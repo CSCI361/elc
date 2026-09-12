@@ -1,5 +1,7 @@
 # Generate a local random secret with `vp run setup:local` once configured.
 AUTH_SECRET=
+# Keep this 32-byte base64url key stable when rotating the auth secret.
+TICKET_ENCRYPTION_KEY=
 # Configure these only for their associated external acceptance checks.
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=

@@ -1,10 +1,15 @@
 import { Hono } from "hono"
 import type { ApiErrorCode } from "@elc/shared"
+import { updatePreferencesSchema } from "@elc/shared"
 import { HTTPException } from "hono/http-exception"
 import { secureHeaders } from "hono/secure-headers"
 import { createAuth, getAuthCapabilities, type AuthDependencies } from "./auth"
 import { requireVerifiedSession } from "./auth/session"
 import type { Bindings } from "./env"
+import { ApiFailure, assertSql } from "./db/transitions"
+import { ticketRoutes } from "./tickets"
+import { orderRoutes } from "./orders/routes"
+import { eventsRoutes } from "./events"
 
 function authenticationDependencies(env: Bindings): AuthDependencies {
   if (env.ENVIRONMENT !== "local") return {}
@@ -66,6 +71,11 @@ export const app = new Hono<{
   )
   .get("/api/me", async (c) => {
     const session = await requireVerifiedSession(c)
+    const profile = await c.env.DB.prepare(
+      "SELECT locale FROM profiles WHERE user_id = ?"
+    )
+      .bind(session.user.id)
+      .first<{ locale: "kk" | "ru" | "en" }>()
     return c.json({
       user: {
         id: session.user.id,
@@ -73,8 +83,33 @@ export const app = new Hono<{
         email: session.user.email,
         emailVerified: session.user.emailVerified,
       },
+      profile: { locale: profile?.locale ?? "kk", hasSavedLocale: !!profile },
     })
   })
+  .patch("/api/me/preferences", async (c) => {
+    const session = await requireVerifiedSession(c)
+    const body = await c.req.json<unknown>().catch(() => null)
+    const result = updatePreferencesSchema.safeParse(body)
+    if (!result.success)
+      throw new ApiFailure("INVALID_INPUT", 400, "Choose a supported language.")
+    await c.env.DB.batch([
+      ...assertSql(
+        c.env.DB,
+        `EXISTS (SELECT 1 FROM user u LEFT JOIN profiles p ON p.user_id = u.id
+          WHERE u.id = ? AND u.email_verified = 1 AND p.suspended_at IS NULL)`,
+        [session.user.id]
+      ),
+      c.env.DB.prepare(
+        "INSERT INTO profiles (user_id, locale, updated_at) VALUES (?, ?, ?) ON CONFLICT (user_id) DO UPDATE SET locale = excluded.locale, updated_at = excluded.updated_at"
+      ).bind(session.user.id, result.data.locale, Date.now()),
+    ])
+    return c.json({
+      profile: { locale: result.data.locale, hasSavedLocale: true },
+    })
+  })
+  .route("/api", ticketRoutes)
+  .route("/api", orderRoutes)
+  .route("/api", eventsRoutes)
   .all("/api/*", (c) =>
     c.json(
       {
@@ -102,7 +137,10 @@ app.onError((error, c) => {
     return c.json(
       {
         error: {
-          code: codes[error.status] ?? "INTERNAL_ERROR",
+          code:
+            error instanceof ApiFailure
+              ? error.code
+              : (codes[error.status] ?? "INTERNAL_ERROR"),
           message: error.message,
           requestId: c.get("requestId"),
         },

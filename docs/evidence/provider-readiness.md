@@ -7,14 +7,16 @@ Cloudflare deployment.
 Polar documents KZT pricing, quantity pricing, discounts, refunds and signed
 webhooks. Its checkout buys one product; a list of products offers a choice.
 The remaining acceptance work includes the representation of a basket containing
-different ticket types and approval of the ticket-sales business category. Missing
+different ticket types. Business eligibility would require a provider decision
+before a production launch, which is outside this academic release. Missing
 credentials are an access limitation, not evidence that Polar cannot support ELC.
 No alternative provider has been selected by this investigation.
 
 ## Access available during inspection
 
 Only environment variable names and configuration key names were inspected for
-credentials. No secret values were printed or copied into this repository.
+credentials at the initial inspection. Secret values are excluded from this
+document and version control; the authorized sandbox token is stored locally.
 
 | Check                  | Observation                                                                                                                | What it establishes                                                                                                         |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
@@ -24,9 +26,24 @@ credentials. No secret values were printed or copied into this repository.
 | Wrangler configuration | A saved OAuth login exists; the subsequent root-task `wrangler whoami` succeeded with D1, Workers and Queues write grants. | Cloudflare authentication and these grants are verified. No account identifiers or email addresses are recorded here.       |
 | Tool commands          | `vp`, `pnpm`, `node` present; `wrangler` absent from PATH at initial inspection                                            | Existing Vite+ commands can run. This does not rule out a project-local Wrangler installed by subsequent work.              |
 
-No authenticated Polar API request, checkout, refund or webhook delivery was run.
-No account was created, provider contacted, package installed or resource deployed
-by this investigation.
+The user subsequently signed in to the `elc` sandbox organization through their
+existing Helium browser session. The sandbox banner explicitly states that
+payments are not processed. A private, one-time product named `elc sandbox
+ticket order` was created with KZT 9,000 pricing; the catalogue confirmed the
+product and displayed ₸9,000. Its sandbox product ID is
+`66720b47-54e1-453f-91a1-58f6a35cbd30`.
+
+The user approved a 30-day token named `elc-academic-sandbox`, scoped to checkout
+read/write, order and product read, refund read/write, and webhook read/write.
+It was created through the existing browser session and saved to the ignored
+`apps/api/.dev.vars` file with mode 0600. The file preserves the existing auth
+and ticket encryption keys. No token value was printed or committed.
+
+Authenticated product list and product detail requests returned HTTP 200 with
+`Polar-Version: 2026-04`; the detail matched the product ID and KZT currency.
+The probe used `User-Agent: elc-sandbox-acceptance/1.0`; the initial default
+Python user-agent received 403. Completed checkout, refund and webhook delivery
+remain pending. No provider contact or production operation occurred.
 
 Polar sandbox uses a separate account, organization and token, with API base
 `https://sandbox-api.polar.sh/v1`. Production tokens do not authenticate there.
@@ -45,8 +62,8 @@ secret are required to complete the cases below. [Polar sandbox](https://polar.s
 | Seat pricing               | Seat-based products support people who claim membership benefits. One-time orders have their own seat pool. [Seat-based guide](https://polar.sh/docs/guides/seat-based-pricing)                                                                                                                                                              | ELC tickets must not inherit invitation, claim or perpetual-license behavior by accident.                                                                                                               |
 | Discounts                  | Percentage and fixed discounts can apply to one-time products. Restrictions include products, dates and redemption limits. [Discounts](https://polar.sh/docs/features/discounts)                                                                                                                                                             | KZT fixed discounts, percentage rounding, invalid/expired codes and concurrent redemption limits.                                                                                                       |
 | Order reference            | Checkout metadata is copied to the order/subscription. It allows 50 flat entries, keys up to 40 characters, string values up to 500 characters, or numeric/boolean values. [Checkout API](https://polar.sh/docs/features/checkout/session), [Create checkout](https://polar.sh/docs/api-reference/2026-04/checkouts/create-checkout-session) | An app order ID and basket hash survive checkout, payment, webhook and refund reconciliation. Keep the full basket snapshot in ELC storage.                                                             |
-| Partial/full refund        | Refunds operate on an order. The refundable base is the remaining net amount; Polar calculates the corresponding tax refund. [Refund behavior](https://polar.sh/docs/features/refunds)                                                                                                                                                       | Correct KZT refund totals and app ticket revocation after successful completion.                                                                                                                        |
-| Refund API                 | `POST /v1/refunds/` requires `order_id`, `reason`, integer `amount`, and `refunds:write`. It supports metadata and `revoke_benefits`; resulting status can be pending, succeeded, failed or canceled. [Create refund](https://polar.sh/docs/api-reference/2026-04/refunds/create-refund)                                                     | Partial refund, remainder refund and recovery when a request times out. A created refund must not be assumed successful.                                                                                |
+| Full refund                | Refunds operate on an order. The refundable base is the remaining net amount; Polar calculates the corresponding tax refund. [Refund behavior](https://polar.sh/docs/features/refunds)                                                                                                                                                       | Correct KZT refund totals and app ticket revocation after successful completion.                                                                                                                        |
+| Refund API                 | `POST /v1/refunds/` requires `order_id`, `reason`, integer `amount`, and `refunds:write`. It supports metadata and `revoke_benefits`; resulting status can be pending, succeeded, failed or canceled. [Create refund](https://polar.sh/docs/api-reference/2026-04/refunds/create-refund)                                                     | Full refund and recovery when a request times out. A created refund must not be assumed successful.                                                                                                     |
 | Payment/refund events      | Events include `order.paid`, `order.refunded`, `refund.created`, `refund.updated` and `checkout.expired`. [Webhook events](https://polar.sh/docs/integrate/webhooks/events)                                                                                                                                                                  | Actual payloads, delivery ordering and reconciliation against app state.                                                                                                                                |
 
 Ticket sales appear under restricted businesses requiring closer review and may
@@ -87,7 +104,8 @@ from the reference URL or calendar alone.
 
 ## Sandbox acceptance procedure
 
-Every case below is pending. Use a dedicated sandbox organization and synthetic
+Product API access is verified; transaction and webhook cases remain pending.
+Use a dedicated sandbox organization and synthetic
 customers. Store evidence with the chosen API/SDK version, request shape, object
 IDs, status, currency, amounts, event IDs and assertions. Exclude access tokens,
 webhook secrets, checkout client secrets and customer payment details.
@@ -119,18 +137,18 @@ except urllib.error.HTTPError as error:
 PY
 ```
 
-| Case                       | Execute                                                                                                                                                                                                         | Pass condition                                                                                                                                                                          |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| P1: Access and contract    | Run the probe. Confirm the organization in the sandbox dashboard and pin the same supported version for the webhook endpoint.                                                                                   | Authorized response and explicit version; required product, checkout, order, refund and webhook permissions available. Authentication failure remains an access failure.                |
-| P2: Single ticket          | Create a one-time KZT product, create a hosted checkout, pay with the documented test card, retrieve the resulting order.                                                                                       | Checkout, order and receipt show the expected KZT price; the verified `order.paid` event fulfills exactly once.                                                                         |
-| P3: Quantity               | Use a unit-based product at 3,000 KZT with quantity 3; set checkout quantity bounds to the reservation quantity. Attempt a quantity change.                                                                     | The charged quantity matches the reservation; the 9,000 KZT subtotal produces exactly three tickets. Inventory cannot be expanded at checkout.                                          |
-| P4: Different ticket types | Record an ELC basket with one 5,000 KZT adult ticket and two 2,000 KZT student tickets. Test an aggregate fixed-price checkout with the app order reference, if that representation is accepted for evaluation. | One 9,000 KZT subtotal, preserved ticket-type snapshots and three correctly typed tickets. Record receipt/itemization limitations explicitly. A product selector alone fails this case. |
-| P5: Discounts              | Apply a 10% discount to the 9,000 KZT fixture, then test a KZT fixed discount, invalid code, expiry and exhausted redemptions.                                                                                  | Expected discounted net amounts, one application of the discount, correct tax treatment and no fulfillment for a rejected checkout.                                                     |
-| P6: Reference integrity    | Compare metadata on session, order and signed payment event. Submit a payment event for another order/currency/amount to the app's verifier tests.                                                              | Valid payment matches the immutable basket; mismatches cannot issue tickets.                                                                                                            |
-| P7: Refunds                | Refund part of a paid KZT order, wait for final status, then refund the remainder. Retry/redeliver the resulting events. Exercise timeout recovery separately.                                                  | Refunded net/tax totals reconcile; only intended tickets become invalid; a retry cannot cause duplicate financial requests or duplicate ticket transitions.                             |
-| P8: Signatures and replay  | Deliver a genuine sandbox event. Repeat it, alter one body byte, omit a required signature header, use a stale timestamp and test both key encodings if supporting older secrets.                               | Genuine signature succeeds; altered/invalid events fail; repeats have no duplicate effects. Local signed fixtures alone do not prove provider delivery.                                 |
-| P9: Failure recovery       | Let a checkout expire; test a declined test payment; temporarily return a controlled error from the test endpoint and inspect redelivery.                                                                       | No unpaid tickets; reservations released by app policy; a later valid event reconciles once.                                                                                            |
-| P10: Eligibility           | Obtain and retain a provider decision for ELC's ticket-sales business before production launch.                                                                                                                 | The actual business and transaction representation are accepted. No provider contact was made during this review.                                                                       |
+| Case                          | Execute                                                                                                                                                                                                         | Pass condition                                                                                                                                                                          |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1: Access and contract       | Run the probe. Confirm the organization in the sandbox dashboard and pin the same supported version for the webhook endpoint.                                                                                   | Authorized response and explicit version; required product, checkout, order, refund and webhook permissions available. Authentication failure remains an access failure.                |
+| P2: Single ticket             | Create a one-time KZT product, create a hosted checkout, pay with the documented test card, retrieve the resulting order.                                                                                       | Checkout, order and receipt show the expected KZT price; the verified `order.paid` event fulfills exactly once.                                                                         |
+| P3: Quantity                  | Use a unit-based product at 3,000 KZT with quantity 3; set checkout quantity bounds to the reservation quantity. Attempt a quantity change.                                                                     | The charged quantity matches the reservation; the 9,000 KZT subtotal produces exactly three tickets. Inventory cannot be expanded at checkout.                                          |
+| P4: Different ticket types    | Record an ELC basket with one 5,000 KZT adult ticket and two 2,000 KZT student tickets. Test an aggregate fixed-price checkout with the app order reference, if that representation is accepted for evaluation. | One 9,000 KZT subtotal, preserved ticket-type snapshots and three correctly typed tickets. Record receipt/itemization limitations explicitly. A product selector alone fails this case. |
+| P5: Discounts                 | Apply a 10% discount to the 9,000 KZT fixture, then test a KZT fixed discount, invalid code, expiry and exhausted redemptions.                                                                                  | Expected discounted net amounts, one application of the discount, correct tax treatment and no fulfillment for a rejected checkout.                                                     |
+| P6: Reference integrity       | Compare metadata on session, order and signed payment event. Submit a payment event for another order/currency/amount to the app's verifier tests.                                                              | Valid payment matches the immutable basket; mismatches cannot issue tickets.                                                                                                            |
+| P7: Refunds                   | Fully refund a paid KZT order and wait for final status. Retry/redeliver the resulting events. Exercise timeout recovery separately.                                                                            | Refunded net/tax totals reconcile; all tickets in the refunded order become invalid; a retry cannot cause duplicate financial requests or duplicate ticket transitions.                 |
+| P8: Signatures and replay     | Deliver a genuine sandbox event. Repeat it, alter one body byte, omit a required signature header, use a stale timestamp and test both key encodings if supporting older secrets.                               | Genuine signature succeeds; altered/invalid events fail; repeats have no duplicate effects. Local signed fixtures alone do not prove provider delivery.                                 |
+| P9: Failure recovery          | Let a checkout expire; test a declined test payment; temporarily return a controlled error from the test endpoint and inspect redelivery.                                                                       | No unpaid tickets; reservations released by app policy; a later valid event reconciles once.                                                                                            |
+| Future production eligibility | Obtain and retain a provider decision for ELC's ticket-sales business before production launch.                                                                                                                 | The actual business and transaction representation are accepted. No provider contact was made during this review.                                                                       |
 
 For P4, the following is a proposed request body to
 `POST https://sandbox-api.polar.sh/v1/checkouts/`. Replace the UUID and metadata
@@ -147,7 +165,8 @@ This fixture does not claim native ticket-type line items. [Create checkout](htt
       {
         "amount_type": "fixed",
         "price_currency": "kzt",
-        "price_amount": 900000
+        "price_amount": 900000,
+        "tax_behavior": "inclusive"
       }
     ]
   },
@@ -160,8 +179,8 @@ This fixture does not claim native ticket-type line items. [Create checkout](htt
 ```
 
 Validate the minor-unit conversion, provider minimum and displayed KZT subtotal
-before payment. Tax may make the final total differ from the subtotal. Apply a
-discount once: either send the undiscounted price with the provider discount or
+before payment. Use inclusive tax and require the final total to match the
+frozen app amount. Apply a discount once: either send the undiscounted price with the provider discount or
 send the final app-calculated price with checkout discounts disabled.
 
 ## Hono, Workers, D1 and Vite+
@@ -204,7 +223,8 @@ supports an explicit `persistState.path`. Use local bindings for the initial
 acceptance run; ensure no binding is marked remote.
 [Cloudflare plugin API](https://developers.cloudflare.com/workers/vite-plugin/reference/api/)
 
-The integration still needs a real local Workers startup, a D1 migration/query
-through Hono, a browser request through the frontend's API path, production build
-and local preview, plus transaction and webhook tests in the Workers runtime.
-Node-only mocks cannot establish D1 behavior or Workers compatibility.
+Local Workers startup, migrated D1 queries through Hono, browser authentication,
+free-ticket transactions, and the web/Worker/marketing build now pass. See
+[checkout evidence](./checkout.md) and [web authentication](./web-authentication.md).
+Actual paid transactions, signed provider webhook delivery and deployed runtime
+acceptance remain pending. Node-only mocks cannot establish these results.

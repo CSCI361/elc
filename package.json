@@ -16,7 +16,8 @@
     "prepare": "vp config",
     "setup:local": "node scripts/setup-local.mjs",
     "auth:generate": "auth generate --config apps/api/src/auth/schema-cli.ts --adapter drizzle --dialect sqlite --output apps/api/src/db/auth-schema.ts --yes",
-    "verify:local-auth": "node scripts/verify-local-auth.mjs"
+    "verify:local-auth": "node scripts/verify-local-auth.mjs",
+    "verify:local-ticketing": "node scripts/verify-local-ticketing.mjs"
   },
   "devDependencies": {
     "@babel/core": "^8.0.5",

@@ -20,6 +20,8 @@ commit. The integration owner maintains this plan after each coherent unit.
 
 ## Starting state
 
+This section records the historical baseline, before the integrated work below.
+
 - Baseline commit: `762c289`; clean worktree at implementation start.
 - React web starter only; no product services, migrations, or tests.
 - `vp install` and `vp run build` pass.
@@ -27,14 +29,28 @@ commit. The integration owner maintains this plan after each coherent unit.
 - `vp test` exits with no test files.
 - Branch: `feat/academic-release`.
 
+## Current integration
+
+The workspace now has real web account flows, event and campaign APIs, atomic
+checkout and reservation lifecycle services, zero-total ticket issuance, protected
+credential retrieval, and online scanning with authorized reversal. The full
+automated suite passes 106 tests. Browser authentication and a complete free
+ticketing flow through the running Worker HTTP routes passed with disposable
+fixtures. `vp check` and the complete `vp run build` pass, including TypeScript,
+Astro diagnostics, and web/Worker/marketing artifacts.
+
+This is partial release coverage. Paid/provider/refund flows, product web
+workflows beyond accounts, delivery/PDFs, mobile/offline operation, support,
+reporting, deployment and physical-device acceptance remain open.
+
 ## Dependency-ordered milestones
 
 | ID  | Milestone                                                         | Depends on                              | Owner                                      | Status      |
 | --- | ----------------------------------------------------------------- | --------------------------------------- | ------------------------------------------ | ----------- |
 | M0  | Plan, workspace, checks, and development commands                 | None                                    | Integration                                | In progress |
 | M1  | Shared contracts, policies, authentication, schema and migrations | M0                                      | Contracts + integration                    | In progress |
-| M2  | Workers ticketing flow, payment adapter and correctness proof     | M1                                      | Integration + provider verification        | Pending     |
-| M3  | Attendee, organizer and platform administration web workflows     | M1, M2                                  | Web implementation                         | Pending     |
+| M2  | Workers ticketing flow, payment adapter and correctness proof     | M1                                      | Integration + provider verification        | In progress |
+| M3  | Attendee, organizer and platform administration web workflows     | M1, M2                                  | Web implementation                         | In progress |
 | M4  | Tickets, delivery, campaigns and calendar exports                 | M2, M3                                  | API + web implementation                   | Pending     |
 | M5  | Expo online/offline check-in and reconciliation                   | M1, M2, M4                              | Mobile implementation                      | Pending     |
 | M6  | Support, attachments, live updates, analytics and history         | M2, M3                                  | API + web implementation                   | Pending     |
@@ -77,15 +93,19 @@ narrow layout. Deployment and GA4 remain pending.
 - [ ] Negative authorization tests cover unrelated events/orders/tickets/cases,
       downloads, exports, analytics, history and unassigned mobile users.
 
-Current evidence: 25 shared-contract tests, 15 authentication/access tests,
-seven D1 migration/guard tests and two API-boundary tests pass. The generated
-Better Auth schema and two
-reviewed application migrations apply locally. A separate HTTP check through
-workerd proves registration, verification, session access and sign-out. This
-does not establish native authentication or external Google/Resend acceptance.
-The application schema is initial; later workflows still need additional tables.
+Current evidence: the integrated suite passes 106 tests across shared rules,
+authentication/access, migrations, API boundaries, events, checkout, ticket
+credentials/admission and web-account behavior. Reviewed migrations include
+cross-event scope guards, active-ticket uniqueness, order revisions and frozen
+refund-policy snapshots. Local HTTP checks use real verification and sign-in
+sessions; browser checks cover registration, reset, preferences, session
+revocation and suspended-account handling. Native authentication, external
+Google OAuth and Resend delivery remain unverified. Later workflows still need
+additional schema and authorization coverage.
 See [foundation validation](./evidence/foundation.md) and
-[authentication evidence](./evidence/authentication.md).
+[authentication evidence](./evidence/authentication.md) for the initial unit, and
+[web authentication evidence](./evidence/web-authentication.md) for the integrated
+account screens.
 
 ### M2: first complete ticketing flow and infrastructure proof
 
@@ -95,13 +115,13 @@ See [foundation validation](./evidence/foundation.md) and
       fully discounted paid ticket (activation still required; no provider checkout).
 - [ ] Implement KZT 5,000 activation and compensation on failed activation;
       organizer-paid 3% fee, full-refund fee reversal and seven-day payout holds.
-- [ ] Ten-minute holds, one active checkout/account/event, six-ticket default,
+- [x] Ten-minute holds, one active checkout/account/event, six-ticket default,
       immutable payment-attempt contents and server-calculated price snapshots.
-- [ ] Prove atomic last-ticket, same-seat, multi-seat and limited-promo races on
+- [x] Prove atomic last-ticket, same-seat, multi-seat and limited-promo races on
       D1/Workers. Zero-row conditional writes must not allow partial commits.
 - [ ] Prove duplicate/out-of-order payment events, expired/abandoned holds,
       cancellation during payment, late-payment compensation and refund retries.
-- [ ] Prove simultaneous check-ins, idempotent retries and authorized reversals.
+- [x] Prove simultaneous check-ins, idempotent retries and authorized reversals.
 - [ ] Orders, inventory, promo, tickets, audit and outbox commit together; queue
       failure/replay cannot duplicate tickets or lose required side effects.
 - [ ] Record actual Polar KZT checkout/refund compatibility. Use the documented
@@ -109,8 +129,29 @@ See [foundation validation](./evidence/foundation.md) and
 - [ ] Run a deployed smoke test and mixed reporting/checkout/scanner workload.
       Target 95% of scan results within two seconds using the specified dataset.
 
+Current evidence: [checkout verification](./evidence/checkout.md) covers real D1
+inventory/promo races, replacement rollback and revisions, immutable deadlines,
+expiry/abandonment, payment-attempt edit freeze, current eligibility and capacity,
+and database-clock checks. Zero-total issuance creates one canonical credential
+and commits its audit/outbox records atomically. Admission tests cover concurrent
+scans, cancellation/refund blocks, permission revocation and corrections after
+event end without permitting new admission.
+
+`vp run verify:local-ticketing` passed through the running Worker: real account
+verification/sign-in, event/type creation and publication, free reservation,
+zero-total completion, purchaser credential retrieval, explicit scanner grants,
+retry/duplicate handling, reversal and rescan. Private fixture grants stand in
+for the unfinished staff-assignment endpoint. This proves the local free flow;
+paid activation/payment/refund/compensation, queue delivery/replay, PDF/email,
+deployed load and native-device acceptance remain pending. Polar sandbox access
+and KZT product creation are recorded in
+[provider readiness](./evidence/provider-readiness.md); transaction and webhook
+compatibility are not yet proven.
+
 ### M3: web workflows and product policy
 
+- [x] Web registration, verification, sign-in, password reset, account language,
+      other-session revocation and sign-out with real local browser evidence.
 - [ ] Attendee discovery, event details, private invitation acceptance, registration,
       checkout, confirmation, account orders, ticket downloads and support entry points.
 - [ ] Organizer profiles, event creation/edit/preview/publish/unpublish/cancel,
@@ -123,6 +164,16 @@ See [foundation validation](./evidence/foundation.md) and
       automatic event-cancellation refunds, pending-refund admission block,
       conditional restocking and consumed completed promo redemptions.
 - [ ] Simulated payout records, unresolved-order holds and later adjustments.
+
+Current evidence: the [web account flows](./evidence/web-authentication.md) work
+in Kazakh, Russian and English, with saved preferences, safe return paths and
+focused accessibility checks. Google availability is shown accurately; external
+OAuth remains pending. [Event APIs](./evidence/events.md) provide discovery,
+management/preview/publication, ticket types/windows/visibility, capacity,
+assigned-seat inventory and campaign creation/enabling. Those APIs are integrated
+with checkout and preserve held/sold inventory and historical snapshots. Their
+attendee/organizer web screens, staff/invitation management, cancellation,
+activation, platform administration and refund/payout workflows are unfinished.
 
 ### M4: tickets, delivery, campaigns and calendars
 
@@ -195,16 +246,21 @@ See [foundation validation](./evidence/foundation.md) and
 
 ## Evidence log
 
-| Date       | Evidence                                                    | Result                                                                         |
-| ---------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| 2026-09-13 | Repository inspection at `762c289`, dependency installation | Clean baseline; install passes; starter validation issues recorded above       |
-| 2026-09-13 | [Foundation validation](./evidence/foundation.md)           | 49 tests pass; local Worker/D1 authentication and browser/API integration pass |
-| 2026-09-13 | [Provider readiness](./evidence/provider-readiness.md)      | Cloudflare access available; actual Polar compatibility proof remains pending  |
+| Date       | Evidence                                                    | Result                                                                                                                      |
+| ---------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-13 | Repository inspection at `762c289`, dependency installation | Clean baseline; install passes; starter validation issues recorded above                                                    |
+| 2026-09-13 | [Foundation validation](./evidence/foundation.md)           | 49 tests pass; local Worker/D1 authentication and browser/API integration pass                                              |
+| 2026-09-13 | [Provider readiness](./evidence/provider-readiness.md)      | Cloudflare access available; actual Polar compatibility proof remains pending                                               |
+| 2026-09-13 | [Events and campaigns](./evidence/events.md)                | Integrated event/campaign routes and D1 mutation/race tests; product screens and delivery pending                           |
+| 2026-09-13 | [Checkout and ticketing](./evidence/checkout.md)            | Atomic local D1 tests and complete free ticketing HTTP flow through workerd pass; paid/provider/deployed acceptance pending |
+| 2026-09-13 | [Web authentication](./evidence/web-authentication.md)      | Real browser account flows, preferences, reset and session revocation pass; external OAuth/email pending                    |
+| 2026-09-13 | Integrated automated suite                                  | 106 tests pass; `vp check` and the complete web/Worker/marketing build pass                                                 |
 
 ## External checks awaiting access or execution
 
-Provider and device availability is being inspected. Cloudflare deployment,
-Polar sandbox transactions, Google OAuth, Resend delivery, GA4 reports, supported
+Cloudflare account grants and Polar sandbox browser access/KZT product creation
+are established. Cloudflare deployment, completed Polar sandbox transactions,
+refund/webhook delivery, Google OAuth, Resend delivery, GA4 reports, supported
 calendar clients and physical iOS/Android tests have no acceptance evidence yet.
 Missing credentials do not establish provider incompatibility. Continue local
 implementation and integration while these checks remain pending.

@@ -50,6 +50,7 @@ export const events = sqliteTable(
     category: text("category").notNull(),
     venueName: text("venue_name").notNull(),
     venueAddress: text("venue_address").notNull(),
+    refundInstructions: text("refund_instructions").notNull().default(""),
     timeZone: text("time_zone").notNull().default("Asia/Almaty"),
     startsAt: integer("starts_at").notNull(),
     endsAt: integer("ends_at").notNull(),
@@ -78,6 +79,7 @@ export const events = sqliteTable(
     venueLayoutId: text("venue_layout_id"),
     calendarUid: text("calendar_uid").notNull().unique(),
     calendarSequence: integer("calendar_sequence").notNull().default(0),
+    revision: integer("revision").notNull().default(0),
     reportingId: text("reporting_id").notNull().unique(),
     suspendedAt: integer("suspended_at"),
     cancelledAt: integer("cancelled_at"),
@@ -239,6 +241,10 @@ export const orders = sqliteTable(
     processingFeeMinor: integer("processing_fee_minor").notNull(),
     campaignId: text("campaign_id").references(() => campaigns.id),
     refundPolicyVersion: text("refund_policy_version").notNull(),
+    refundPolicyJson: text("refund_policy_json")
+      .notNull()
+      .default('{"version":"academic-v1","instructions":""}'),
+    revision: integer("revision").notNull().default(0),
     createdAt: integer("created_at").notNull(),
     completedAt: integer("completed_at"),
     admissionBlockedAt: integer("admission_blocked_at"),

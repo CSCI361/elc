@@ -82,6 +82,21 @@ try {
   const me = await fetch(`${origin}/api/me`, { headers: { Cookie: cookie } })
   assert.equal(me.status, 200)
   assert.equal((await me.json()).user.email === email, true)
+  step = "save authenticated locale preference"
+  const preference = await fetch(`${origin}/api/me/preferences`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Origin: origin,
+      Cookie: cookie,
+    },
+    body: JSON.stringify({ locale: "ru" }),
+  })
+  assert.equal(preference.status, 200)
+  const saved = await fetch(`${origin}/api/me`, {
+    headers: { Cookie: cookie },
+  }).then((response) => response.json())
+  assert.deepEqual(saved.profile, { locale: "ru", hasSavedLocale: true })
   step = "sign out and deny revoked session"
   assert.equal((await post("/sign-out", {}, cookie)).status, 200)
   assert.equal(
@@ -100,7 +115,7 @@ try {
 } finally {
   try {
     await query(
-      `DELETE FROM development_mail WHERE recipient = '${email}'; DELETE FROM user WHERE email = '${email}';`
+      `DELETE FROM development_mail WHERE recipient = '${email}'; DELETE FROM profiles WHERE user_id IN (SELECT id FROM user WHERE email = '${email}'); DELETE FROM user WHERE email = '${email}';`
     )
   } catch {
     console.error("Local fixture cleanup could not finish.")

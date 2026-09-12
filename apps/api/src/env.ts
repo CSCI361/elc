@@ -9,6 +9,7 @@ export interface Bindings {
   APP_ORIGIN: string
   AUTH_URL?: string
   AUTH_SECRET: string
+  TICKET_ENCRYPTION_KEY?: string
   EMAIL_FROM: string
   GOOGLE_CLIENT_ID?: string
   GOOGLE_CLIENT_SECRET?: string
