@@ -2,6 +2,8 @@
 AUTH_SECRET=
 # Keep this 32-byte base64url key stable when rotating the auth secret.
 TICKET_ENCRYPTION_KEY=
+OFFLINE_SIGNING_PRIVATE_JWK=
+OFFLINE_SIGNING_KEY_ID=
 # Configure these only for their associated external acceptance checks.
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=

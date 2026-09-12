@@ -7,6 +7,8 @@ import {
   type ProviderRefundStatus,
 } from "@elc/shared"
 import { ApiFailure, assertSql, isTransitionConflict } from "../db/transitions"
+import { restockOrderInventory } from "../orders/restock"
+import { refundedPayoutAdjustment } from "./payouts"
 import {
   loadPayment,
   paymentAudit,
@@ -149,6 +151,119 @@ async function loadRefund(db: D1Database, id: string) {
   return refund
 }
 
+/** Event cancellation ignores voluntary cutoff/admission rules and never refunds activation. */
+export async function ensureEventCancellationRefund(
+  db: D1Database,
+  payment: PaymentRow,
+  now = Date.now()
+) {
+  if (
+    payment.purpose !== "ticket_order" ||
+    payment.state !== "succeeded" ||
+    !payment.provider_payment_id ||
+    !payment.provider_order_id
+  )
+    throw new ApiFailure(
+      "PAYMENT_MISMATCH",
+      409,
+      "A confirmed attendee payment is required."
+    )
+  const existing = await db
+    .prepare("SELECT id FROM refunds WHERE payment_attempt_id = ?")
+    .bind(payment.id)
+    .first<string>("id")
+  if (existing) return existing
+  const id = crypto.randomUUID()
+  const request = providerRefundRequestSchema.parse({
+    refundId: id,
+    idempotencyKey: id,
+    providerPaymentId: payment.provider_payment_id,
+    providerOrderId: payment.provider_order_id,
+    expected: paymentBinding(payment),
+    amountMinor: payment.amount_minor,
+    currency: "KZT",
+    reason: "event_cancelled",
+  })
+  try {
+    await db.batch([
+      ...assertSql(
+        db,
+        `EXISTS (SELECT 1 FROM payment_attempts p JOIN orders o ON o.id = p.subject_id JOIN events e ON e.id = o.event_id
+        WHERE p.id = ? AND p.purpose = 'ticket_order' AND p.state = 'succeeded' AND p.provider_payment_id = ? AND p.provider_order_id = ?
+        AND p.amount_minor = ? AND p.amount_minor = o.total_minor AND p.currency = 'KZT' AND o.currency = p.currency
+        AND o.completed_at IS NOT NULL AND e.cancelled_at IS NOT NULL)`,
+        [
+          payment.id,
+          payment.provider_payment_id,
+          payment.provider_order_id,
+          payment.amount_minor,
+        ]
+      ),
+      db
+        .prepare(`INSERT INTO refunds (id, payment_attempt_id, reason, amount_minor, request_json, created_at, updated_at)
+        VALUES (?, ?, 'event_cancelled', ?, ?, ?, ?)`)
+        .bind(
+          id,
+          payment.id,
+          payment.amount_minor,
+          JSON.stringify(request),
+          now,
+          now
+        ),
+      db
+        .prepare(
+          "UPDATE orders SET admission_blocked_at = COALESCE(admission_blocked_at, ?), revision = revision + 1 WHERE id = ?"
+        )
+        .bind(now, payment.subject_id),
+      paymentAudit(db, payment, "refund.event_cancellation_requested", now),
+      db
+        .prepare(`INSERT INTO outbox (id, kind, entity_id, payload_json, created_at, next_attempt_at)
+        VALUES (?, 'refund.reconcile', ?, ?, ?, ?)`)
+        .bind(
+          `refund-reconcile:${id}`,
+          id,
+          JSON.stringify({ refundId: id, paymentAttemptId: payment.id }),
+          now,
+          now
+        ),
+    ])
+  } catch (error) {
+    if (!isTransitionConflict(error)) throw error
+    const replay = await db
+      .prepare("SELECT id FROM refunds WHERE payment_attempt_id = ?")
+      .bind(payment.id)
+      .first<string>("id")
+    if (replay) return replay
+    throw new ApiFailure(
+      "CONFLICT",
+      409,
+      "The cancelled order changed before its refund could be prepared."
+    )
+  }
+  return id
+}
+
+/** Bounded durable sweep. Each prepared refund owns its separate retryable outbox job. */
+export async function prepareEventCancellationRefunds(
+  db: D1Database,
+  eventId: string,
+  now = Date.now()
+) {
+  const predicate = `FROM payment_attempts p JOIN orders o ON o.id = p.subject_id JOIN events e ON e.id = o.event_id
+    WHERE p.purpose = 'ticket_order' AND p.state = 'succeeded' AND o.event_id = ? AND e.cancelled_at IS NOT NULL
+    AND o.completed_at IS NOT NULL AND o.total_minor > 0 AND NOT EXISTS (SELECT 1 FROM refunds r WHERE r.payment_attempt_id = p.id)`
+  const payments = await db
+    .prepare(`SELECT p.* ${predicate} ORDER BY p.id LIMIT 20`)
+    .bind(eventId)
+    .all<PaymentRow>()
+  for (const payment of payments.results)
+    await ensureEventCancellationRefund(db, payment, now)
+  return !(await db
+    .prepare(`SELECT 1 ${predicate} LIMIT 1`)
+    .bind(eventId)
+    .first())
+}
+
 export async function applyRefundStatus(
   db: D1Database,
   raw: ProviderRefundStatus,
@@ -174,6 +289,13 @@ export async function applyRefundStatus(
     )
   if (refund.state === "succeeded") return
   if (refund.state === "failed" && status.state === "pending") return
+  const eventId =
+    payment.purpose === "ticket_order"
+      ? await db
+          .prepare("SELECT event_id FROM orders WHERE id = ?")
+          .bind(payment.subject_id)
+          .first<string>("event_id")
+      : null
   const mutationId = `${refund.id}:${status.providerRefundId}:${status.state}`
   try {
     await db.batch([
@@ -210,13 +332,13 @@ export async function applyRefundStatus(
                 "UPDATE orders SET state = CASE WHEN completed_at IS NOT NULL THEN 'refunded' ELSE state END, admission_blocked_at = COALESCE(admission_blocked_at, ?), revision = revision + 1 WHERE id = ?"
               )
               .bind(now, payment.subject_id),
-            db
-              .prepare(`UPDATE inventory SET order_id = NULL, reservation_id = NULL WHERE order_id = ? AND enabled = 1
-          AND EXISTS (SELECT 1 FROM events e JOIN ticket_types t ON t.event_id = e.id WHERE e.id = inventory.event_id AND t.id = inventory.ticket_type_id
-            AND e.publication_state = 'published' AND e.cancelled_at IS NULL AND e.suspended_at IS NULL
-            AND e.ends_at > ? AND e.registration_opens_at <= ? AND e.registration_closes_at > ?
-            AND t.hidden = 0 AND t.sales_start_at <= ? AND t.sales_end_at > ? AND (t.kind = 'free' OR e.paid_sales_state = 'active'))`)
-              .bind(payment.subject_id, now, now, now, now, now),
+            ...restockOrderInventory(
+              db,
+              payment.subject_id,
+              eventId ?? "",
+              now
+            ),
+            ...refundedPayoutAdjustment(db, refund.id, now),
           ]),
       paymentAudit(db, payment, `refund.${status.state}`, now),
       db

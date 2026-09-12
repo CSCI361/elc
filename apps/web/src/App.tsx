@@ -8,6 +8,8 @@ import { EventsRoute } from "@/events"
 import { isEventPath, withoutPaymentSecrets } from "@/events/policies"
 import { lazy, Suspense } from "react"
 import { Loading } from "@/events/ui"
+import { SupportRoute } from "@/support"
+import { isSupportPath } from "@/support/policies"
 import {
   createInvitationMemory,
   readInvitationToken,
@@ -45,6 +47,12 @@ if (
 
 function AppRoutes() {
   const { messages: t } = useAccount()
+  if (isSupportPath(window.location.pathname))
+    return (
+      <AppShell>
+        <SupportRoute path={window.location.pathname} />
+      </AppShell>
+    )
   if (window.location.pathname === "/invitations/accept")
     return (
       <AppShell>

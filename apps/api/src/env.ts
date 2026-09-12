@@ -10,6 +10,8 @@ export interface Bindings {
   AUTH_URL?: string
   AUTH_SECRET: string
   TICKET_ENCRYPTION_KEY?: string
+  OFFLINE_SIGNING_PRIVATE_JWK?: string
+  OFFLINE_SIGNING_KEY_ID?: string
   EMAIL_FROM: string
   GOOGLE_CLIENT_ID?: string
   GOOGLE_CLIENT_SECRET?: string

@@ -1,0 +1,122 @@
+.support-list {
+  display: grid;
+  gap: 0.85rem;
+  margin-block: 1.5rem;
+}
+.support-case-link {
+  padding: 1.2rem;
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  display: grid;
+  gap: 0.6rem;
+  background: var(--card);
+}
+.support-case-link strong {
+  font-size: 1.125rem;
+}
+.support-case-link small,
+.support-meta {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+.support-filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end;
+  gap: 1rem;
+}
+.support-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(17rem, 1fr);
+  align-items: start;
+  gap: 1.25rem;
+}
+.support-form {
+  display: grid;
+  gap: 1.25rem;
+}
+.support-form fieldset {
+  display: grid;
+  gap: 1rem;
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+.support-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.support-timeline {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+.support-timeline li {
+  border-left: 3px solid var(--border);
+  padding: 0.25rem 0 0.75rem 1rem;
+}
+.support-timeline p {
+  margin-block: 0.6rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.support-timeline header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.support-timeline time {
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+}
+.support-page {
+  overflow-wrap: anywhere;
+}
+.support-reference {
+  font-family: monospace;
+  font-size: 0.8rem;
+  user-select: all;
+}
+.support-notice {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  margin-block: 1rem;
+}
+.refund-panel {
+  display: grid;
+  gap: 1rem;
+}
+.refund-panel h2,
+.refund-panel p {
+  margin: 0;
+}
+.refund-panel dl {
+  margin: 0;
+}
+.cancel-event summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding-block: 0.5rem;
+  font-weight: 700;
+  color: var(--destructive);
+}
+.cancel-event form {
+  margin-top: 1rem;
+}
+@media (max-width: 850px) {
+  .support-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .support-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 420px) {
+  .support-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

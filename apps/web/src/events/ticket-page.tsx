@@ -10,6 +10,8 @@ import { segment, useResource } from "./api"
 import { useEventText } from "./messages"
 import { EventError, Loading } from "./ui"
 import { TicketPdfDownload } from "./exports"
+import { supportHref } from "@/support/policies"
+import { useSupportText } from "@/support/messages"
 
 function Credential({ ticketId }: { ticketId: string }) {
   const { t } = useEventText()
@@ -61,6 +63,7 @@ function Credential({ ticketId }: { ticketId: string }) {
 }
 
 export function TicketPage({ ticketId }: { ticketId: string }) {
+  const { t: supportText } = useSupportText()
   const { t } = useEventText()
   const resource = useResource(
     `/tickets/${segment(ticketId)}`,
@@ -109,6 +112,17 @@ export function TicketPage({ ticketId }: { ticketId: string }) {
         </a>
         {!resource.error ? (
           <div className="ticket-pdf-action">
+            <a
+              className="secondary-link"
+              href={supportHref({
+                ticketId: ticket.id,
+                orderId: ticket.orderId,
+                eventId: ticket.eventId,
+                audience: "attendee",
+              })}
+            >
+              {supportText("help")}
+            </a>
             <TicketPdfDownload ticketId={ticket.id} />
             <p>{t("pdfPrivacy")}</p>
           </div>

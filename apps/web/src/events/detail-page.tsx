@@ -35,6 +35,8 @@ import {
 import { SeatMap } from "./seat-map"
 import { EventError, Field, Loading } from "./ui"
 import { CalendarActions } from "./exports"
+import { supportHref } from "@/support/policies"
+import { useSupportText } from "@/support/messages"
 
 function ReservationForm({
   event,
@@ -300,6 +302,7 @@ function ReservationForm({
 }
 
 export function EventDetailPage({ eventId }: { eventId: string }) {
+  const { t: supportText } = useSupportText()
   const { locale, t } = useEventText()
   const detail = useResource(
     `/events/${segment(eventId)}`,
@@ -366,6 +369,16 @@ export function EventDetailPage({ eventId }: { eventId: string }) {
             <p className="preserve-lines">{event.refundInstructions}</p>
           </section>
           <CalendarActions eventId={event.id} />
+          <a
+            className="secondary-link"
+            href={supportHref({
+              eventId: event.id,
+              audience: "attendee",
+              category: "event_information",
+            })}
+          >
+            {supportText("help")}
+          </a>
         </div>
         <div>
           {inventory.error ? (

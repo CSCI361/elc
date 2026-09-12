@@ -17,6 +17,10 @@ import {
 import { useState, type FormEvent } from "react"
 import { useAccount } from "@/auth/context"
 import { useAccessText } from "@/access/messages"
+import { useSupportText } from "@/support/messages"
+import { supportHref } from "@/support/policies"
+import { CancellationPanel } from "@/support/cancellation-panel"
+import { CalendarActions } from "./exports"
 import { Button } from "@/components/ui/button"
 import { EventApiError, segment, useCommand, useResource } from "./api"
 import { useEventText } from "./messages"
@@ -458,6 +462,7 @@ export function EventEditorPage({ eventId }: { eventId?: string }) {
 }
 
 function ExistingEventEditor({ eventId }: { eventId: string }) {
+  const { t: supportText } = useSupportText()
   const { account } = useAccount()
   const { t: accessText } = useAccessText()
   const { locale, t } = useEventText()
@@ -482,6 +487,23 @@ function ExistingEventEditor({ eventId }: { eventId: string }) {
     )
   const { event, ticketTypes } = detail.data
   const published = event.publicationState === "published"
+  if (event.cancelledAt)
+    return (
+      <div className="events-page">
+        <a className="back-link" href="/organizer/events">
+          {t("organize")}
+        </a>
+        <h1>{event.title}</h1>
+        <CancellationPanel event={event} onChanged={reload} />
+        <a
+          className="secondary-link"
+          href={`/support?view=staff&eventId=${segment(event.id)}`}
+        >
+          {supportText("title")}
+        </a>
+        <CalendarActions eventId={event.id} />
+      </div>
+    )
   return (
     <div className="events-page editor-page">
       <a className="back-link" href="/organizer/events">
@@ -496,6 +518,24 @@ function ExistingEventEditor({ eventId }: { eventId: string }) {
           <h1>{event.title}</h1>
         </div>
         <div className="event-actions">
+          <a
+            className="secondary-link"
+            href={`/support?view=staff&eventId=${segment(event.id)}`}
+          >
+            {supportText("title")}
+          </a>
+          {account?.user.id === event.organizerId ? (
+            <a
+              className="secondary-link"
+              href={supportHref({
+                eventId: event.id,
+                audience: "organizer_platform",
+                category: "activation",
+              })}
+            >
+              {supportText("organizer_platform")}
+            </a>
+          ) : null}
           {account?.user.id === event.organizerId ? (
             <a
               className="secondary-link"
@@ -533,6 +573,7 @@ function ExistingEventEditor({ eventId }: { eventId: string }) {
       {command.error ? (
         <EventError error={command.error} retry={reload} />
       ) : null}
+      <CancellationPanel event={event} onChanged={reload} />
       <div className="editor-grid">
         <EventForm
           key={`event:${event.revision}`}

@@ -18,6 +18,9 @@ import { useEventText } from "./messages"
 import { clockText, money, remainingSeconds } from "./policies"
 import { EventError, Loading } from "./ui"
 import { CalendarActions, TicketPdfDownload } from "./exports"
+import { RefundPanel } from "@/support/refund-panel"
+import { useSupportText } from "@/support/messages"
+import { supportHref } from "@/support/policies"
 
 function OrderTickets({ orderId }: { orderId: string }) {
   const { t } = useEventText()
@@ -198,6 +201,7 @@ function CheckoutActions({
 }
 
 export function CheckoutPage({ orderId }: { orderId: string }) {
+  const { t: supportText } = useSupportText()
   const { locale, t } = useEventText()
   const resource = useResource(
     `/orders/${segment(orderId)}`,
@@ -222,8 +226,28 @@ export function CheckoutPage({ orderId }: { orderId: string }) {
           <span className="eyebrow">
             {t("order")} · {t(order.state)}
           </span>
-          <h1>{t(order.state === "completed" ? "ticketReady" : "checkout")}</h1>
+          <h1>
+            {t(
+              order.state === "completed"
+                ? "ticketReady"
+                : order.completedAt
+                  ? "order"
+                  : "checkout"
+            )}
+          </h1>
         </div>
+        {!resource.error ? (
+          <a
+            className="secondary-link"
+            href={supportHref({
+              orderId: order.id,
+              eventId: order.eventId,
+              audience: "attendee",
+            })}
+          >
+            {supportText("help")}
+          </a>
+        ) : null}
       </div>
       {resource.error ? (
         <EventError error={resource.error} retry={resource.reload} />
@@ -276,6 +300,9 @@ export function CheckoutPage({ orderId }: { orderId: string }) {
               {resource.data.refundPolicy.instructions}
             </p>
           </section>
+          {order.completedAt && !resource.error ? (
+            <RefundPanel orderId={order.id} onChanged={resource.reload} />
+          ) : null}
         </div>
         <div>
           {order.completedAt !== null ? (

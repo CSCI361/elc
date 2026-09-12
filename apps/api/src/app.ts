@@ -13,7 +13,12 @@ import { eventsRoutes } from "./events"
 import { paymentRoutes } from "./payments/routes"
 import { activationRoutes } from "./activation"
 import { exportRoutes } from "./exports"
+import { cancellationRoutes } from "./events/cancellation-routes"
 import { accessRoutes } from "./access"
+import { supportRoutes } from "./support"
+import { refundRoutes } from "./payments/refund-routes"
+import { payoutRoutes } from "./payments/payout-routes"
+import { offlineRoutes } from "./offline"
 
 function authenticationDependencies(env: Bindings): AuthDependencies {
   if (env.ENVIRONMENT !== "local") return {}
@@ -117,7 +122,12 @@ export const app = new Hono<{
   .route("/api", paymentRoutes)
   .route("/api", activationRoutes)
   .route("/api", exportRoutes)
+  .route("/api", cancellationRoutes)
   .route("/api", accessRoutes)
+  .route("/api", supportRoutes)
+  .route("/api", refundRoutes)
+  .route("/api", payoutRoutes)
+  .route("/api", offlineRoutes)
   .all("/api/*", (c) =>
     c.json(
       {

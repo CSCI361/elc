@@ -44,12 +44,22 @@ multilingual A4 PDFs and calendar exports. Browser evidence covers GA and the
 activation checklist entry. Real Polar sandbox payments have activated one event
 for KZT 5,000 and completed a mixed discounted KZT 9,000 order with three tickets.
 
-This is partial release coverage. Actual refund and signed webhook acceptance,
-staff/invitation UI and APIs, support and delivery, reporting, Expo/offline,
-external OAuth/email/analytics, deployment and physical-device checks remain
-open. The full integrated suite passes 281 tests across 22 files. Formatting, lint,
-type checks and the complete web/Worker/Astro build pass. The saved checkpoint is
-historical; use the current evidence documents for work completed since resuming.
+Staff and private invitations, support conversations, event cancellation and
+voluntary refund/free-cancellation workflows now have API and browser evidence.
+PDF and calendar actions are verified in the browser. Current focused suites
+cover 29 access tests, 22 support tests, 8 cancellation tests, 21 voluntary refund
+tests, 33 offline backend tests and 12 simulated payout tests. Support live tests
+run through workerd with real authentication and Durable Objects. The mobile
+scanner and payout web view are in progress.
+
+This is partial release coverage. Actual refunds and signed webhooks, remaining
+web workflows, delivery, reporting, Expo/offline, external OAuth/email/analytics,
+deployment and physical-device checks remain open. The last full integration
+baseline passed 424 tests across 32 files. Scoped formatting/lint/type checks
+and the complete web/Worker/Astro build also pass. Native bundling and the next
+web/attachment units are being validated separately.
+The saved checkpoint is historical; use the current evidence documents for work
+completed since resuming.
 
 ## Dependency-ordered milestones
 
@@ -60,8 +70,8 @@ historical; use the current evidence documents for work completed since resuming
 | M2  | Workers ticketing flow, payment adapter and correctness proof     | M1                                      | Integration + provider verification        | In progress |
 | M3  | Attendee, organizer and platform administration web workflows     | M1, M2                                  | Web implementation                         | In progress |
 | M4  | Tickets, delivery, campaigns and calendar exports                 | M2, M3                                  | API + web implementation                   | In progress |
-| M5  | Expo online/offline check-in and reconciliation                   | M1, M2, M4                              | Mobile implementation                      | Pending     |
-| M6  | Support, attachments, live updates, analytics and history         | M2, M3                                  | API + web implementation                   | Pending     |
+| M5  | Expo online/offline check-in and reconciliation                   | M1, M2, M4                              | Mobile implementation                      | In progress |
+| M6  | Support, attachments, live updates, analytics and history         | M2, M3                                  | API + web implementation                   | In progress |
 | M7  | Marketing, localization, accessibility and operational safeguards | M1; integrated workflows for acceptance | Integration                                | Pending     |
 | M8  | Deployed integration, physical devices and release rehearsal      | M0-M7                                   | Integration + user-provided access/devices | Pending     |
 
@@ -301,3 +311,11 @@ builds passed. The web entry chunk is 548 kB minified and still emits a build
 warning. Full-suite setup initially exhausted macOS loopback ports; batching
 migration DDL and bounding parallel workerd test files fixed the run without
 changing the tests' concurrent business operations. `vp env doctor` passed.
+
+Latest integration validation: 424/424 tests across 32 files passed in 133 seconds.
+Scoped checks covered all API, web, shared, script and documentation files; the
+web/Worker/Astro build passed. The web entry chunk is now 584 kB minified and
+still emits the existing size warning. This integration includes support live
+delivery, cancellation/refunds, offline backend and simulated payout records.
+The full `vp check` reached three lint findings in the unfinished mobile files;
+that work remains outside this checkpoint and is being corrected by its owner.

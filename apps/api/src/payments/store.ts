@@ -105,7 +105,7 @@ export function paymentAudit(
   row: PaymentRow,
   action: string,
   now: number,
-  actorId: string | null = null
+  actorId: string | null = "system:payments"
 ) {
   return db
     .prepare(`INSERT INTO audit_entries (id, event_id, actor_id, scope, action, entity_id, description, correlation_id, created_at)

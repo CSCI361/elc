@@ -530,6 +530,9 @@ export const activationAttempts = sqliteTable(
 )
 
 export const refunds = sqliteTable("refunds", {
+  requestedBy: text("requested_by").references(() => user.id),
+  supportCaseId: text("support_case_id").references(() => supportCases.id),
+  authorizationReason: text("authorization_reason"),
   id: text("id").primaryKey(),
   paymentAttemptId: text("payment_attempt_id")
     .notNull()
@@ -552,6 +555,79 @@ export const refunds = sqliteTable("refunds", {
   createdAt: integer("created_at").notNull(),
   confirmedAt: integer("confirmed_at"),
 })
+
+export const simulatedPayouts = sqliteTable(
+  "simulated_payouts",
+  {
+    id: text("id").primaryKey(),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => events.id),
+    organizerId: text("organizer_id")
+      .notNull()
+      .references(() => user.id),
+    currency: text("currency").notNull().default("KZT"),
+    amountMinor: integer("amount_minor").notNull(),
+    orderCount: integer("order_count").notNull(),
+    eligibleAt: integer("eligible_at").notNull(),
+    completedAt: integer("completed_at").notNull(),
+  },
+  (t) => [
+    index("payout_event_time").on(t.eventId, t.completedAt),
+    check(
+      "payout_amounts",
+      sql`${t.currency} = 'KZT' AND ${t.amountMinor} >= 0 AND ${t.orderCount} BETWEEN 1 AND 20 AND ${t.completedAt} >= ${t.eligibleAt}`
+    ),
+  ]
+)
+
+export const simulatedPayoutItems = sqliteTable(
+  "simulated_payout_items",
+  {
+    id: text("id").primaryKey(),
+    payoutId: text("payout_id")
+      .notNull()
+      .references(() => simulatedPayouts.id),
+    orderId: text("order_id")
+      .notNull()
+      .unique()
+      .references(() => orders.id),
+    paymentAttemptId: text("payment_attempt_id")
+      .notNull()
+      .unique()
+      .references(() => paymentAttempts.id),
+    paidMinor: integer("paid_minor").notNull(),
+    processingFeeMinor: integer("processing_fee_minor").notNull(),
+    contributionMinor: integer("contribution_minor").notNull(),
+  },
+  (t) => [
+    index("payout_items_run").on(t.payoutId),
+    check(
+      "payout_item_amounts",
+      sql`${t.paidMinor} > 0 AND ${t.processingFeeMinor} BETWEEN 0 AND ${t.paidMinor} AND ${t.contributionMinor} = ${t.paidMinor} - ${t.processingFeeMinor}`
+    ),
+  ]
+)
+
+export const simulatedPayoutAdjustments = sqliteTable(
+  "simulated_payout_adjustments",
+  {
+    id: text("id").primaryKey(),
+    payoutItemId: text("payout_item_id")
+      .notNull()
+      .references(() => simulatedPayoutItems.id),
+    refundId: text("refund_id")
+      .notNull()
+      .unique()
+      .references(() => refunds.id),
+    amountMinor: integer("amount_minor").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [
+    index("payout_adjustments_item").on(t.payoutItemId),
+    check("payout_adjustment_amount", sql`${t.amountMinor} <= 0`),
+  ]
+)
 
 export const providerEvents = sqliteTable(
   "provider_events",
@@ -631,6 +707,155 @@ export const checkins = sqliteTable(
   ]
 )
 
+export const offlineDevices = sqliteTable(
+  "offline_devices",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id")
+      .notNull()
+      .references(() => user.id),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => events.id),
+    label: text("label").notNull(),
+    revision: integer("revision").notNull().default(0),
+    registeredAt: integer("registered_at").notNull(),
+    revokedAt: integer("revoked_at"),
+    revokedBy: text("revoked_by").references(() => user.id),
+    revocationReason: text("revocation_reason"),
+    lossReported: integer("loss_reported", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    lastSyncAt: integer("last_sync_at"),
+  },
+  (t) => [
+    index("offline_devices_event_account").on(t.eventId, t.accountId, t.id),
+  ]
+)
+
+export const offlineSnapshots = sqliteTable(
+  "offline_snapshots",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id")
+      .notNull()
+      .references(() => user.id),
+    deviceId: text("device_id")
+      .notNull()
+      .references(() => offlineDevices.id),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => events.id),
+    issuedAt: integer("issued_at").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    eventEndsAt: integer("event_ends_at").notNull(),
+    ticketCount: integer("ticket_count").notNull(),
+    keyId: text("key_id").notNull(),
+    manifestJson: text("manifest_json"),
+  },
+  (t) => [
+    index("offline_snapshots_expiry").on(t.expiresAt),
+    index("offline_snapshots_device").on(t.deviceId, t.issuedAt),
+  ]
+)
+
+export const offlineSnapshotTickets = sqliteTable(
+  "offline_snapshot_tickets",
+  {
+    snapshotId: text("snapshot_id")
+      .notNull()
+      .references(() => offlineSnapshots.id),
+    ticketId: text("ticket_id")
+      .notNull()
+      .references(() => tickets.id),
+    ordinal: integer("ordinal").notNull(),
+    tokenHash: text("token_hash").notNull(),
+    payloadJson: text("payload_json").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.snapshotId, t.ticketId] }),
+    uniqueIndex("offline_snapshot_page_order").on(t.snapshotId, t.ordinal),
+  ]
+)
+
+export const offlineOperations = sqliteTable(
+  "offline_operations",
+  {
+    operationId: text("operation_id").primaryKey(),
+    accountId: text("account_id")
+      .notNull()
+      .references(() => user.id),
+    deviceId: text("device_id")
+      .notNull()
+      .references(() => offlineDevices.id),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => events.id),
+    snapshotId: text("snapshot_id").notNull(),
+    kind: text("kind", { enum: ["scan", "undo"] }).notNull(),
+    originalOperationId: text("original_operation_id"),
+    deviceSequence: integer("device_sequence").notNull(),
+    capturedAt: integer("captured_at").notNull(),
+    reportedAt: integer("reported_at").notNull(),
+    inputHash: text("input_hash").notNull(),
+    unitHash: text("unit_hash").notNull(),
+    result: text("result").notNull(),
+    checkinId: text("checkin_id").references(() => checkins.id),
+    ticketId: text("ticket_id").references(() => tickets.id),
+    orderId: text("order_id").references(() => orders.id),
+  },
+  (t) => [
+    uniqueIndex("offline_device_sequence").on(t.deviceId, t.deviceSequence),
+    index("offline_operations_event").on(t.eventId, t.operationId),
+  ]
+)
+
+export const offlineAdmissionReports = sqliteTable(
+  "offline_admission_reports",
+  {
+    operationId: text("operation_id")
+      .primaryKey()
+      .references(() => offlineOperations.operationId),
+    orderId: text("order_id")
+      .notNull()
+      .references(() => orders.id),
+    ticketId: text("ticket_id")
+      .notNull()
+      .references(() => tickets.id),
+    revision: integer("revision").notNull().default(0),
+    reviewState: text("review_state", { enum: ["unresolved", "resolved"] })
+      .notNull()
+      .default("unresolved"),
+    resolution: text("resolution", {
+      enum: ["no_admission", "admission_confirmed"],
+    }),
+    reviewedAt: integer("reviewed_at"),
+    reviewedBy: text("reviewed_by").references(() => user.id),
+    reason: text("reason"),
+  },
+  (t) => [index("offline_unresolved_order").on(t.orderId, t.reviewState)]
+)
+
+export const offlineAdmissionReviews = sqliteTable(
+  "offline_admission_reviews",
+  {
+    id: text("id").primaryKey(),
+    operationId: text("operation_id")
+      .notNull()
+      .references(() => offlineOperations.operationId),
+    actorId: text("actor_id")
+      .notNull()
+      .references(() => user.id),
+    resolution: text("resolution", {
+      enum: ["no_admission", "admission_confirmed"],
+    }).notNull(),
+    reason: text("reason").notNull(),
+    checkinId: text("checkin_id").references(() => checkins.id),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [uniqueIndex("offline_one_review").on(t.operationId)]
+)
+
 export const auditEntries = sqliteTable(
   "audit_entries",
   {
@@ -696,3 +921,114 @@ export const developmentMail = sqliteTable("development_mail", {
   body: text("body").notNull(),
   createdAt: integer("created_at").notNull(),
 })
+
+export const supportCases = sqliteTable(
+  "support_cases",
+  {
+    id: text("id").primaryKey(),
+    requesterId: text("requester_id")
+      .notNull()
+      .references(() => user.id),
+    audience: text("audience", {
+      enum: ["attendee", "organizer_platform"],
+    }).notNull(),
+    category: text("category", {
+      enum: [
+        "ticket_delivery",
+        "payment",
+        "refund",
+        "seating",
+        "event_information",
+        "check_in",
+        "account",
+        "activation",
+        "technical",
+        "dispute",
+        "compensation",
+      ],
+    }).notNull(),
+    subject: text("subject").notNull(),
+    eventId: text("event_id").references(() => events.id),
+    orderId: text("order_id").references(() => orders.id),
+    ticketId: text("ticket_id").references(() => tickets.id),
+    assigneeId: text("assignee_id").references(() => user.id),
+    status: text("status", {
+      enum: ["open", "in_progress", "waiting_for_customer", "resolved"],
+    })
+      .notNull()
+      .default("open"),
+    revision: integer("revision").notNull().default(1),
+    lastSequence: integer("last_sequence").notNull().default(1),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+    resolvedAt: integer("resolved_at"),
+  },
+  (t) => [
+    index("support_requester_created").on(t.requesterId, t.createdAt, t.id),
+    index("support_event_created").on(t.eventId, t.createdAt, t.id),
+    index("support_assignee_created").on(t.assigneeId, t.createdAt, t.id),
+    index("support_order_resolution").on(t.orderId, t.status, t.category),
+    check(
+      "support_case_domain",
+      sql`${t.audience} IN ('attendee', 'organizer_platform') AND ${t.status} IN ('open', 'in_progress', 'waiting_for_customer', 'resolved') AND ${t.category} IN ('ticket_delivery', 'payment', 'refund', 'seating', 'event_information', 'check_in', 'account', 'activation', 'technical', 'dispute', 'compensation') AND length(trim(${t.subject})) BETWEEN 1 AND 160 AND ${t.revision} >= 1 AND ${t.lastSequence} = ${t.revision} AND ${t.updatedAt} >= ${t.createdAt} AND (${t.status} = 'resolved') = (${t.resolvedAt} IS NOT NULL) AND (${t.resolvedAt} IS NULL OR ${t.resolvedAt} BETWEEN ${t.createdAt} AND ${t.updatedAt})`
+    ),
+    check(
+      "support_case_context",
+      sql`(${t.ticketId} IS NULL OR ${t.orderId} IS NOT NULL) AND (${t.orderId} IS NULL OR ${t.eventId} IS NOT NULL) AND (${t.audience} <> 'attendee' OR ${t.eventId} IS NOT NULL) AND (${t.category} NOT IN ('refund', 'dispute', 'compensation') OR ${t.orderId} IS NOT NULL)`
+    ),
+  ]
+)
+
+export const supportMessages = sqliteTable(
+  "support_messages",
+  {
+    id: text("id").primaryKey(),
+    caseId: text("case_id")
+      .notNull()
+      .references(() => supportCases.id),
+    sequence: integer("sequence").notNull(),
+    authorId: text("author_id")
+      .notNull()
+      .references(() => user.id),
+    authorName: text("author_name").notNull(),
+    body: text("body").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [
+    uniqueIndex("support_message_sequence").on(t.caseId, t.sequence),
+    check(
+      "support_message_values",
+      sql`${t.sequence} >= 1 AND length(trim(${t.body})) BETWEEN 1 AND 8000 AND length(${t.authorName}) BETWEEN 1 AND 256`
+    ),
+  ]
+)
+
+export const supportCaseChanges = sqliteTable(
+  "support_case_changes",
+  {
+    id: text("id").primaryKey(),
+    caseId: text("case_id")
+      .notNull()
+      .references(() => supportCases.id),
+    sequence: integer("sequence").notNull(),
+    actorId: text("actor_id")
+      .notNull()
+      .references(() => user.id),
+    kind: text("kind", {
+      enum: ["created", "message", "assignment", "status"],
+    }).notNull(),
+    messageId: text("message_id")
+      .unique()
+      .references(() => supportMessages.id),
+    beforeJson: text("before_json").notNull(),
+    afterJson: text("after_json").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [
+    uniqueIndex("support_change_sequence").on(t.caseId, t.sequence),
+    check(
+      "support_change_values",
+      sql`${t.sequence} >= 1 AND ${t.kind} IN ('created', 'message', 'assignment', 'status') AND json_valid(${t.beforeJson}) = 1 AND json_valid(${t.afterJson}) = 1 AND json_type(${t.beforeJson}) = 'object' AND json_type(${t.afterJson}) = 'object' AND (${t.kind} IN ('created', 'message')) = (${t.messageId} IS NOT NULL)`
+    ),
+  ]
+)

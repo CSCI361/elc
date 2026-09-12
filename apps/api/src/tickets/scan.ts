@@ -24,7 +24,11 @@ export function staffAuthorizationSql(
 }
 
 /** Used both for the displayed outcome and inside the transaction that records it. */
-function outcomeSql(eventId: string, tokenHash: string, now?: number) {
+export function admissionOutcomeSql(
+  eventId: string,
+  tokenHash: string,
+  now?: number
+) {
   const timestamp =
     now === undefined ? "CAST(unixepoch('subsecond') * 1000 AS INTEGER)" : "?"
   return {
@@ -68,7 +72,7 @@ export async function scanOnline(
   )
   for (let attempt = 0; attempt < 3; attempt++) {
     const now = clock()
-    const outcome = outcomeSql(input.eventId, tokenHash, now)
+    const outcome = admissionOutcomeSql(input.eventId, tokenHash, now)
     const result = await db
       .prepare(`SELECT ${outcome.expression} AS result`)
       .bind(...outcome.bindings)
@@ -76,7 +80,7 @@ export async function scanOnline(
     if (!result) throw new Error("Missing scan outcome")
     await dependencies.beforeCommit?.()
     const commitNow = clock()
-    const commitOutcome = outcomeSql(
+    const commitOutcome = admissionOutcomeSql(
       input.eventId,
       tokenHash,
       dependencies.now ? commitNow : undefined

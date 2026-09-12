@@ -1,16 +1,21 @@
 import { verifiedProviderEventSchema, type PaymentAdapter } from "@elc/shared"
 import type { Bindings } from "../env"
 import { applyRefundStatus, processPayment } from "./reconcile"
-import { processRefund } from "./refunds"
+import { prepareEventCancellationRefunds, processRefund } from "./refunds"
 
-const paymentKinds = ["payment.reconcile", "refund.reconcile", "provider.event"]
+const paymentKinds = [
+  "payment.reconcile",
+  "refund.reconcile",
+  "provider.event",
+  "event.cancellation",
+]
 
 export async function dispatchPaymentOutbox(
   env: Pick<Bindings, "DB" | "DELIVERY">,
   now = Date.now()
 ) {
   const pending =
-    await env.DB.prepare(`SELECT id FROM outbox WHERE kind IN ('payment.reconcile', 'refund.reconcile', 'provider.event')
+    await env.DB.prepare(`SELECT id FROM outbox WHERE kind IN ('payment.reconcile', 'refund.reconcile', 'provider.event', 'event.cancellation')
     AND completed_at IS NULL AND next_attempt_at <= ? ORDER BY next_attempt_at, id LIMIT 20`)
       .bind(now)
       .all<{ id: string }>()
@@ -31,7 +36,7 @@ export async function dispatchPaymentOutbox(
 
 export async function consumePaymentOutbox(
   env: Pick<Bindings, "DB" | "APP_ORIGIN" | "TICKET_ENCRYPTION_KEY">,
-  adapter: PaymentAdapter,
+  adapter: PaymentAdapter | (() => PaymentAdapter),
   id: string
 ) {
   const row = await env.DB.prepare("SELECT * FROM outbox WHERE id = ?")
@@ -45,12 +50,15 @@ export async function consumePaymentOutbox(
     }>()
   if (!row || row.completed_at !== null) return true
   if (!paymentKinds.includes(row.kind)) return false
+  const provider = () => (typeof adapter === "function" ? adapter() : adapter)
   let complete = false
   try {
+    if (row.kind === "event.cancellation")
+      complete = await prepareEventCancellationRefunds(env.DB, row.entity_id)
     if (row.kind === "payment.reconcile")
-      complete = await processPayment(env, adapter, row.entity_id)
+      complete = await processPayment(env, provider(), row.entity_id)
     if (row.kind === "refund.reconcile") {
-      await processRefund(env.DB, adapter, row.entity_id)
+      await processRefund(env.DB, provider(), row.entity_id)
       const refund = await env.DB.prepare(
         "SELECT state FROM refunds WHERE id = ?"
       )
@@ -70,7 +78,7 @@ export async function consumePaymentOutbox(
         )
         if (event.kind === "refund") {
           // Resolve missing checkout/order identities before applying a refund received first.
-          await processPayment(env, adapter, event.paymentAttemptId)
+          await processPayment(env, provider(), event.paymentAttemptId)
           const {
             kind: _kind,
             providerEventId: _providerEventId,
@@ -79,7 +87,7 @@ export async function consumePaymentOutbox(
           await applyRefundStatus(env.DB, refundStatus)
         }
         // Payment lookup is authoritative, including refunds received before payment events.
-        complete = await processPayment(env, adapter, event.paymentAttemptId)
+        complete = await processPayment(env, provider(), event.paymentAttemptId)
         if (complete)
           await env.DB.prepare(
             "UPDATE provider_events SET processed_at = ? WHERE id = ?"

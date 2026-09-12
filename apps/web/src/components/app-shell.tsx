@@ -10,6 +10,7 @@ import { useAccount } from "@/auth/context"
 import { LocaleSelect } from "@/auth/locale-select"
 import { useTheme } from "./theme-provider"
 import { useEventText } from "@/events/messages"
+import { useSupportText } from "@/support/messages"
 
 export function AppShell({
   children,
@@ -21,6 +22,7 @@ export function AppShell({
   const { messages: t, status } = useAccount()
   const { theme, setTheme } = useTheme()
   const { t: eventLabel } = useEventText()
+  const { t: supportLabel } = useSupportText()
   const dark =
     theme === "dark" ||
     (theme === "system" &&
@@ -67,6 +69,18 @@ export function AppShell({
         </nav>
       </header>
       <nav className="event-navigation" aria-label={eventLabel("discover")}>
+        {status === "active" ? (
+          <a
+            href="/support"
+            aria-current={
+              window.location.pathname.startsWith("/support")
+                ? "page"
+                : undefined
+            }
+          >
+            {supportLabel("support")}
+          </a>
+        ) : null}
         <a
           href="/events"
           aria-current={
