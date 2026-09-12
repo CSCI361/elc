@@ -297,6 +297,185 @@ const text = {
     "Заказов пока нет.",
     "You have no orders yet.",
   ],
+  enablePaidSales: [
+    "Ақылы билеттерді қосу",
+    "Включить платные билеты",
+    "Enable paid tickets",
+  ],
+  activationDemo: [
+    "Оқу жобасының демо нұсқасы. Тек ойдан шығарылған деректерді пайдаланыңыз. Тұлғаны және төлем шотын тексеру имитацияланады.",
+    "Учебная демонстрация. Используйте только вымышленные данные. Проверки личности и платёжного счёта имитируются.",
+    "Academic demonstration. Use fictional details only. Identity and payout checks are simulated.",
+  ],
+  paidEnabled: [
+    "Ақылы сатылым қосылған",
+    "Платные продажи включены",
+    "Paid sales are enabled",
+  ],
+  activationPending: [
+    "Қосу талаптары орындалмаған",
+    "Требования активации не выполнены",
+    "Activation requirements remain",
+  ],
+  activationSuspended: [
+    "Ақылы сатылым тоқтатылған",
+    "Платные продажи приостановлены",
+    "Paid sales are suspended",
+  ],
+  organizerName: [
+    "Ұйымдастырушы атауы",
+    "Название организатора",
+    "Organizer display name",
+  ],
+  demoLegalName: [
+    "Ойдан шығарылған заңды атауы",
+    "Вымышленное юридическое название",
+    "Fictional legal name",
+  ],
+  organizerContact: [
+    "Байланыс деректері",
+    "Контактные данные",
+    "Contact details",
+  ],
+  dummyPayout: [
+    "Демо төлем шотының белгісі",
+    "Обозначение демонстрационного счёта",
+    "Dummy payout reference",
+  ],
+  dummyPayoutHint: [
+    "Мысалы, DEMO-campus. Банк деректерін енгізбеңіз.",
+    "Например, DEMO-campus. Не вводите банковские реквизиты.",
+    "For example, DEMO-campus. Do not enter bank details.",
+  ],
+  simulatedIdentity: [
+    "Тұлғаны тексеру имитациясы",
+    "Имитация проверки личности",
+    "Simulated identity check",
+  ],
+  simulatedPayout: [
+    "Төлем шотын тексеру имитациясы",
+    "Имитация проверки счёта",
+    "Simulated payout check",
+  ],
+  checkPending: ["Әлі тексерілмеген", "Ещё не проверено", "Not checked"],
+  checkPassed: [
+    "Сәтті тексеруді имитациялау",
+    "Имитировать успешную проверку",
+    "Simulate a passed check",
+  ],
+  checkFailed: [
+    "Сәтсіз тексеруді имитациялау",
+    "Имитировать неуспешную проверку",
+    "Simulate a failed check",
+  ],
+  activationTerms: [
+    "Демо нұсқада тест төлемдері, имитацияланған тексерулер және ойдан шығарылған төлем шоты қолданылады. Нақты ақша аударылмайды. Ақылы сатылым сәтті қосылса, осы іс-шараның қосу төлемі қайтарылмайды. Қосу аяқталмаса, төлем тест ортасында қайтарылады.",
+    "В демо используются тестовые платежи, имитация проверок и вымышленный платёжный счёт. Реальные деньги не переводятся. После успешного включения продаж плата за активацию этого события не возвращается. Если активация не завершена, платёж возвращается в тестовой среде.",
+    "The demo uses sandbox payments, simulated checks, and a dummy payout account. No real money is transferred. The activation fee for this event is non-refundable after activation succeeds. A payment that cannot complete activation is refunded in the sandbox.",
+  ],
+  termsOriginal: [
+    "Шарттардың түпнұсқасы мен нұсқасы",
+    "Оригинал и версия условий",
+    "Original terms and version",
+  ],
+  acceptTerms: [
+    "Осы демо шарттарын қабылдаймын",
+    "Принимаю эти условия демонстрации",
+    "I accept these demonstration terms",
+  ],
+  saveChecklist: [
+    "Талаптарды сақтау",
+    "Сохранить требования",
+    "Save checklist",
+  ],
+  checklistDuringPayment: [
+    "Төлем кезінде талаптарды өзгерту төлемді қайтаруды қажет етуі мүмкін.",
+    "Изменение требований во время оплаты может потребовать возврата платежа.",
+    "Changing the checklist during payment may require a refund of that payment.",
+  ],
+  activationFee: [
+    "Осы іс-шараны қосу төлемі",
+    "Плата за активацию этого события",
+    "Activation fee for this event",
+  ],
+  feeRetained: [
+    "Бұрын төленген қосу төлемі",
+    "Ранее оплаченная активация",
+    "Previously paid activation fee",
+  ],
+  activationFeeHint: [
+    "Сома сервердегі баптаулардан алынады. Сәтті қосу үшін қайта төлем алынбайды.",
+    "Сумма определяется настройками сервера. Успешная активация не оплачивается повторно.",
+    "The amount comes from current settings. A successful activation is not charged again.",
+  ],
+  payActivation: [
+    "Қосуды тест режимінде төлеу",
+    "Оплатить активацию в тестовом режиме",
+    "Pay the test activation fee",
+  ],
+  refundStatus: ["Қайтару күйі", "Статус возврата", "Refund status"],
+  email_unverified: [
+    "Поштаны растаңыз",
+    "Подтвердите почту",
+    "Verify the account email",
+  ],
+  account_suspended: [
+    "Аккаунт тоқтатылған",
+    "Аккаунт приостановлен",
+    "Account is suspended",
+  ],
+  event_suspended: [
+    "Іс-шара тоқтатылған",
+    "Событие приостановлено",
+    "Event is suspended",
+  ],
+  event_cancelled: [
+    "Іс-шара болдырылмаған",
+    "Событие отменено",
+    "Event is cancelled",
+  ],
+  event_ended: ["Іс-шара аяқталған", "Событие завершено", "Event has ended"],
+  paid_sales_suspended: [
+    "Ақылы сатылым тоқтатылған",
+    "Платные продажи приостановлены",
+    "Paid sales are suspended",
+  ],
+  paid_ticket_required: [
+    "Ақылы билет түрін қосыңыз",
+    "Добавьте платный тип билета",
+    "Add a paid ticket type",
+  ],
+  profile_incomplete: [
+    "Ұйымдастырушы деректерін толтырыңыз",
+    "Заполните данные организатора",
+    "Complete the organizer details",
+  ],
+  identity_check: [
+    "Тұлғаны тексеру имитациясын аяқтаңыз",
+    "Завершите имитацию проверки личности",
+    "Pass the simulated identity check",
+  ],
+  payout_check: [
+    "Төлем шотын тексеру имитациясын аяқтаңыз",
+    "Завершите имитацию проверки счёта",
+    "Pass the simulated payout check",
+  ],
+  terms_required: [
+    "Ағымдағы демо шарттарын қабылдаңыз",
+    "Примите текущие условия демонстрации",
+    "Accept the current demonstration terms",
+  ],
+  fee_required: [
+    "Іс-шараны қосу төлемі қажет",
+    "Необходима оплата активации",
+    "The activation fee is required",
+  ],
+  removeSeat: ["Орынды алып тастау", "Убрать место", "Remove seat"],
+  serviceUnavailable: [
+    "Қызмет қазір қолжетімсіз. Кейінірек қайталаңыз.",
+    "Сервис сейчас недоступен. Повторите позже.",
+    "The service is currently unavailable. Try again later.",
+  ],
 } satisfies Record<string, readonly [string, string, string]>
 
 export type EventMessageKey = keyof typeof text

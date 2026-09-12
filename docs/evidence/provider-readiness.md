@@ -1,8 +1,8 @@
 # Provider readiness
 
-Reviewed on 2026-09-13 (Asia/Almaty). This records public documentation and local
-access checks. It does not record a completed Polar sandbox transaction or a
-Cloudflare deployment.
+Reviewed on 2026-09-13 (Asia/Almaty). This records provider documentation, access
+checks, and completed sandbox activation and ticket payments. Refund, signed
+webhook delivery and Cloudflare deployment acceptance remain pending.
 
 Polar documents KZT pricing, quantity pricing, discounts, refunds and signed
 webhooks. Its checkout buys one product; a list of products offers a choice.
@@ -42,14 +42,60 @@ and ticket encryption keys. No token value was printed or committed.
 Authenticated product list and product detail requests returned HTTP 200 with
 `Polar-Version: 2026-04`; the detail matched the product ID and KZT currency.
 The probe used `User-Agent: elc-sandbox-acceptance/1.0`; the initial default
-Python user-agent received 403. Completed checkout, refund and webhook delivery
-remain pending. No provider contact or production operation occurred.
+Python user-agent received 403. The completed checkout evidence below extends this initial access probe. Refund
+and webhook delivery remain pending. No provider contact or production operation occurred.
 
 Polar sandbox uses a separate account, organization and token, with API base
 `https://sandbox-api.polar.sh/v1`. Production tokens do not authenticate there.
 It supports test card payments; customer emails are limited to organization
 members and their sub-address aliases. A sandbox organization token and webhook
 secret are required to complete the cases below. [Polar sandbox](https://polar.sh/docs/integrate/sandbox)
+
+## Actual sandbox checkout evidence
+
+The resumed run used authenticated HTTP accounts with sandbox-member aliases,
+a real event and two ticket types, a 10% campaign, publication and the activation
+checklist. It used the existing sandbox organization and the pinned SDK adapter
+inside the local Worker. No payment result or activation flag was seeded into D1.
+The browser submitted Polar's documented test card through its hosted checkout.
+
+- Activation displayed and charged KZT 5,000 (`500000` minor units). Authoritative
+  provider lookup matched the frozen metadata, amount and currency, and the app
+  recorded one successful activation with current eligibility `active`.
+- A basket containing one KZT 5,000 adult ticket and two KZT 2,500 student tickets
+  had a KZT 10,000 subtotal and KZT 1,000 discount. Polar displayed KZT 9,000 with
+  inclusive taxes of zero. Its aggregate product represented the frozen basket;
+  ticket-type lines and attendee names remained in elc's canonical order.
+- After the test card payment, authoritative lookup returned the matching paid
+  order. The app completed exactly one order, issued three canonical tickets,
+  sold exactly three inventory slots and committed one promo allocation.
+  The organizer-paid processing fee snapshot was `27000` minor units (KZT 270).
+- All nine PDF downloads (three tickets in kk/ru/en) returned protected PDFs
+  through the running Worker. Credential retrieval before and after generation
+  was identical. The command `node scripts/verify-polar-sandbox.mjs verify-paid`
+  asserted those facts without printing the credentials.
+- Polar added a customer session bearer value to its browser return URL. The app
+  now removes it before rendering navigation or constructing sign-in return URLs.
+  A subsequent actual return retained only the app payment-attempt identifier.
+
+A second KZT 9,000 checkout was prepared and its local reservation was explicitly
+abandoned. The Mac locked before the final sandbox payment submission. Its latest
+verified state is payment `pending`, order `abandoned`, zero tickets and no refund.
+This is prepared late-payment compensation acceptance, not proof of a refund.
+The ignored `.wrangler/polar-acceptance.json` retains the scoped accounts and run
+identifiers; `.wrangler/polar-checkout.html` opens the current checkout privately.
+
+A temporary webhook-only proxy passed path, method and signature-header boundary
+checks. Cloudflared 2026.9.1 could reach Cloudflare's API but its QUIC connections
+timed out and HTTP/2 connections on port 7844 were reset. The proxy and tunnel
+were stopped. No Polar webhook endpoint or signing secret was created by this
+attempt. The prepared configuration/proxy scripts require a working tunnel and
+still need actual provider delivery acceptance. This network result does not
+establish provider incompatibility. [Cloudflare quick tunnels](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/trycloudflare/)
+
+Cloudflare's read-only R2 inventory request returned code `10042`, requiring R2
+activation in the account dashboard. The existing remote D1 database belongs to
+another project and was not modified. No elc remote resource has been deployed.
 
 ## Documented Polar capabilities
 
@@ -226,5 +272,6 @@ acceptance run; ensure no binding is marked remote.
 Local Workers startup, migrated D1 queries through Hono, browser authentication,
 free-ticket transactions, and the web/Worker/marketing build now pass. See
 [checkout evidence](./checkout.md) and [web authentication](./web-authentication.md).
-Actual paid transactions, signed provider webhook delivery and deployed runtime
-acceptance remain pending. Node-only mocks cannot establish these results.
+Actual sandbox activation and mixed-ticket transactions now pass as recorded
+above. Signed provider webhook delivery, refunds and deployed runtime acceptance
+remain pending. Node-only mocks cannot establish these results.

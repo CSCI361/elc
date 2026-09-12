@@ -2,10 +2,10 @@
 
 Updated: 2026-09-13
 
-Work paused at the user's offline checkpoint. Read
-[resume checkpoint](./resume-checkpoint.md) before continuing; it records the
-saved payment/web work, incomplete activation modules, credentials setup and
-ordered next steps. The release remains in progress.
+Work resumed at the user's request from checkpoint `3edfe08`. The
+[resume checkpoint](./resume-checkpoint.md) records the saved payment/web work,
+incomplete activation modules, credentials setup and ordered next steps. The
+release remains in progress.
 
 ## Scope and evidence rules
 
@@ -36,17 +36,20 @@ This section records the historical baseline, before the integrated work below.
 
 ## Current integration
 
-The workspace now has real web account flows, event and campaign APIs, atomic
-checkout and reservation lifecycle services, zero-total ticket issuance, protected
-credential retrieval, and online scanning with authorized reversal. The full
-automated suite passes 106 tests. Browser authentication and a complete free
-ticketing flow through the running Worker HTTP routes passed with disposable
-fixtures. `vp check` and the complete `vp run build` pass, including TypeScript,
-Astro diagnostics, and web/Worker/marketing artifacts.
+The workspace now has web accounts, event/campaign authoring and discovery,
+atomic GA/assigned-seat checkout, canonical tickets, online scanning and reversal,
+paid-sales activation, payment reconciliation/compensation services, protected
+multilingual A4 PDFs and calendar exports. Browser evidence covers GA and the
+80-seat layout, competing reservations, free issuance, mobile layouts and
+activation checklist entry. Real Polar sandbox payments have activated one event
+for KZT 5,000 and completed a mixed discounted KZT 9,000 order with three tickets.
 
-This is partial release coverage. Paid/provider/refund flows, product web
-workflows beyond accounts, delivery/PDFs, mobile/offline operation, support,
-reporting, deployment and physical-device acceptance remain open.
+This is partial release coverage. Actual refund and signed webhook acceptance,
+staff/invitation UI and APIs, support and delivery, reporting, Expo/offline,
+external OAuth/email/analytics, deployment and physical-device checks remain
+open. The full integrated suite passes 281 tests across 22 files. Formatting, lint,
+type checks and the complete web/Worker/Astro build pass. The saved checkpoint is
+historical; use the current evidence documents for work completed since resuming.
 
 ## Dependency-ordered milestones
 
@@ -56,7 +59,7 @@ reporting, deployment and physical-device acceptance remain open.
 | M1  | Shared contracts, policies, authentication, schema and migrations | M0                                      | Contracts + integration                    | In progress |
 | M2  | Workers ticketing flow, payment adapter and correctness proof     | M1                                      | Integration + provider verification        | In progress |
 | M3  | Attendee, organizer and platform administration web workflows     | M1, M2                                  | Web implementation                         | In progress |
-| M4  | Tickets, delivery, campaigns and calendar exports                 | M2, M3                                  | API + web implementation                   | Pending     |
+| M4  | Tickets, delivery, campaigns and calendar exports                 | M2, M3                                  | API + web implementation                   | In progress |
 | M5  | Expo online/offline check-in and reconciliation                   | M1, M2, M4                              | Mobile implementation                      | Pending     |
 | M6  | Support, attachments, live updates, analytics and history         | M2, M3                                  | API + web implementation                   | Pending     |
 | M7  | Marketing, localization, accessibility and operational safeguards | M1; integrated workflows for acceptance | Integration                                | Pending     |
@@ -98,7 +101,7 @@ narrow layout. Deployment and GA4 remain pending.
 - [ ] Negative authorization tests cover unrelated events/orders/tickets/cases,
       downloads, exports, analytics, history and unassigned mobile users.
 
-Current evidence: the integrated suite passes 106 tests across shared rules,
+Initial evidence: the foundation suite passed 106 tests across shared rules,
 authentication/access, migrations, API boundaries, events, checkout, ticket
 credentials/admission and web-account behavior. Reviewed migrations include
 cross-event scope guards, active-ticket uniqueness, order revisions and frozen
@@ -147,8 +150,10 @@ verification/sign-in, event/type creation and publication, free reservation,
 zero-total completion, purchaser credential retrieval, explicit scanner grants,
 retry/duplicate handling, reversal and rescan. Private fixture grants stand in
 for the unfinished staff-assignment endpoint. This proves the local free flow;
-paid activation/payment/refund/compensation, queue delivery/replay, PDF/email,
-deployed load and native-device acceptance remain pending. Polar sandbox access
+external delivery, deployed load and native-device acceptance remain pending.
+Activation and mixed discounted payments now pass against Polar; synthetic D1
+tests cover compensation and queue replay. Actual refunds and signed webhook
+delivery still need acceptance. Polar sandbox access
 and KZT product creation are recorded in
 [provider readiness](./evidence/provider-readiness.md); transaction and webhook
 compatibility are not yet proven.
@@ -161,7 +166,7 @@ compatibility are not yet proven.
       checkout, confirmation, account orders, ticket downloads and support entry points.
 - [ ] Organizer profiles, event creation/edit/preview/publish/unpublish/cancel,
       visibility, capacity, ticket types/windows/hiding, staff and activation checklist.
-- [ ] Accessible SVG seat map for the specified 80-seat hall, state labels,
+- [x] Accessible SVG seat map for the specified 80-seat hall, state labels,
       keyboard selection, atomic holds and preserved seat snapshots.
 - [ ] Platform search, reported-event review, user/event suspension, activation
       inspection, fee/settings configuration, operational exports and audit records.
@@ -176,13 +181,16 @@ focused accessibility checks. Google availability is shown accurately; external
 OAuth remains pending. [Event APIs](./evidence/events.md) provide discovery,
 management/preview/publication, ticket types/windows/visibility, capacity,
 assigned-seat inventory and campaign creation/enabling. Those APIs are integrated
-with checkout and preserve held/sold inventory and historical snapshots. Their
-attendee/organizer web screens, staff/invitation management, cancellation,
-activation, platform administration and refund/payout workflows are unfinished.
+with checkout and preserve held/sold inventory and historical snapshots. Their attendee/organizer screens now have [browser evidence](./evidence/web-events.md)
+for discovery, GA/assigned-seat purchase, protected QR display and the activation
+checklist. [Activation evidence](./evidence/activation.md) covers fee snapshots,
+current eligibility, administrative fee/moderation APIs and compensation races.
+Staff/invitation management, cancellation, platform administration screens and
+refund/payout workflows remain in progress or pending.
 
 ### M4: tickets, delivery, campaigns and calendars
 
-- [ ] Versioned opaque admission credentials distinct from campaign links; digital
+- [x] Versioned opaque admission credentials distinct from campaign links; digital
       and printed copies share one admission and survive safe PDF regeneration.
 - [ ] Protected A4 PDFs include all required fields and Kazakh/Russian fonts;
       grayscale paper scanning succeeds on physical iOS and Android devices.
@@ -194,6 +202,12 @@ activation, platform administration and refund/payout workflows are unfinished.
       time zones, cancellation metadata and fresh IDs when events are duplicated.
 - [ ] Verify replacement procedures that leave one calendar entry in Google web,
       Outlook web and Apple Calendar iOS/macOS; no automatic-sync claims.
+
+Current evidence: [PDF/calendar verification](./evidence/ticket-exports.md) covers
+real Worker downloads, three languages, private R2 access, canonical QR recovery,
+grayscale raster decoding, calendar identifiers/time zones and cancellation
+metadata. Physical paper scanning, supported calendar clients, frontend export
+controls and external/background delivery remain pending.
 
 ### M5: mobile and offline
 
@@ -269,8 +283,21 @@ screens and partial activation code still need the acceptance work recorded in
 ## External checks awaiting access or execution
 
 Cloudflare account grants and Polar sandbox browser access/KZT product creation
-are established. Cloudflare deployment, completed Polar sandbox transactions,
-refund/webhook delivery, Google OAuth, Resend delivery, GA4 reports, supported
+are established. Cloudflare deployment, refund/webhook delivery, Google OAuth, Resend delivery,
+GA4 reports, supported
 calendar clients and physical iOS/Android tests have no acceptance evidence yet.
 Missing credentials do not establish provider incompatibility. Continue local
 implementation and integration while these checks remain pending.
+
+Recent external constraints: the Mac locked before submitting the prepared
+late-payment test. The user has been asked to unlock it. Both UDP and TCP tunnel
+connections on port 7844 failed; no webhook endpoint was created. Cloudflare R2
+is not enabled in the account. The local server and private sandbox run state
+remain available, and no unrelated remote database was changed.
+
+Resumed integration validation: 281/281 tests across 22 files passed, followed
+by scoped checks for the test setup change. Full checks and web/Worker/Astro
+builds passed. The web entry chunk is 548 kB minified and still emits a build
+warning. Full-suite setup initially exhausted macOS loopback ports; batching
+migration DDL and bounding parallel workerd test files fixed the run without
+changing the tests' concurrent business operations. `vp env doctor` passed.

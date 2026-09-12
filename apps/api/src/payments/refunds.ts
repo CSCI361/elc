@@ -71,6 +71,11 @@ export async function ensureCompensation(
         "? <> 'ticket_order' OR NOT EXISTS (SELECT 1 FROM orders WHERE id = ? AND state = 'completed')",
         [payment.purpose, payment.subject_id]
       ),
+      ...assertSql(
+        db,
+        "? <> 'event_activation' OR NOT EXISTS (SELECT 1 FROM event_activations WHERE successful_payment_attempt_id = ?)",
+        [payment.purpose, payment.id]
+      ),
       db
         .prepare(`INSERT INTO refunds (id, payment_attempt_id, reason, amount_minor, request_json, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?)`)

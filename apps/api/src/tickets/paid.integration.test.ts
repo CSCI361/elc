@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test"
+import { activateTestEvent } from "../activation/test-fixture"
 import { createAuthTestDatabase } from "../auth/test-database"
 import { startCheckout, replaceCheckout } from "../orders/checkout"
 import { expireReservations } from "../orders/lifecycle"
@@ -25,7 +26,11 @@ describe("D1 canonical issuance from recorded paid orders", () => {
     ],
   })
   const count = (table: string) =>
-    db.prepare(`SELECT count(*) AS n FROM ${table}`).first<number>("n")
+    db
+      .prepare(
+        `SELECT count(*) AS n FROM ${table}${table === "payment_attempts" ? " WHERE purpose = 'ticket_order'" : ""}`
+      )
+      .first<number>("n")
 
   beforeEach(async () => {
     fixture = await createAuthTestDatabase()
@@ -65,6 +70,7 @@ describe("D1 canonical issuance from recorded paid orders", () => {
         )
         .bind(`slot-${index}`)
         .run()
+    await activateTestEvent(db, "event", "owner", now)
   })
 
   afterEach(async () => {

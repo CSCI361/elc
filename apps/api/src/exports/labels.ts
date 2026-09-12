@@ -1,0 +1,115 @@
+export type ExportLocale = "kk" | "ru" | "en"
+
+export const labels = {
+  en: {
+    ticket: "Admission ticket",
+    demo: "ACADEMIC DEMONSTRATION / SANDBOX",
+    attendee: "Attendee",
+    type: "Ticket type",
+    when: "Date and time",
+    venue: "Venue",
+    seat: "Assigned seat",
+    general: "General admission",
+    section: "Section",
+    row: "Row",
+    place: "Seat",
+    price: "Ticket price before discounts",
+    discount: "Whole-order discount",
+    total: "Whole-order total",
+    ticketId: "Ticket ID",
+    orderId: "Order ID",
+    status: "Status at download",
+    valid: "Valid",
+    checked_in: "Checked in",
+    cancelled: "Cancelled",
+    refunded: "Refunded",
+    blocked: "Admission blocked",
+    eventCancelled: "Event cancelled",
+    eventSuspended: "Event suspended",
+    print:
+      "Print on A4 at 100% scale. Keep the QR code clear; grayscale is supported.",
+    admission:
+      "This PDF and your digital ticket share one admission. Staff check the current server status.",
+    privacy:
+      "Keep this ticket private. Anyone with this QR code can present it at the entrance.",
+    simulation:
+      "This is a demonstration ticket. All payment amounts are sandbox records.",
+    page: "Page",
+  },
+  ru: {
+    ticket: "Входной билет",
+    demo: "УЧЕБНАЯ ДЕМОНСТРАЦИЯ / SANDBOX",
+    attendee: "Посетитель",
+    type: "Тип билета",
+    when: "Дата и время",
+    venue: "Место проведения",
+    seat: "Назначенное место",
+    general: "Свободное размещение",
+    section: "Сектор",
+    row: "Ряд",
+    place: "Место",
+    price: "Цена билета до скидок",
+    discount: "Скидка на весь заказ",
+    total: "Итого за весь заказ",
+    ticketId: "Номер билета",
+    orderId: "Номер заказа",
+    status: "Статус при скачивании",
+    valid: "Действителен",
+    checked_in: "Вход зарегистрирован",
+    cancelled: "Отменён",
+    refunded: "Возвращён",
+    blocked: "Вход заблокирован",
+    eventCancelled: "Мероприятие отменено",
+    eventSuspended: "Мероприятие приостановлено",
+    print:
+      "Печатайте на A4 в масштабе 100%. Не закрывайте QR-код; чёрно-белая печать подходит.",
+    admission:
+      "PDF и цифровой билет дают один вход. Сотрудник проверяет текущий статус на сервере.",
+    privacy:
+      "Не передавайте билет другим. Предъявить этот QR-код на входе может любой его обладатель.",
+    simulation:
+      "Это демонстрационный билет. Все суммы платежей относятся к тестовой среде.",
+    page: "Страница",
+  },
+  kk: {
+    ticket: "Кіру билеті",
+    demo: "ОҚУ ДЕМОНСТРАЦИЯСЫ / SANDBOX",
+    attendee: "Қатысушы",
+    type: "Билет түрі",
+    when: "Күні мен уақыты",
+    venue: "Өтетін орны",
+    seat: "Белгіленген орын",
+    general: "Еркін орналасу",
+    section: "Сектор",
+    row: "Қатар",
+    place: "Орын",
+    price: "Билеттің жеңілдікке дейінгі бағасы",
+    discount: "Бүкіл тапсырыс жеңілдігі",
+    total: "Бүкіл тапсырыс сомасы",
+    ticketId: "Билет нөмірі",
+    orderId: "Тапсырыс нөмірі",
+    status: "Жүктеу кезіндегі күйі",
+    valid: "Жарамды",
+    checked_in: "Кіру тіркелді",
+    cancelled: "Күші жойылған",
+    refunded: "Қайтарылған",
+    blocked: "Кіру бұғатталған",
+    eventCancelled: "Іс-шара тоқтатылды",
+    eventSuspended: "Іс-шара уақытша тоқтатылды",
+    print:
+      "A4 қағазына 100% масштабта басып шығарыңыз. QR-кодты жаппаңыз; ақ-қара баспа жарайды.",
+    admission:
+      "PDF және цифрлық билет бір рет кіруге арналған. Қызметкер сервердегі ағымдағы күйді тексереді.",
+    privacy:
+      "Билетті құпия сақтаңыз. Осы QR-коды бар кез келген адам оны кіреберісте көрсете алады.",
+    simulation:
+      "Бұл демонстрациялық билет. Барлық төлем сомалары сынақ ортасына жатады.",
+    page: "Бет",
+  },
+} as const
+
+export const calendarNotes = {
+  en: "Calendar exports save a snapshot and do not sync automatically. To update or cancel an imported entry, remove the old entry, then import the revised file and check that only one entry remains. Do not use an event-creation link to update an existing entry.",
+  ru: "Экспорт сохраняет копию события без автоматической синхронизации. Для обновления или отмены удалите прежнюю запись, импортируйте новый файл и проверьте, что осталась одна запись. Ссылка создания события не обновляет существующую запись.",
+  kk: "Күнтізбе экспорты автоматты түрде жаңармайтын көшірмені сақтайды. Жаңарту немесе тоқтату үшін ескі жазбаны өшіріп, жаңа файлды импорттаңыз және бір ғана жазба қалғанын тексеріңіз. Іс-шара жасау сілтемесі бар жазбаны жаңартпайды.",
+} as const

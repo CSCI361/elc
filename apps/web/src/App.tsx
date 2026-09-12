@@ -5,11 +5,15 @@ import { readAuthRoute, withoutAuthSecrets } from "@/auth/navigation"
 import { AuthProvider } from "@/auth/provider"
 import { AppShell } from "@/components/app-shell"
 import { EventsRoute } from "@/events"
-import { isEventPath } from "@/events/policies"
+import { isEventPath, withoutPaymentSecrets } from "@/events/policies"
 
 const initialURL = new URL(window.location.href)
-const route = readAuthRoute(initialURL)
-const safeURL = withoutAuthSecrets(initialURL)
+const paymentSafeURL = new URL(
+  withoutPaymentSecrets(initialURL),
+  initialURL.origin
+)
+const route = readAuthRoute(paymentSafeURL)
+const safeURL = withoutAuthSecrets(paymentSafeURL)
 if (
   `${initialURL.pathname}${initialURL.search}${initialURL.hash}` !== safeURL
 ) {

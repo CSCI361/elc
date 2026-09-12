@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test"
+import { activateTestEvent } from "../activation/test-fixture"
 import { createAuthTestDatabase } from "../auth/test-database"
 import { startCheckout, replaceCheckout } from "./checkout"
 import { abandonCheckout, expireReservations, readCheckout } from "./lifecycle"
@@ -30,7 +31,9 @@ describe("D1 checkout service", () => {
   const clock = { now: () => now }
   const count = async (table: string, where = "1") =>
     db
-      .prepare(`SELECT count(*) AS n FROM ${table} WHERE ${where}`)
+      .prepare(
+        `SELECT count(*) AS n FROM ${table} WHERE ${where}${table === "payment_attempts" ? " AND purpose = 'ticket_order'" : ""}`
+      )
       .first<number>("n")
 
   beforeEach(async () => {
@@ -60,6 +63,7 @@ describe("D1 checkout service", () => {
         )
         .bind(`slot-${index}`)
         .run()
+    await activateTestEvent(db, "event", "owner", now)
   })
 
   afterEach(async () => {

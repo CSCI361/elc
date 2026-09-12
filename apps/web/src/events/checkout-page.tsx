@@ -75,7 +75,7 @@ function CheckoutActions({
   data: CheckoutResponse
   reload: () => void
 }) {
-  const { t } = useEventText()
+  const { t, locale } = useEventText()
   const command = useCommand()
   const now = useServerNow()
   const remaining = remainingSeconds(data.reservation.expiresAt, now)
@@ -97,7 +97,7 @@ function CheckoutActions({
               <span>{t("remaining")}</span>
               <strong aria-live="off">{clockText(remaining)}</strong>
               <time dateTime={data.reservation.expiresAt}>
-                {new Intl.DateTimeFormat(undefined, {
+                {new Intl.DateTimeFormat(locale, {
                   timeStyle: "short",
                 }).format(new Date(data.reservation.expiresAt))}
               </time>

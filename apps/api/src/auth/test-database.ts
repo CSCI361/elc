@@ -19,11 +19,12 @@ export async function createAuthTestDatabase() {
       .filter((name) => name.endsWith(".sql"))
       .sort()) {
       const sql = await readFile(new URL(file, migrationDirectory), "utf8")
-      for (const statement of sql
+      const statements = sql
         .split("--> statement-breakpoint")
-        .filter((part) => part.replace(/^\s*--.*$/gm, "").trim())) {
-        await DB.prepare(statement).run()
-      }
+        .filter((part) => part.replace(/^\s*--.*$/gm, "").trim())
+        .map((statement) => DB.prepare(statement))
+      // A migration batch avoids opening a local proxy connection for every DDL statement.
+      if (statements.length) await DB.batch(statements)
     }
     return { runtime, DB: DB as unknown as Bindings["DB"] }
   } catch (error) {

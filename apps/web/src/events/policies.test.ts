@@ -3,13 +3,39 @@ import {
   dateFromInput,
   dateInput,
   parsePrice,
+  purchasableSeats,
   remainingSeconds,
   safePaymentUrl,
   selectedBasket,
+  withoutPaymentSecrets,
+  type Inventory,
   type Seat,
 } from "./policies"
 
 describe("event purchase policies", () => {
+  it("removes provider bearer credentials before payment return links can be built", () => {
+    const url = new URL(
+      "https://elc.test/payments/return?attempt=attempt-1&customer_session_token=private-fixture&customer_session_token=second&unexpected=private#private"
+    )
+    expect(withoutPaymentSecrets(url)).toBe(
+      "/payments/return?attempt=attempt-1"
+    )
+    const staleSignIn = new URL("https://elc.test/auth/sign-in")
+    staleSignIn.searchParams.set("returnTo", url.pathname + url.search)
+    const sanitizedSignIn = new URL(
+      withoutPaymentSecrets(staleSignIn),
+      staleSignIn.origin
+    )
+    expect(sanitizedSignIn.searchParams.get("returnTo")).toBe(
+      "/payments/return?attempt=attempt-1"
+    )
+    expect(sanitizedSignIn.href).not.toContain("private")
+    expect(
+      withoutPaymentSecrets(
+        new URL("https://elc.test/events/demo?campaign=public-code")
+      )
+    ).toBe("/events/demo?campaign=public-code")
+  })
   it("converts decimal KZT to minor units without binary rounding", () => {
     expect(parsePrice("4999.99")).toBe(499999)
     expect(parsePrice(" 12,5 ")).toBe(1250)
@@ -127,6 +153,58 @@ describe("assigned-seat basket", () => {
         "1": "Ada",
       })
     ).toThrow("INVENTORY_UNAVAILABLE")
+  })
+
+  it("keeps inactive paid sales and closed ticket windows out of seat selection", () => {
+    const now = Date.parse("2026-09-20T10:00:00Z")
+    const type = (
+      id: string,
+      kind: "free" | "paid",
+      salesEndAt = "2026-09-20T11:00:00Z"
+    ): Inventory["ticketTypes"][number] => ({
+      id,
+      eventId: "event",
+      currency: "KZT",
+      kind,
+      name: id,
+      description: "",
+      priceMinor: kind === "paid" ? 10000 : 0,
+      quantity: 40,
+      hidden: false,
+      salesStartAt: "2026-09-20T09:00:00Z",
+      salesEndAt,
+      available: 40,
+      reserved: 0,
+      sold: 0,
+      unavailable: 0,
+    })
+    const data: Inventory = {
+      eventId: "event",
+      revision: 1,
+      seatingMode: "assigned",
+      seats: [
+        seat("1", "free"),
+        seat("2", "paid"),
+        seat("3", "closed"),
+        seat("4", "paid", "held"),
+      ],
+      ticketTypes: [
+        type("free", "free"),
+        type("paid", "paid"),
+        type("closed", "free", "2026-09-20T10:00:00Z"),
+      ],
+    }
+    expect(
+      purchasableSeats(data, false, now).map((value) => value.state)
+    ).toEqual(["available", "unavailable", "unavailable", "held"])
+    expect(purchasableSeats(data, true, now)[1]?.state).toBe("available")
+    expect(() =>
+      selectedBasket(purchasableSeats(data, false, now), ["1", "2"], {
+        "1": "Ada",
+        "2": "Bob",
+      })
+    ).toThrow("INVENTORY_UNAVAILABLE")
+    expect(data.seats[1]?.state).toBe("available")
   })
 
   it("requires an attendee name and never sends a client-provided price", () => {

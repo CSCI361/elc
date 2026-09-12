@@ -10,6 +10,7 @@ import {
   type ProviderRefundRequest,
   type ProviderRefundStatus,
 } from "@elc/shared"
+import { activateTestEvent } from "../activation/test-fixture"
 import { createAuthTestDatabase } from "../auth/test-database"
 import { startCheckout } from "../orders/checkout"
 import { startOrderPayment } from "./checkout"
@@ -177,6 +178,7 @@ export async function createPaymentFixture() {
         )
         .bind(`slot-${index}`)
         .run()
+    await activateTestEvent(db, "event", "owner", now)
     const checkout = await startCheckout(
       db,
       "buyer",

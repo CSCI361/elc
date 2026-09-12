@@ -3,6 +3,7 @@ import {
   type PaymentAdapter,
   type PaymentCheckoutRequest,
 } from "@elc/shared"
+import { paidSalesEligibilitySql } from "../activation/guards"
 import { requireActiveAccount } from "../auth/permissions"
 import {
   ApiFailure,
@@ -90,6 +91,11 @@ export async function startOrderPayment(
     now
   )
   const eligible = purchaseEligibilitySql(actorId, order.event_id, now)
+  const activation = paidSalesEligibilitySql(
+    order.event_id,
+    now,
+    !!dependencies.now
+  )
   try {
     await db.batch([
       db
@@ -99,6 +105,7 @@ export async function startOrderPayment(
         .bind(actorId, input.requestId, receiptHash, id, now),
       ...assertSql(db, active.predicate, active.bindings),
       ...assertSql(db, eligible.predicate, eligible.bindings),
+      ...assertSql(db, activation.predicate, activation.bindings),
       ...assertSql(
         db,
         `EXISTS (SELECT 1 FROM orders WHERE id = ? AND total_minor = ? AND admission_blocked_at IS NULL)

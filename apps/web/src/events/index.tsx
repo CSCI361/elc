@@ -1,16 +1,35 @@
+import { lazy, Suspense } from "react"
 import { EventListPage } from "./list-page"
 import { EventDetailPage } from "./detail-page"
-import { EventEditorPage } from "./editor"
-import { CheckoutPage } from "./checkout-page"
-import { TicketPage } from "./ticket-page"
-import { PaymentPage } from "./payment-page"
-import { OrdersPage } from "./orders-page"
-import { Protected } from "./ui"
-import { EventError } from "./ui"
+import { Protected, EventError, Loading } from "./ui"
 import { EventApiError } from "./api"
 import "./events.css"
 
+const EventEditorPage = lazy(() =>
+  import("./editor").then((module) => ({ default: module.EventEditorPage }))
+)
+const CheckoutPage = lazy(() =>
+  import("./checkout-page").then((module) => ({ default: module.CheckoutPage }))
+)
+const TicketPage = lazy(() =>
+  import("./ticket-page").then((module) => ({ default: module.TicketPage }))
+)
+const PaymentPage = lazy(() =>
+  import("./payment-page").then((module) => ({ default: module.PaymentPage }))
+)
+const OrdersPage = lazy(() =>
+  import("./orders-page").then((module) => ({ default: module.OrdersPage }))
+)
+
 export function EventsRoute({ path }: { path: string }) {
+  return (
+    <Suspense fallback={<Loading />}>
+      <MatchedEventRoute path={path} />
+    </Suspense>
+  )
+}
+
+function MatchedEventRoute({ path }: { path: string }) {
   if (path === "/" || path === "/events") return <EventListPage />
   if (path === "/organizer/events")
     return (

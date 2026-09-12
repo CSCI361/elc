@@ -193,6 +193,10 @@ export function errorKey(error: unknown): EventMessageKey {
       return "expiredHint"
     case "CHECKOUT_FROZEN":
       return "frozen"
+    case "ORDER_LIMIT":
+      return "limit"
+    case "SERVICE_UNAVAILABLE":
+      return "serviceUnavailable"
     case "PROMO_INVALID":
     case "PROMO_EXHAUSTED":
       return "promoInvalid"

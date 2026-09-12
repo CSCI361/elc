@@ -23,6 +23,86 @@
   width: 100%;
   min-width: 0;
 }
+.events-page fieldset {
+  min-inline-size: 0;
+}
+.activation-panel > summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.activation-content {
+  padding-top: 22px;
+}
+.activation-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+.activation-blockers {
+  list-style: disc;
+  padding-left: 22px;
+  color: var(--app-subtle);
+  line-height: 1.8;
+  font-size: 14px;
+  margin-bottom: 28px;
+}
+.activation-terms {
+  margin: 20px 0;
+  padding: 20px;
+  background: var(--app-page);
+  border-radius: 10px;
+}
+.activation-terms p {
+  font-size: 13px;
+}
+.activation-terms details {
+  margin: 15px 0;
+  font-size: 13px;
+}
+.activation-terms summary {
+  cursor: pointer;
+  min-height: 36px;
+}
+.activation-terms small {
+  display: block;
+  margin: 10px 0;
+  overflow-wrap: anywhere;
+}
+.activation-terms .event-checkbox {
+  margin-bottom: 0;
+  align-items: start;
+}
+.activation-terms input {
+  flex: 0 0 auto;
+}
+.activation-fee {
+  border-top: 1px solid var(--app-line);
+  padding-top: 24px;
+  margin-top: 28px;
+  display: flex;
+  align-items: start;
+  gap: 14px;
+}
+.activation-fee span,
+.activation-fee strong {
+  display: block;
+}
+.activation-fee strong {
+  font-size: 26px;
+  margin: 10px 0;
+}
+.activation-fee p {
+  font-size: 13px;
+}
+.activation-payment {
+  margin: 20px 0;
+}
+.activation-payment p {
+  font-size: 13px;
+}
 .events-page h1 {
   font-size: clamp(32px, 4.2vw, 54px);
   line-height: 1.08;

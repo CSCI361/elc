@@ -10,6 +10,7 @@ import {
   type ProviderRefundStatus,
 } from "@elc/shared"
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test"
+import { activateTestEvent } from "../activation/test-fixture"
 import { createAuthTestDatabase } from "../auth/test-database"
 import { startCheckout, replaceCheckout } from "../orders/checkout"
 import {
@@ -204,6 +205,7 @@ describe("D1 payment orchestration and compensation", () => {
         )
         .bind(`slot-${index}`)
         .run()
+    await activateTestEvent(db, "event", "owner", now)
   })
 
   afterEach(async () => {
@@ -263,7 +265,11 @@ describe("D1 payment orchestration and compensation", () => {
     expect(new Set(responses.map((result) => result.payment.id)).size).toBe(1)
     expect(provider.creates).toHaveLength(1)
     const paymentId = responses[0]!.payment.id
-    expect(await scalar("SELECT count(*) AS n FROM payment_attempts")).toBe(1)
+    expect(
+      await scalar(
+        "SELECT count(*) AS n FROM payment_attempts WHERE purpose = 'ticket_order'"
+      )
+    ).toBe(1)
     expect(
       await scalar(
         "SELECT count(*) AS n FROM audit_entries WHERE action = 'payment.prepared'"
@@ -336,7 +342,11 @@ describe("D1 payment orchestration and compensation", () => {
       )
     ).rejects.toMatchObject({ code: "CONFLICT" })
     expect(provider.creates).toHaveLength(0)
-    expect(await scalar("SELECT count(*) AS n FROM payment_attempts")).toBe(0)
+    expect(
+      await scalar(
+        "SELECT count(*) AS n FROM payment_attempts WHERE purpose = 'ticket_order'"
+      )
+    ).toBe(0)
     expect(
       await scalar(
         "SELECT count(*) AS n FROM outbox WHERE kind = 'payment.reconcile'"

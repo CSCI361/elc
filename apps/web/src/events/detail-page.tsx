@@ -26,7 +26,9 @@ import { useEventText } from "./messages"
 import {
   dateText,
   money,
+  purchasableSeats,
   selectedBasket,
+  ticketSalesOpen,
   type Inventory,
   type Seat,
 } from "./policies"
@@ -51,6 +53,12 @@ function ReservationForm({
     new URLSearchParams(window.location.search).get("campaign") ?? ""
   )
   const command = useCommand()
+  const date = useServerNow()
+  const seats = purchasableSeats(
+    inventory,
+    event.paidSalesState === "active",
+    date
+  )
   const assigned = event.seatingMode === "assigned"
   const count = assigned
     ? selected.length
@@ -69,13 +77,13 @@ function ReservationForm({
       setSelected((value) => value.filter((id) => id !== seat.id))
     else if (count < event.maxTicketsPerOrder)
       setSelected((value) => [...value, seat.id])
-    else command.setError(new EventApiError("INVALID_INPUT", 400))
+    else command.setError(new EventApiError("ORDER_LIMIT", 400))
   }
   async function submit(submission: FormEvent<HTMLFormElement>) {
     submission.preventDefault()
     try {
       const items = assigned
-        ? selectedBasket(inventory.seats, selected, names)
+        ? selectedBasket(seats, selected, names)
         : inventory.ticketTypes
             .filter((type) => (quantities[type.id] ?? 0) > 0)
             .map((type) => ({
@@ -111,7 +119,6 @@ function ReservationForm({
       )
     }
   }
-  const date = useServerNow()
   const salesOpen =
     event.publicationState === "published" &&
     !event.cancelledAt &&
@@ -139,12 +146,18 @@ function ReservationForm({
       <form onSubmit={submit}>
         <fieldset disabled={command.pending}>
           {assigned ? (
-            <SeatMap
-              seats={inventory.seats}
-              selected={selected}
-              onSelect={select}
-              disabled={command.pending}
-            />
+            <>
+              {inventory.ticketTypes.some((type) => type.kind === "paid") &&
+              event.paidSalesState !== "active" ? (
+                <p className="field-hint">{t("paymentInactive")}</p>
+              ) : null}
+              <SeatMap
+                seats={seats}
+                selected={selected}
+                onSelect={select}
+                disabled={command.pending}
+              />
+            </>
           ) : (
             <div className="ticket-type-options">
               {inventory.ticketTypes.map((type) => (
@@ -170,10 +183,11 @@ function ReservationForm({
                     value={quantities[type.id] ?? 0}
                     disabled={
                       type.available === 0 ||
-                      (type.kind === "paid" &&
-                        event.paidSalesState !== "active") ||
-                      Date.parse(type.salesStartAt) > date ||
-                      Date.parse(type.salesEndAt) <= date
+                      !ticketSalesOpen(
+                        type,
+                        event.paidSalesState === "active",
+                        date
+                      )
                     }
                     onChange={(change) => {
                       const next = Number(change.target.value)
@@ -211,7 +225,7 @@ function ReservationForm({
                   <button
                     type="button"
                     className="seat-remove"
-                    aria-label={`${t("back")} ${seat.row}${seat.number}`}
+                    aria-label={`${t("removeSeat")} ${seat.section} ${seat.row}${seat.number}`}
                     onClick={() =>
                       setSelected((value) =>
                         value.filter((id) => id !== seat.id)
@@ -275,6 +289,9 @@ function ReservationForm({
             </a>
           )}
           {count === 0 ? <p className="field-hint">{t("selectHint")}</p> : null}
+          {count > event.maxTicketsPerOrder ? (
+            <p role="alert">{t("limit")}</p>
+          ) : null}
         </fieldset>
       </form>
     </section>

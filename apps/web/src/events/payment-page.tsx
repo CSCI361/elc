@@ -57,6 +57,11 @@ export function PaymentPage({ attemptId }: { attemptId: string }) {
           {money(payment.amountMinor, locale)}
         </strong>
         <p>{t("paymentNote")}</p>
+        {payment.refundState ? (
+          <p role="status">
+            {t("refundStatus")}: {t(payment.refundState)}
+          </p>
+        ) : null}
         {resource.error ? (
           <EventError error={resource.error} retry={resource.reload} />
         ) : null}

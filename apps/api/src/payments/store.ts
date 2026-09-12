@@ -7,6 +7,10 @@ import {
 } from "@elc/shared"
 import { requireActiveAccount } from "../auth/permissions"
 import { ApiFailure, assertSql, isTransitionConflict } from "../db/transitions"
+import {
+  activationEligibilitySql,
+  paidSalesEligibilitySql,
+} from "../activation/guards"
 
 export type PaymentRow = {
   id: string
@@ -128,6 +132,20 @@ export async function claimPaymentDispatch(
   now: number,
   injectedClock = false
 ) {
+  const activation =
+    row.purpose === "event_activation"
+      ? activationEligibilitySql(row, now, injectedClock)
+      : null
+  const eventId =
+    row.purpose === "ticket_order"
+      ? await db
+          .prepare("SELECT event_id FROM orders WHERE id = ?")
+          .bind(row.subject_id)
+          .first<string>("event_id")
+      : null
+  const paidSales = eventId
+    ? paidSalesEligibilitySql(eventId, now, injectedClock)
+    : null
   // Resolve event identity from the frozen order; SQL reads current cancellation and holds.
   const eligible =
     row.purpose === "ticket_order"
@@ -163,7 +181,7 @@ export async function claimPaymentDispatch(
         AND c.starts_at <= CAST(unixepoch('subsecond') * 1000 AS INTEGER) AND c.ends_at > CAST(unixepoch('subsecond') * 1000 AS INTEGER)))`
     }
     )`
-      : "0"
+      : activation!.predicate
   const values =
     row.purpose === "ticket_order"
       ? [
@@ -180,7 +198,7 @@ export async function claimPaymentDispatch(
           now,
           now,
         ]
-      : []
+      : activation!.bindings
   try {
     const result = await db.batch([
       db
@@ -196,6 +214,16 @@ export async function claimPaymentDispatch(
         .prepare(`UPDATE payment_attempts SET state = CASE WHEN (${eligible}) THEN 'pending' ELSE 'cancelled' END,
         dispatch_state = CASE WHEN (${eligible}) THEN 'dispatched' ELSE 'reconciled' END, updated_at = ? WHERE id = ?`)
         .bind(...values, ...values, now, row.id),
+      ...(row.purpose === "ticket_order"
+        ? [
+            db
+              .prepare(
+                `UPDATE payment_attempts SET state = 'cancelled', dispatch_state = 'reconciled'
+          WHERE id = ? AND NOT (${paidSales?.predicate ?? "0"})`
+              )
+              .bind(row.id, ...(paidSales?.bindings ?? [])),
+          ]
+        : []),
       paymentAudit(db, row, "payment.dispatch_checked", now),
       db
         .prepare("SELECT dispatch_state FROM payment_attempts WHERE id = ?")

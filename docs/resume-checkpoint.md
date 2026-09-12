@@ -1,8 +1,9 @@
 # Resume checkpoint
 
-Saved on 2026-09-13 at the user's request before going offline. Work is paused
-at this checkpoint; do not start further implementation until the user resumes.
-This is a development checkpoint, not a completed academic release.
+Saved on 2026-09-13 at the user's request before going offline. The user has since
+explicitly resumed from this checkpoint. This file preserves the saved state;
+current progress is tracked in the implementation plan. This is a development
+checkpoint, not a completed academic release.
 
 ## Start here
 

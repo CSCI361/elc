@@ -5,6 +5,7 @@ import {
   type CompletedOrderResponse,
 } from "@elc/shared"
 import { HTTPException } from "hono/http-exception"
+import { paidSalesEligibilitySql } from "../activation/guards"
 import {
   ApiFailure,
   assertSql,
@@ -234,6 +235,11 @@ async function completeCanonicalOrder(
     { allowPaymentAttempt: Boolean(payment) }
   )
   const purchase = purchaseEligibilitySql(actorId, order.event_id, now)
+  const activation = paidSalesEligibilitySql(
+    order.event_id,
+    now,
+    !!dependencies.now
+  )
   const payload = JSON.stringify(planned)
   try {
     await db.batch([
@@ -251,6 +257,12 @@ async function completeCanonicalOrder(
         ),
       ...assertSql(db, active.predicate, active.bindings),
       ...assertSql(db, purchase.predicate, purchase.bindings),
+      ...assertSql(
+        db,
+        `NOT EXISTS (SELECT 1 FROM order_items oi JOIN ticket_types t ON t.id = oi.ticket_type_id
+          WHERE oi.order_id = ? AND (oi.unit_price_minor > 0 OR t.kind = 'paid')) OR (${activation.predicate})`,
+        [orderId, ...activation.bindings]
+      ),
       ...assertSql(
         db,
         `EXISTS (SELECT 1 FROM orders WHERE id = ? AND total_minor ${payment ? "> 0" : "= 0"} AND admission_blocked_at IS NULL)

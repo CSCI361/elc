@@ -3,6 +3,7 @@ import { execFile } from "node:child_process"
 import { randomUUID } from "node:crypto"
 import { fileURLToPath } from "node:url"
 import { promisify } from "node:util"
+import { Miniflare, convertV4MiniflareOptions } from "miniflare"
 
 const execute = promisify(execFile)
 const directory = fileURLToPath(new URL("../", import.meta.url))
@@ -124,6 +125,34 @@ async function cleanup() {
   const checkins = `SELECT id FROM checkins WHERE ticket_id IN (${tickets})`
   const campaigns = `SELECT id FROM campaigns WHERE event_id IN (${events})`
   const payments = `SELECT id FROM payment_attempts WHERE (purpose = 'ticket_order' AND subject_id IN (${orders})) OR (purpose = 'event_activation' AND subject_id IN (${events}))`
+  const ownTickets = (await query(tickets))[0].results
+  if (ownTickets.length) {
+    const storage = new Miniflare(
+      convertV4MiniflareOptions({
+        modules: true,
+        script:
+          "export default { fetch() { return new Response('local fixture cleanup'); } }",
+        compatibilityDate: "2026-09-12",
+        r2Buckets: { FILES: "elc-local-files" },
+        r2Persist: `${directory}.wrangler/state/v3/r2`,
+      })
+    )
+    try {
+      const files = await storage.getR2Bucket("FILES")
+      for (const ticket of ownTickets) {
+        const prefix = `private/ticket-pdfs/${encodeURIComponent(ticket.id)}/`
+        let remaining
+        do {
+          remaining = await files.list({ prefix })
+          if (remaining.objects.length)
+            await files.delete(remaining.objects.map((object) => object.key))
+        } while (remaining.truncated)
+        assert.equal((await files.list({ prefix })).objects.length, 0)
+      }
+    } finally {
+      await storage.dispose()
+    }
+  }
   // Delete children first, preserving all records outside this run's exact accounts/events.
   await query(
     [
@@ -322,6 +351,70 @@ try {
     status: 403,
   })
 
+  step =
+    "download canonical ticket PDFs in all three languages through the Worker"
+  for (const locale of ["kk", "ru", "en"]) {
+    const pdf = await fetch(
+      `${origin}/api/tickets/${ticketId}/pdf?locale=${locale}`,
+      {
+        headers: { Cookie: buyer.cookie },
+        redirect: "manual",
+        signal: AbortSignal.timeout(20000),
+      }
+    )
+    diagnostic = ` HTTP ${pdf.status}.`
+    assert.equal(pdf.status, 200)
+    assert.equal(pdf.headers.get("content-type"), "application/pdf")
+    assert.equal(pdf.headers.get("cache-control"), "private, no-store")
+    assert.ok(pdf.headers.get("content-disposition")?.includes("attachment"))
+    const bytes = new Uint8Array(await pdf.arrayBuffer())
+    assert.equal(new TextDecoder().decode(bytes.slice(0, 5)), "%PDF-")
+    assert.ok(bytes.length > 1000)
+    diagnostic = ""
+  }
+  await request(`/api/tickets/${ticketId}/pdf`, { actor: scanner, status: 403 })
+  assert.deepEqual(
+    (await request(`/api/tickets/${ticketId}/credential`, { actor: buyer }))
+      .data.credential,
+    delivered.credential
+  )
+
+  step =
+    "download an event-only calendar snapshot and creation links through the Worker"
+  const calendar = (
+    await request(`/api/events/${eventId}/calendar?locale=en`, { actor: buyer })
+  ).data
+  assert.equal(calendar.calendar.uid, detail.event.calendar.uid)
+  assert.equal(calendar.calendar.timeZone, "Asia/Almaty")
+  assert.equal(
+    new URL(calendar.createLinks.google).hostname,
+    "calendar.google.com"
+  )
+  assert.equal(
+    new URL(calendar.createLinks.outlook).hostname,
+    "outlook.live.com"
+  )
+  assert.ok(calendar.replacementNote.includes("do not sync automatically"))
+  const icsResponse = await fetch(
+    `${origin}/api/events/${eventId}/calendar.ics`,
+    {
+      headers: { Cookie: buyer.cookie },
+      signal: AbortSignal.timeout(15000),
+    }
+  )
+  assert.equal(icsResponse.status, 200)
+  assert.ok(
+    icsResponse.headers.get("content-type")?.startsWith("text/calendar")
+  )
+  assert.equal(icsResponse.headers.get("cache-control"), "private, no-store")
+  const ics = await icsResponse.text()
+  assert.ok(ics.includes(`UID:${detail.event.calendar.uid}\r\n`))
+  assert.ok(ics.includes("TZID:Asia/Almaty\r\n"))
+  assert.ok(ics.includes("STATUS:CONFIRMED\r\n"))
+  assert.ok(
+    !ics.includes(ticketId) && !ics.includes(delivered.credential.token)
+  )
+
   step = "deny unassigned scanner and organizer implicit scan authority"
   const scanInput = {
     eventId,
@@ -460,5 +553,5 @@ try {
 
 if (succeeded && cleanupSucceeded)
   console.log(
-    "PASS: local Worker HTTP account verification, event/type publication, reservation, zero-total issuance, canonical credential, explicit staff scan, retry/duplicate handling, reversal and rescan; fixture cleanup verified."
+    "PASS: local Worker HTTP account verification, event/type publication, reservation, zero-total issuance, canonical credential, protected kk/ru/en PDFs, calendar exports, explicit staff scan, retry/duplicate handling, reversal and rescan; D1/R2 fixture cleanup verified."
   )

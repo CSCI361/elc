@@ -481,6 +481,28 @@ export const eventActivations = sqliteTable(
   ]
 )
 
+export const activationChecklistHistory = sqliteTable(
+  "activation_checklist_history",
+  {
+    eventId: text("event_id")
+      .notNull()
+      .references(() => eventActivations.eventId),
+    revision: integer("revision").notNull(),
+    actorId: text("actor_id")
+      .notNull()
+      .references(() => user.id),
+    checklistJson: text("checklist_json").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.eventId, t.revision] }),
+    check(
+      "activation_history_values",
+      sql`${t.revision} > 0 AND json_valid(${t.checklistJson}) = 1`
+    ),
+  ]
+)
+
 export const activationAttempts = sqliteTable(
   "activation_attempts",
   {

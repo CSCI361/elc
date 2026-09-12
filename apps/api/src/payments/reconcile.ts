@@ -13,6 +13,7 @@ import {
   requestHash,
 } from "../db/transitions"
 import { completePaidOrder } from "../tickets/issue"
+import { completeActivation, completedActivation } from "../activation/complete"
 import type { PaymentDependencies, PaymentEnvironment } from "./checkout"
 import { applyRefundStatus, ensureCompensation, processRefund } from "./refunds"
 import {
@@ -244,26 +245,45 @@ export async function processPayment(
       .run()
     return false
   }
-  if (payment.purpose === "event_activation") return false
   try {
-    await completePaidOrder(env, payment.id, dependencies)
+    if (payment.purpose === "event_activation") {
+      await completeActivation(db, payment.id, dependencies)
+    } else {
+      await completePaidOrder(env, payment.id, dependencies)
+    }
     return true
   } catch (error) {
     if (!(error instanceof HTTPException) || ![403, 409].includes(error.status))
       throw error
-    const completed = await db
-      .prepare("SELECT state FROM orders WHERE id = ?")
-      .bind(payment.subject_id)
-      .first<{ state: string }>()
+    if (
+      payment.purpose === "event_activation" &&
+      (await completedActivation(db, payment.id))
+    )
+      return true
+    const completed =
+      payment.purpose === "ticket_order"
+        ? await db
+            .prepare("SELECT state FROM orders WHERE id = ?")
+            .bind(payment.subject_id)
+            .first<{ state: string }>()
+        : null
     if (completed?.state === "completed") return true
     let refundId: string
     try {
       refundId = await ensureCompensation(db, payment, now())
     } catch (compensationError) {
-      const current = await db
-        .prepare("SELECT state FROM orders WHERE id = ?")
-        .bind(payment.subject_id)
-        .first<{ state: string }>()
+      if (
+        payment.purpose === "event_activation" &&
+        (await completedActivation(db, payment.id))
+      )
+        return true
+      const current =
+        payment.purpose === "ticket_order"
+          ? await db
+              .prepare("SELECT state FROM orders WHERE id = ?")
+              .bind(payment.subject_id)
+              .first<{ state: string }>()
+          : null
       if (current?.state === "completed") return true
       throw compensationError
     }

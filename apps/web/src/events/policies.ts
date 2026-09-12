@@ -6,6 +6,52 @@ import {
 
 export type Inventory = ReturnType<typeof inventoryResponseSchema.parse>
 export type Seat = Inventory["seats"][number]
+/** The app only needs its own attempt ID from the provider's return URL. */
+export function withoutPaymentSecrets(input: URL): string {
+  const url = new URL(input)
+  url.searchParams.delete("customer_session_token")
+  if (url.pathname === "/payments/return") {
+    const attempt = url.searchParams.get("attempt")
+    url.search = ""
+    if (attempt) url.searchParams.set("attempt", attempt)
+    url.hash = ""
+  }
+  const returnTo = url.searchParams.get("returnTo")
+  if (returnTo?.startsWith("/payments/return?")) {
+    url.searchParams.set(
+      "returnTo",
+      withoutPaymentSecrets(new URL(returnTo, url.origin))
+    )
+  }
+  return `${url.pathname}${url.search}${url.hash}`
+}
+export function ticketSalesOpen(
+  type: Inventory["ticketTypes"][number],
+  paidSalesActive: boolean,
+  now: number
+) {
+  return (
+    (type.kind === "free" || paidSalesActive) &&
+    Date.parse(type.salesStartAt) <= now &&
+    Date.parse(type.salesEndAt) > now
+  )
+}
+export function purchasableSeats(
+  inventory: Inventory,
+  paidSalesActive: boolean,
+  now: number
+): Seat[] {
+  const openTypes = new Set(
+    inventory.ticketTypes
+      .filter((type) => ticketSalesOpen(type, paidSalesActive, now))
+      .map((type) => type.id)
+  )
+  return inventory.seats.map((seat) =>
+    seat.state === "available" && !openTypes.has(seat.ticketTypeId ?? "")
+      ? { ...seat, state: "unavailable" }
+      : seat
+  )
+}
 export function isEventPath(path: string) {
   return (
     path === "/" ||

@@ -138,7 +138,7 @@ export async function readActivation(
   if (activation?.payout_check !== "passed") blockers.push("payout_check")
   if (
     activation?.terms_version !== DEMO_PAID_TERMS_VERSION ||
-    !activation.terms_accepted_at
+    activation.terms_accepted_at === null
   )
     blockers.push("terms_required")
   if (!successful) blockers.push("fee_required")
@@ -222,7 +222,8 @@ export function activationAudit(
   actorId: string,
   action: string,
   correlationId: string,
-  now: number
+  now: number,
+  description = action.replaceAll(".", " ")
 ) {
   return db
     .prepare(
@@ -235,7 +236,7 @@ export function activationAudit(
       eventId ? "event" : "platform",
       action,
       eventId ?? "activation-settings",
-      action.replaceAll(".", " "),
+      description,
       correlationId,
       now
     )

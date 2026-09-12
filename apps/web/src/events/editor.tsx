@@ -26,6 +26,7 @@ import {
   type Inventory,
 } from "./policies"
 import { SeatMap } from "./seat-map"
+import { ActivationPanel } from "./activation-panel"
 import { EventError, Field, Loading, SelectField, TextArea } from "./ui"
 
 type EventDetail = ReturnType<typeof eventDetailResponseSchema.parse>
@@ -575,6 +576,11 @@ function ExistingEventEditor({ eventId }: { eventId: string }) {
           onSaved={reload}
         />
       ) : null}
+      <ActivationPanel
+        eventId={event.id}
+        hasPaidTickets={ticketTypes.some((type) => type.kind === "paid")}
+        onChanged={reload}
+      />
     </div>
   )
 }

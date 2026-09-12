@@ -55,3 +55,21 @@ export function checklistEligibilitySql(
     bindings: [eventId, actorId, now],
   }
 }
+
+/** Current owner eligibility is required even when a promo makes paid admission free. */
+export function paidSalesEligibilitySql(
+  eventId: string,
+  now: number,
+  injectedClock = false
+) {
+  return {
+    predicate: `EXISTS (SELECT 1 FROM event_activations a JOIN events e ON e.id = a.event_id
+      JOIN user u ON u.id = e.organizer_id LEFT JOIN profiles p ON p.user_id = u.id
+      JOIN payment_attempts paid ON paid.id = a.successful_payment_attempt_id
+      WHERE e.id = ? AND e.paid_sales_state = 'active' AND ${checklistConditions}
+      AND a.activated_at IS NOT NULL AND paid.state = 'succeeded'
+      AND NOT EXISTS (SELECT 1 FROM refunds r WHERE r.payment_attempt_id = paid.id) AND e.ends_at > ?
+      ${injectedClock ? "" : "AND e.ends_at > CAST(unixepoch('subsecond') * 1000 AS INTEGER)"})`,
+    bindings: [eventId, now],
+  }
+}

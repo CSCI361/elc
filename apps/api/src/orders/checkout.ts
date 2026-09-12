@@ -9,6 +9,7 @@ import {
   type CheckoutResponse,
   type RefundPolicySnapshot,
 } from "../../../../packages/shared/src/checkout-api"
+import { paidSalesEligibilitySql } from "../activation/guards"
 import { requireActiveAccount } from "../auth/permissions"
 import {
   ApiFailure,
@@ -226,7 +227,8 @@ function planGuards(
   actorId: string,
   input: StartCheckout,
   plan: Awaited<ReturnType<typeof buildPlan>>,
-  now: number
+  now: number,
+  injectedClock: boolean
 ) {
   const eligibility = purchaseEligibilitySql(actorId, input.eventId, now)
   const json = JSON.stringify(plan.items)
@@ -262,6 +264,14 @@ function planGuards(
       [json, input.eventId]
     ),
   ]
+  if (plan.items.some((item) => item.kind === "paid")) {
+    const activation = paidSalesEligibilitySql(
+      input.eventId,
+      now,
+      injectedClock
+    )
+    statements.push(...assertSql(db, activation.predicate, activation.bindings))
+  }
   if (plan.campaign)
     statements.push(
       ...assertSql(
@@ -445,7 +455,7 @@ async function writeCheckout(
         JSON.stringify(response),
         now
       ),
-    ...planGuards(db, actorId, input, plan, commitNow),
+    ...planGuards(db, actorId, input, plan, commitNow, !!dependencies.now),
     ...assertSql(db, "? > ?", [expiresAt, commitNow]),
   ]
   if (existing) {

@@ -1,5 +1,5 @@
 import { Input } from "@base-ui/react/input"
-import { type ComponentProps, type ReactNode } from "react"
+import { useId, type ComponentProps, type ReactNode } from "react"
 import { AuthNotice } from "@/auth/notice"
 import { AccountPage } from "@/auth/account-page"
 import { useAccount } from "@/auth/context"
@@ -24,7 +24,7 @@ export function EventError({
         </small>
       ) : null}
       {retry ? (
-        <button className="text-action" onClick={retry}>
+        <button type="button" className="text-action" onClick={retry}>
           {t("reload")}
         </button>
       ) : null}
@@ -70,12 +70,24 @@ export function Field({
   hint,
   ...props
 }: ComponentProps<typeof Input> & { label: string; hint?: string }) {
+  const generatedId = useId()
+  const id = props.id ?? generatedId
+  const hintId = `${id}-hint`
   return (
-    <label className="event-field">
-      <span>{label}</span>
-      <Input {...props} className="auth-input" />
-      {hint ? <small>{hint}</small> : null}
-    </label>
+    <div className="event-field">
+      <label htmlFor={id}>{label}</label>
+      <Input
+        {...props}
+        id={id}
+        aria-describedby={
+          [props["aria-describedby"], hint ? hintId : null]
+            .filter(Boolean)
+            .join(" ") || undefined
+        }
+        className="auth-input"
+      />
+      {hint ? <small id={hintId}>{hint}</small> : null}
+    </div>
   )
 }
 export function SelectField({

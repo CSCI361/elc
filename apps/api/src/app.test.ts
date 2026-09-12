@@ -1,7 +1,16 @@
 import { apiErrorSchema } from "@elc/shared"
-import { describe, expect, it } from "vite-plus/test"
+import { describe, expect, it, vi } from "vite-plus/test"
 import { app } from "./app"
 import type { Bindings } from "./env"
+
+// Node tests load the same bytes that the Worker bundles as an ArrayBuffer module.
+vi.mock("./exports/assets/NotoSans-Regular.bin", async () => {
+  const { readFileSync } = await import("node:fs")
+  const bytes = readFileSync(
+    new URL("./exports/assets/NotoSans-Regular.bin", import.meta.url)
+  )
+  return { default: new Uint8Array(bytes).buffer }
+})
 
 describe("application API boundary", () => {
   it("returns the shared error contract and matching correlation header for unknown API routes", async () => {
