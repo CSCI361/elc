@@ -49,12 +49,19 @@ are reviewed; the integration owner reviews changes and commits deliberately.
 
 ### M0: workspace and tooling
 
-- [ ] Move the existing UI to `apps/web` without losing its design system.
+- [x] Move the existing UI to `apps/web` without losing its design system.
 - [ ] Establish `apps/api`, `apps/mobile`, `apps/marketing`, and `packages/shared`.
-- [ ] Configure pnpm workspaces, Vite+ formatting/lint/type checks and tests.
-- [ ] Fix existing validation failures; configure meaningful application builds.
+- [x] Configure pnpm workspaces, Vite+ formatting/lint/type checks and tests.
+- [x] Fix existing validation failures; configure meaningful application builds.
 - [ ] Provide documented local setup, migrations, seed data and development commands.
 - [ ] Commit CI checks, secret exclusions, and local/preview/demo resource configuration.
+
+Current evidence: the React and Hono Worker build together, local D1/R2/Queue/
+Durable Object bindings are configured, and CI checks and secret exclusions are
+authored. `apps/mobile`, seed commands and remote API resources remain pending.
+Astro builds all four static routes. Root checks include Astro diagnostics and
+both application builds; local browser checks cover its three locales and
+narrow layout. Deployment and GA4 remain pending.
 
 ### M1: contracts, access and data
 
@@ -69,6 +76,16 @@ are reviewed; the integration owner reviews changes and commits deliberately.
       with expiry/revocation; event staff permissions; explicit platform grants.
 - [ ] Negative authorization tests cover unrelated events/orders/tickets/cases,
       downloads, exports, analytics, history and unassigned mobile users.
+
+Current evidence: 25 shared-contract tests, 15 authentication/access tests,
+seven D1 migration/guard tests and two API-boundary tests pass. The generated
+Better Auth schema and two
+reviewed application migrations apply locally. A separate HTTP check through
+workerd proves registration, verification, session access and sign-out. This
+does not establish native authentication or external Google/Resend acceptance.
+The application schema is initial; later workflows still need additional tables.
+See [foundation validation](./evidence/foundation.md) and
+[authentication evidence](./evidence/authentication.md).
 
 ### M2: first complete ticketing flow and infrastructure proof
 
@@ -178,9 +195,11 @@ are reviewed; the integration owner reviews changes and commits deliberately.
 
 ## Evidence log
 
-| Date       | Evidence                                                    | Result                                                                   |
-| ---------- | ----------------------------------------------------------- | ------------------------------------------------------------------------ |
-| 2026-09-13 | Repository inspection at `762c289`, dependency installation | Clean baseline; install passes; starter validation issues recorded above |
+| Date       | Evidence                                                    | Result                                                                         |
+| ---------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| 2026-09-13 | Repository inspection at `762c289`, dependency installation | Clean baseline; install passes; starter validation issues recorded above       |
+| 2026-09-13 | [Foundation validation](./evidence/foundation.md)           | 49 tests pass; local Worker/D1 authentication and browser/API integration pass |
+| 2026-09-13 | [Provider readiness](./evidence/provider-readiness.md)      | Cloudflare access available; actual Polar compatibility proof remains pending  |
 
 ## External checks awaiting access or execution
 

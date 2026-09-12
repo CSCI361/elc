@@ -1,0 +1,18 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro"
+---
+
+<BaseLayout locale="kk" title="elc · 404" description="Бет табылмады. Страница не найдена. Page not found.">
+  <main class="not-found page-width">
+    <a class="wordmark" href="/" aria-label="elc басты беті">elc<span aria-hidden="true">.</span></a>
+    <p class="eyebrow">404</p>
+    <h1>Бет табылмады.</h1>
+    <p lang="ru">Страница не найдена.</p>
+    <p lang="en">Page not found.</p>
+    <nav aria-label="Басты бетке өту">
+      <a class="button button-primary" href="/" lang="kk">Қазақша</a>
+      <a class="button button-outline" href="/ru/" lang="ru">Русский</a>
+      <a class="button button-outline" href="/en/" lang="en">English</a>
+    </nav>
+  </main>
+</BaseLayout>

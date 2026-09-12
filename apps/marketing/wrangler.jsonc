@@ -1,0 +1,31 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "elc-marketing-local",
+  "compatibility_date": "2026-09-11",
+  "workers_dev": false,
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page",
+  },
+  "env": {
+    "preview": {
+      "name": "elc-marketing-preview",
+      "workers_dev": true,
+      "assets": {
+        "directory": "./dist",
+        "html_handling": "auto-trailing-slash",
+        "not_found_handling": "404-page",
+      },
+    },
+    "demo": {
+      "name": "elc-marketing-demo",
+      "workers_dev": true,
+      "assets": {
+        "directory": "./dist",
+        "html_handling": "auto-trailing-slash",
+        "not_found_handling": "404-page",
+      },
+    },
+  },
+}

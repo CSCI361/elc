@@ -1,0 +1,8 @@
+# Generate a local random secret with `vp run setup:local` once configured.
+AUTH_SECRET=
+# Configure these only for their associated external acceptance checks.
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+RESEND_API_KEY=
+POLAR_ACCESS_TOKEN=
+POLAR_WEBHOOK_SECRET=

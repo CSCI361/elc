@@ -1,0 +1,23 @@
+{
+  "name": "@elc/marketing",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --host 127.0.0.1 --port 4321",
+    "build": "astro build",
+    "preview": "astro preview --host 127.0.0.1 --port 4321",
+    "typecheck": "astro check",
+    "preview:worker": "wrangler dev --config wrangler.jsonc --local",
+    "deploy:preview": "node scripts/deploy.mjs preview",
+    "deploy:demo": "node scripts/deploy.mjs demo"
+  },
+  "dependencies": {
+    "@fontsource-variable/roboto": "^5.3.0",
+    "astro": "^7.3.2"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "typescript": "6.0.3"
+  }
+}

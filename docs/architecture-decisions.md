@@ -2,7 +2,7 @@
 
 Updated: 2026-09-13
 
-This document defines the planned architecture for elc's academic MVP. The repository currently contains a React web starter; the applications, backend services, and deployment described here remain to be implemented.
+This document defines the architecture for elc's academic release. Implementation is underway. The repository has a web/API workspace, shared contracts, authentication and initial database migrations. The [implementation plan](./implementation-plan.md) tracks remaining services and acceptance evidence; the architecture below is the target, not a claim that every feature is implemented.
 
 The product requirements are in [elc SRS, initial draft v0.3](./elc_SRS_Initial_Draft.pdf). Section references below refer to that version. This document records technology choices and the product policies for implementation. Use `elc` as the project and product name. The product decisions listed in SRS Section 12 are resolved here for the academic release; provider integration and technical acceptance still need verification.
 
@@ -436,7 +436,7 @@ Changes to these policies require a recorded revision and updated acceptance cri
 
 ## Implementation verification still required
 
-No product-policy questions remain open in this document. The repository is still a starter, so this decision record does not establish that the system works. Engineering work still includes the shared API/schema design, Workers-compatible PDF/QR and file-validation libraries, provider and authentication configuration, D1 concurrency/load proof, Polar sandbox proof, device tests, and recovery rehearsal. The milestones above define those checks. Assign implementation owners and dates in the delivery plan without treating committed features as optional.
+No product-policy questions remain open in this document. This decision record does not establish that the system works. The implementation plan records completed foundation work and pending checks, including the full ticketing transitions, Workers-compatible PDF/QR and file-validation libraries, external authentication, D1 concurrency/load proof, Polar sandbox proof, device tests, and recovery rehearsal. The milestones above define those checks; committed features remain required throughout implementation.
 
 ## References
 

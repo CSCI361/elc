@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1789243329420,
+      "tag": "0000_third_firebird",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1789243533202,
+      "tag": "0001_scope_guards",
+      "breakpoints": true
+    }
+  ]
+}

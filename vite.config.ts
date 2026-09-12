@@ -1,11 +1,11 @@
-import { fileURLToPath } from "node:url"
-import babel from "@rolldown/plugin-babel"
-import tailwindcss from "@tailwindcss/vite"
-import react, { reactCompilerPreset } from "@vitejs/plugin-react"
-import { defineConfig, lazyPlugins } from "vite-plus"
+import { defineConfig } from "vite-plus"
 
-// https://vite.dev/config/
 export default defineConfig({
+  defaultPackage: "./apps/web",
+  test: {
+    include: ["packages/**/*.test.ts", "apps/**/*.test.ts"],
+    testTimeout: 30000,
+  },
   staged: {
     "*": "vp check --fix",
   },
@@ -17,7 +17,7 @@ export default defineConfig({
     env: {
       builtin: true,
     },
-    ignorePatterns: ["dist"],
+    ignorePatterns: ["**/dist/**", "**/node_modules/**", "**/.wrangler/**"],
     overrides: [
       {
         files: ["**/*.{ts,tsx}"],
@@ -152,26 +152,19 @@ export default defineConfig({
     printWidth: 80,
     sortPackageJson: false,
     sortTailwindcss: {
-      stylesheet: "src/index.css",
+      stylesheet: "apps/web/src/index.css",
       functions: ["cn", "cva"],
     },
     ignorePatterns: [
-      "node_modules/",
+      "**/node_modules/",
+      "**/dist/",
+      "**/.wrangler/",
+      "**/migrations/meta/",
       "coverage/",
       ".pnpm-store/",
       "pnpm-lock.yaml",
       "package-lock.json",
       "yarn.lock",
     ],
-  },
-  plugins: lazyPlugins(() => [
-    react(),
-    babel({ presets: [reactCompilerPreset()] }),
-    tailwindcss(),
-  ]),
-  resolve: {
-    alias: {
-      "@": fileURLToPath(new URL("./src", import.meta.url)),
-    },
   },
 })
