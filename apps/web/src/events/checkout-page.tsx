@@ -17,6 +17,7 @@ import { segment, useCommand, useResource, useServerNow } from "./api"
 import { useEventText } from "./messages"
 import { clockText, money, remainingSeconds } from "./policies"
 import { EventError, Loading } from "./ui"
+import { CalendarActions, TicketPdfDownload } from "./exports"
 
 function OrderTickets({ orderId }: { orderId: string }) {
   const { t } = useEventText()
@@ -34,19 +35,22 @@ function OrderTickets({ orderId }: { orderId: string }) {
       {result.loading ? <Loading /> : null}
       <div className="order-ticket-list">
         {result.data?.items.map((ticket) => (
-          <a href={`/tickets/${segment(ticket.id)}`} key={ticket.id}>
-            <TicketIcon size={24} aria-hidden />
-            <span>
-              <strong>{ticket.attendeeName}</strong>
-              <small>
-                {ticket.seat
-                  ? `${ticket.seat.section} ${ticket.seat.row}${ticket.seat.number}`
-                  : t("general_admission")}{" "}
-                · {t(ticket.state)}
-              </small>
-            </span>
-            <ArrowRightIcon size={20} aria-hidden />
-          </a>
+          <article className="order-ticket-item" key={ticket.id}>
+            <a href={`/tickets/${segment(ticket.id)}`}>
+              <TicketIcon size={24} aria-hidden />
+              <span>
+                <strong>{ticket.attendeeName}</strong>
+                <small>
+                  {ticket.seat
+                    ? `${ticket.seat.section} ${ticket.seat.row}${ticket.seat.number}`
+                    : t("general_admission")}{" "}
+                  · {t(ticket.state)}
+                </small>
+              </span>
+              <ArrowRightIcon size={20} aria-hidden />
+            </a>
+            {!result.error ? <TicketPdfDownload ticketId={ticket.id} /> : null}
+          </article>
         ))}
       </div>
       <div className="event-pagination">
@@ -274,11 +278,14 @@ export function CheckoutPage({ orderId }: { orderId: string }) {
           </section>
         </div>
         <div>
-          {order.state === "completed" ? (
+          {order.completedAt !== null ? (
             <OrderTickets orderId={order.id} />
           ) : (
             <CheckoutActions data={resource.data} reload={resource.reload} />
           )}
+          {order.completedAt ? (
+            <CalendarActions eventId={order.eventId} />
+          ) : null}
         </div>
       </div>
     </div>

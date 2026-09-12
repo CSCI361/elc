@@ -1,0 +1,121 @@
+.access-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-items: start;
+}
+.access-page .event-panel,
+.access-page fieldset {
+  min-width: 0;
+}
+.access-form {
+  margin-block: 1rem;
+}
+.access-form > fieldset {
+  border: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+.permission-options {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.4rem;
+}
+.permission-options legend {
+  padding-inline: 0.3rem;
+  font-weight: 600;
+}
+.permission-options label {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 44px;
+  cursor: pointer;
+}
+.permission-options input {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: 0 0 auto;
+  accent-color: var(--primary);
+}
+.access-record,
+.access-new,
+.invitation-record {
+  margin-block: 1rem;
+  padding-block: 1rem;
+  border-top: 1px solid var(--border);
+}
+.access-record summary,
+.access-new summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding-block: 0.5rem;
+}
+.access-record summary > span,
+.access-record summary > small {
+  display: block;
+  margin-top: 0.4rem;
+}
+.access-record summary > small,
+.invitation-record p {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+.access-record,
+.invitation-record,
+.invitation-account {
+  overflow-wrap: anywhere;
+}
+.invitation-state {
+  display: block;
+  margin-block: 0.5rem;
+  font-size: 0.875rem;
+}
+.access-success {
+  border: 1px solid var(--primary);
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+.invitation-page {
+  max-width: 38rem;
+  margin: 2rem auto;
+}
+.invitation-page > p {
+  line-height: 1.65;
+}
+.invitation-page .auth-form fieldset {
+  border: 0;
+  padding: 0;
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+}
+.invitation-auth-links {
+  display: grid;
+  justify-items: start;
+  gap: 0.65rem;
+  margin-block: 1rem;
+}
+.invitation-auth-links a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.access-accept {
+  display: grid;
+  justify-items: start;
+  gap: 1rem;
+  margin-block: 1rem;
+}
+@media (max-width: 850px) {
+  .access-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

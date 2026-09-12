@@ -15,6 +15,8 @@ import {
   PlusIcon,
 } from "@phosphor-icons/react"
 import { useState, type FormEvent } from "react"
+import { useAccount } from "@/auth/context"
+import { useAccessText } from "@/access/messages"
 import { Button } from "@/components/ui/button"
 import { EventApiError, segment, useCommand, useResource } from "./api"
 import { useEventText } from "./messages"
@@ -456,6 +458,8 @@ export function EventEditorPage({ eventId }: { eventId?: string }) {
 }
 
 function ExistingEventEditor({ eventId }: { eventId: string }) {
+  const { account } = useAccount()
+  const { t: accessText } = useAccessText()
   const { locale, t } = useEventText()
   const detail = useResource(
     `/events/${segment(eventId)}/preview`,
@@ -492,6 +496,14 @@ function ExistingEventEditor({ eventId }: { eventId: string }) {
           <h1>{event.title}</h1>
         </div>
         <div className="event-actions">
+          {account?.user.id === event.organizerId ? (
+            <a
+              className="secondary-link"
+              href={`/organizer/events/${segment(event.id)}/access`}
+            >
+              {accessText("title")}
+            </a>
+          ) : null}
           {published ? (
             <a className="secondary-link" href={`/events/${segment(event.id)}`}>
               {t("details")}

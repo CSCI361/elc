@@ -1,4 +1,5 @@
 import { Hono, type Context } from "hono"
+import { calendarExportResponseSchema } from "@elc/shared"
 import { HTTPException } from "hono/http-exception"
 import { requireSession } from "../auth/session"
 import { ApiFailure } from "../db/transitions"
@@ -62,7 +63,7 @@ export function createExportRoutes(dependencies: Dependencies) {
       )
       context.header("Cache-Control", "private, no-store")
       context.header("Referrer-Policy", "no-referrer")
-      return context.json(result)
+      return context.json(calendarExportResponseSchema.parse(result))
     })
     .get("/events/:eventId/calendar.ics", async (context) => {
       const result = await readCalendarExport(

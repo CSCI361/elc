@@ -34,6 +34,7 @@ import {
 } from "./policies"
 import { SeatMap } from "./seat-map"
 import { EventError, Field, Loading } from "./ui"
+import { CalendarActions } from "./exports"
 
 function ReservationForm({
   event,
@@ -364,6 +365,7 @@ export function EventDetailPage({ eventId }: { eventId: string }) {
             <p>{t("refundHint")}</p>
             <p className="preserve-lines">{event.refundInstructions}</p>
           </section>
+          <CalendarActions eventId={event.id} />
         </div>
         <div>
           {inventory.error ? (

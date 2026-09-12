@@ -722,7 +722,7 @@
   display: grid;
   gap: 12px;
 }
-.order-ticket-list > a {
+.order-ticket-item > a {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -731,7 +731,7 @@
   border: 1px solid var(--app-line);
   border-radius: 10px;
 }
-.order-ticket-list > a > span {
+.order-ticket-item > a > span {
   flex: 1;
   min-width: 0;
 }
@@ -743,6 +743,45 @@
   display: block;
   color: var(--app-subtle);
   margin-top: 7px;
+}
+.order-ticket-item .export-download {
+  margin: 10px 0 12px;
+}
+.export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  gap: 12px;
+  margin: 20px 0;
+}
+.export-download {
+  min-width: 0;
+}
+.export-download > small {
+  display: block;
+  margin-top: 8px;
+  color: var(--app-subtle);
+  font-size: 12px;
+}
+.export-download .auth-notice {
+  margin-top: 12px;
+}
+.calendar-panel .calendar-note {
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+.calendar-provider-note {
+  display: block;
+  color: var(--app-subtle);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.ticket-pdf-action {
+  margin-top: 24px;
+}
+.ticket-pdf-action > p {
+  font-size: 12px;
+  margin-top: 10px;
 }
 .payment-page {
   max-width: 600px;

@@ -6,22 +6,53 @@ import { AuthProvider } from "@/auth/provider"
 import { AppShell } from "@/components/app-shell"
 import { EventsRoute } from "@/events"
 import { isEventPath, withoutPaymentSecrets } from "@/events/policies"
+import { lazy, Suspense } from "react"
+import { Loading } from "@/events/ui"
+import {
+  createInvitationMemory,
+  readInvitationToken,
+  withoutInvitationSecrets,
+} from "@/access/invitation-memory"
+
+const InvitationPage = lazy(() =>
+  import("@/access/invitation-page").then((module) => ({
+    default: module.InvitationPage,
+  }))
+)
 
 const initialURL = new URL(window.location.href)
+const invitationMemory = createInvitationMemory(readInvitationToken(initialURL))
+const invitationSafeURL = new URL(
+  withoutInvitationSecrets(initialURL),
+  initialURL.origin
+)
+if (initialURL.pathname === "/invitations/accept") {
+  initialURL.search = ""
+  initialURL.hash = ""
+}
 const paymentSafeURL = new URL(
-  withoutPaymentSecrets(initialURL),
+  withoutPaymentSecrets(invitationSafeURL),
   initialURL.origin
 )
 const route = readAuthRoute(paymentSafeURL)
 const safeURL = withoutAuthSecrets(paymentSafeURL)
 if (
-  `${initialURL.pathname}${initialURL.search}${initialURL.hash}` !== safeURL
+  `${window.location.pathname}${window.location.search}${window.location.hash}` !==
+  safeURL
 ) {
   window.history.replaceState(null, "", safeURL)
 }
 
 function AppRoutes() {
   const { messages: t } = useAccount()
+  if (window.location.pathname === "/invitations/accept")
+    return (
+      <AppShell>
+        <Suspense fallback={<Loading />}>
+          <InvitationPage memory={invitationMemory} />
+        </Suspense>
+      </AppShell>
+    )
   if (isEventPath(window.location.pathname))
     return (
       <AppShell>

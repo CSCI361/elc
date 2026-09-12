@@ -476,6 +476,47 @@ const text = {
     "Сервис сейчас недоступен. Повторите позже.",
     "The service is currently unavailable. Try again later.",
   ],
+  ticketPdf: [
+    "Билетті PDF форматында жүктеу",
+    "Скачать билет PDF",
+    "Download ticket PDF",
+  ],
+  preparingDownload: [
+    "Файл дайындалуда…",
+    "Подготовка файла…",
+    "Preparing download…",
+  ],
+  downloadStarted: [
+    "Жүктеу басталды.",
+    "Скачивание началось.",
+    "Download started.",
+  ],
+  pdfPrivacy: [
+    "PDF файлындағы кіру кодын құпия сақтаңыз.",
+    "Храните код прохода в PDF в тайне.",
+    "Keep the admission code in your PDF private.",
+  ],
+  addCalendar: ["Күнтізбеге қосу", "Добавить в календарь", "Add to calendar"],
+  calendarIcs: [
+    "Күнтізбе файлын жүктеу (.ics)",
+    "Скачать файл календаря (.ics)",
+    "Download calendar file (.ics)",
+  ],
+  calendarCancelled: [
+    "Іс-шара тоқтатылды. Файлда жаңартылған күйі көрсетілген.",
+    "Событие отменено. Файл содержит обновленный статус.",
+    "The event is cancelled. The file contains the updated status.",
+  ],
+  newTab: [
+    " (жаңа бетте ашылады)",
+    " (откроется в новой вкладке)",
+    " (opens in a new tab)",
+  ],
+  calendarProviderNote: [
+    "Сілтемені ашқанда іс-шара мәліметтері таңдалған күнтізбе қызметіне беріледі.",
+    "При открытии ссылки сведения о событии передаются выбранному сервису календаря.",
+    "Opening a link shares the event details with that calendar service.",
+  ],
 } satisfies Record<string, readonly [string, string, string]>
 
 export type EventMessageKey = keyof typeof text

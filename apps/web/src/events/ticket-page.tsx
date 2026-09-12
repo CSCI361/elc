@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { segment, useResource } from "./api"
 import { useEventText } from "./messages"
 import { EventError, Loading } from "./ui"
+import { TicketPdfDownload } from "./exports"
 
 function Credential({ ticketId }: { ticketId: string }) {
   const { t } = useEventText()
@@ -106,6 +107,12 @@ export function TicketPage({ ticketId }: { ticketId: string }) {
         >
           {t("details")}
         </a>
+        {!resource.error ? (
+          <div className="ticket-pdf-action">
+            <TicketPdfDownload ticketId={ticket.id} />
+            <p>{t("pdfPrivacy")}</p>
+          </div>
+        ) : null}
         {resource.error ? (
           <EventError error={resource.error} retry={resource.reload} />
         ) : ticket.admissionBlocked || ticket.state !== "valid" ? (
