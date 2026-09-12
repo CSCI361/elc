@@ -7,6 +7,41 @@ import { ApiFailure } from "../db/transitions"
 import type { Bindings } from "../env"
 import { recoverTicketCredential } from "./credentials"
 
+export async function readOrderTickets(
+  env: Pick<Bindings, "DB" | "TICKET_ENCRYPTION_KEY">,
+  actorId: string,
+  orderId: string,
+  cursor?: string
+) {
+  await requireActiveAccount(env.DB, actorId)
+  const order = await env.DB.prepare(
+    "SELECT account_id, event_id FROM orders WHERE id = ?"
+  )
+    .bind(orderId)
+    .first<{ account_id: string; event_id: string }>()
+  if (!order) throw new ApiFailure("NOT_FOUND", 404, "Order not found.")
+  if (order.account_id !== actorId)
+    await requireEventPermission(
+      env.DB,
+      actorId,
+      order.event_id,
+      "event:manage"
+    )
+  const rows = await env.DB.prepare(
+    "SELECT id FROM tickets WHERE order_id = ? AND id > ? ORDER BY id LIMIT 101"
+  )
+    .bind(orderId, cursor ?? "")
+    .all<{ id: string }>()
+  const selected = rows.results.slice(0, 100)
+  const items = await Promise.all(
+    selected.map(async (row) => (await readTicket(env, actorId, row.id)).ticket)
+  )
+  return {
+    items,
+    nextCursor: rows.results.length > 100 ? selected.at(-1)!.id : null,
+  }
+}
+
 export async function readTicket(
   env: Pick<Bindings, "DB" | "TICKET_ENCRYPTION_KEY">,
   actorId: string,

@@ -29,6 +29,34 @@
       "when": 1789245159197,
       "tag": "0003_snapshot_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1789247940438,
+      "tag": "0004_cute_black_bolt",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1789248057493,
+      "tag": "0005_payment_dispatch_guards",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1789248445344,
+      "tag": "0006_immutable_payment_time",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1789249277662,
+      "tag": "0007_clumsy_absorbing_man",
+      "breakpoints": true
     }
   ]
 }

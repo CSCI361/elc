@@ -1,5 +1,12 @@
 import { z } from "zod"
-import { entityIdSchema, localeSchema } from "./common"
+import {
+  currencySchema,
+  entityIdSchema,
+  localeSchema,
+  paginatedSchema,
+  utcTimestampSchema,
+} from "./common"
+import { orderStateSchema } from "./states"
 
 export const authCapabilitiesSchema = z.strictObject({
   emailAndPassword: z.boolean(),
@@ -21,3 +28,16 @@ export const accountResponseSchema = z.strictObject({
 })
 
 export const updatePreferencesSchema = z.strictObject({ locale: localeSchema })
+
+export const accountOrdersResponseSchema = paginatedSchema(
+  z.strictObject({
+    id: entityIdSchema,
+    eventId: entityIdSchema,
+    eventTitle: z.string(),
+    eventStartsAt: utcTimestampSchema,
+    state: orderStateSchema,
+    totalMinor: z.int().nonnegative(),
+    currency: currencySchema,
+    createdAt: utcTimestampSchema,
+  })
+)

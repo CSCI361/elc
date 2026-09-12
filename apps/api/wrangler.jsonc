@@ -29,7 +29,16 @@
   ],
   "queues": {
     "producers": [{ "binding": "DELIVERY", "queue": "elc-local-delivery" }],
+    "consumers": [
+      {
+        "queue": "elc-local-delivery",
+        "max_batch_size": 5,
+        "max_batch_timeout": 1,
+        "max_retries": 3,
+      },
+    ],
   },
+  "triggers": { "crons": ["* * * * *"] },
   "durable_objects": {
     "bindings": [{ "name": "SUPPORT", "class_name": "SupportCase" }],
   },

@@ -4,6 +4,7 @@ import {
   type CompleteOrder,
   type CompletedOrderResponse,
 } from "@elc/shared"
+import { HTTPException } from "hono/http-exception"
 import {
   ApiFailure,
   assertSql,
@@ -17,6 +18,24 @@ import { loadOrderRows } from "../orders/read"
 import { createTicketCredential } from "./credentials"
 
 type HeldSlot = { id: string; ticket_type_id: string }
+type IssuanceEnvironment = Pick<Bindings, "DB" | "TICKET_ENCRYPTION_KEY">
+type IssuanceDependencies = {
+  now?: () => number
+  beforeCommit?: () => Promise<void>
+}
+type PaymentProof = {
+  id: string
+  purpose: string
+  subject_id: string
+  state: string
+  provider: string
+  provider_payment_id: string | null
+  amount_minor: number
+  currency: string
+  succeeded_at: number | null
+  account_id: string
+  revision: number
+}
 type TicketPlan = {
   id: string
   orderItemId: string
@@ -29,17 +48,92 @@ type TicketPlan = {
 }
 
 export async function completeZeroTotalOrder(
-  env: Pick<Bindings, "DB" | "TICKET_ENCRYPTION_KEY">,
+  env: IssuanceEnvironment,
   actorId: string,
   orderId: string,
   input: CompleteOrder,
-  dependencies: { now?: () => number; beforeCommit?: () => Promise<void> } = {}
+  dependencies: IssuanceDependencies = {}
+): Promise<CompletedOrderResponse> {
+  return completeCanonicalOrder(env, actorId, orderId, input, dependencies)
+}
+
+/** Server-only finalization of an authoritative payment fact already stored by orchestration. */
+export async function completePaidOrder(
+  env: IssuanceEnvironment,
+  paymentAttemptId: string,
+  dependencies: IssuanceDependencies = {}
+): Promise<CompletedOrderResponse> {
+  const payment =
+    await env.DB.prepare(`SELECT p.*, o.account_id, o.revision FROM payment_attempts p
+    LEFT JOIN orders o ON p.purpose = 'ticket_order' AND o.id = p.subject_id WHERE p.id = ?`)
+      .bind(paymentAttemptId)
+      .first<PaymentProof>()
+  if (
+    !payment ||
+    payment.purpose !== "ticket_order" ||
+    payment.state !== "succeeded" ||
+    !payment.account_id ||
+    !Number.isSafeInteger(payment.amount_minor) ||
+    payment.amount_minor <= 0 ||
+    payment.currency !== "KZT" ||
+    payment.succeeded_at === null
+  )
+    throw new ApiFailure(
+      "PAYMENT_MISMATCH",
+      409,
+      "A succeeded ticket-order payment is required for issuance."
+    )
+  try {
+    return await completeCanonicalOrder(
+      env,
+      payment.account_id,
+      payment.subject_id,
+      { requestId: payment.id, expectedRevision: payment.revision },
+      dependencies,
+      payment
+    )
+  } catch (error) {
+    // Payment facts are never changed here, including when the purchaser loses access.
+    if (error instanceof HTTPException && !(error instanceof ApiFailure))
+      throw new ApiFailure(
+        "FORBIDDEN",
+        403,
+        "The purchaser is no longer eligible for ticket issuance."
+      )
+    throw error
+  }
+}
+
+async function completeCanonicalOrder(
+  env: IssuanceEnvironment,
+  actorId: string,
+  orderId: string,
+  input: CompleteOrder,
+  dependencies: IssuanceDependencies,
+  payment?: PaymentProof
 ): Promise<CompletedOrderResponse> {
   const clock = dependencies.now ?? Date.now
   const db = env.DB
+  const receiptActor = payment ? "system:paid-issuance" : actorId
+  const hash = payment
+    ? await requestHash("complete-paid-order", {
+        paymentAttemptId: payment.id,
+        orderId,
+        provider: payment.provider,
+        providerPaymentId: payment.provider_payment_id,
+        amountMinor: payment.amount_minor,
+        currency: payment.currency,
+      })
+    : await requestHash("complete-zero-order", { orderId, ...input })
+  // A previously fulfilled payment remains fulfilled even if a later refund or
+  // account suspension changes current eligibility. Replay never creates tickets.
+  if (payment) {
+    const replay = await readReceipt(db, receiptActor, input.requestId, hash)
+    if (replay?.responseJson)
+      return completedOrderResponseSchema.parse(JSON.parse(replay.responseJson))
+  }
   const rows = await loadOrderRows(db, actorId, orderId)
-  const hash = await requestHash("complete-zero-order", { orderId, ...input })
-  const existing = await readReceipt(db, actorId, input.requestId, hash)
+  const existing = await readReceipt(db, receiptActor, input.requestId, hash)
   if (existing?.responseJson)
     return completedOrderResponseSchema.parse(JSON.parse(existing.responseJson))
   const { order, reservation, items } = rows
@@ -51,11 +145,20 @@ export async function completeZeroTotalOrder(
     )
   if (order.state !== "pending" || reservation.state !== "active")
     throw new ApiFailure("CONFLICT", 409, "This checkout is no longer active.")
-  if (order.total_minor !== 0)
+  if (
+    payment
+      ? order.total_minor <= 0 ||
+        order.total_minor !== payment.amount_minor ||
+        order.currency !== payment.currency ||
+        reservation.payment_attempt_id !== payment.id
+      : order.total_minor !== 0
+  )
     throw new ApiFailure(
       "PAYMENT_MISMATCH",
       409,
-      "This order requires a confirmed payment."
+      payment
+        ? "The payment does not match this order and reservation."
+        : "This order requires a confirmed payment."
     )
   if (reservation.expires_at <= clock())
     throw new ApiFailure(
@@ -127,7 +230,8 @@ export async function completeZeroTotalOrder(
     actorId,
     orderId,
     input.expectedRevision,
-    now
+    now,
+    { allowPaymentAttempt: Boolean(payment) }
   )
   const purchase = purchaseEligibilitySql(actorId, order.event_id, now)
   const payload = JSON.stringify(planned)
@@ -138,7 +242,7 @@ export async function completeZeroTotalOrder(
           "INSERT INTO request_receipts (actor_id, request_id, input_hash, resource_id, response_json, created_at) VALUES (?, ?, ?, ?, ?, ?)"
         )
         .bind(
-          actorId,
+          receiptActor,
           input.requestId,
           hash,
           orderId,
@@ -149,17 +253,38 @@ export async function completeZeroTotalOrder(
       ...assertSql(db, purchase.predicate, purchase.bindings),
       ...assertSql(
         db,
-        `EXISTS (SELECT 1 FROM orders WHERE id = ? AND total_minor = 0 AND admission_blocked_at IS NULL)
+        `EXISTS (SELECT 1 FROM orders WHERE id = ? AND total_minor ${payment ? "> 0" : "= 0"} AND admission_blocked_at IS NULL)
         AND NOT EXISTS (SELECT 1 FROM tickets WHERE order_id = ?)`,
         [orderId, orderId]
       ),
+      ...(payment
+        ? assertSql(
+            db,
+            `EXISTS (SELECT 1 FROM payment_attempts p
+        JOIN orders o ON o.id = p.subject_id JOIN reservations r ON r.order_id = o.id
+        WHERE p.id = ? AND p.purpose = 'ticket_order' AND p.subject_id = ? AND p.state = 'succeeded'
+        AND p.provider = ? AND p.provider_payment_id IS ? AND p.succeeded_at IS ?
+        AND p.amount_minor = ? AND p.amount_minor > 0 AND p.currency = ?
+        AND o.total_minor = p.amount_minor AND o.currency = p.currency AND r.payment_attempt_id = p.id
+        AND NOT EXISTS (SELECT 1 FROM refunds f WHERE f.payment_attempt_id = p.id))`,
+            [
+              payment.id,
+              orderId,
+              payment.provider,
+              payment.provider_payment_id,
+              payment.succeeded_at,
+              payment.amount_minor,
+              payment.currency,
+            ]
+          )
+        : []),
       ...assertSql(
         db,
         `NOT EXISTS (
         SELECT 1 FROM order_items oi JOIN ticket_types tt ON tt.id = oi.ticket_type_id
         JOIN events e ON e.id = tt.event_id WHERE oi.order_id = ?
         AND (tt.hidden = 1 OR tt.sales_start_at > ? OR tt.sales_end_at <= ?
-          OR (tt.kind = 'paid' AND e.paid_sales_state <> 'active'))
+          OR ((tt.kind = 'paid' OR oi.unit_price_minor > 0) AND e.paid_sales_state <> 'active'))
       )`,
         [orderId, now, now]
       ),
@@ -243,12 +368,15 @@ export async function completeZeroTotalOrder(
           )),
       db
         .prepare(`INSERT INTO audit_entries (id, event_id, actor_id, scope, action, entity_id, description, correlation_id, created_at)
-        VALUES (?, ?, ?, 'event', 'order.completed', ?, 'Zero-total order completed', ?, ?)`)
+        VALUES (?, ?, ?, 'event', 'order.completed', ?, ?, ?, ?)`)
         .bind(
           crypto.randomUUID(),
           order.event_id,
-          actorId,
+          receiptActor,
           orderId,
+          payment
+            ? "Paid order completed from a confirmed payment"
+            : "Zero-total order completed",
           input.requestId,
           now
         ),
@@ -265,7 +393,7 @@ export async function completeZeroTotalOrder(
     ])
   } catch (error) {
     if (!isTransitionConflict(error)) throw error
-    const receipt = await readReceipt(db, actorId, input.requestId, hash)
+    const receipt = await readReceipt(db, receiptActor, input.requestId, hash)
     if (receipt?.responseJson)
       return completedOrderResponseSchema.parse(
         JSON.parse(receipt.responseJson)

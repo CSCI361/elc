@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { entityIdSchema, requestIdSchema } from "./common"
+import { entityIdSchema, paginatedSchema, requestIdSchema } from "./common"
 import { admissionPayloadSchema, scanResultSchema } from "./operations"
 import { ticketSchema } from "./ticketing"
 
@@ -17,6 +17,7 @@ export const completedOrderResponseSchema = z.strictObject({
 export const ticketDetailResponseSchema = z.strictObject({
   ticket: ticketSchema,
 })
+export const orderTicketsResponseSchema = paginatedSchema(ticketSchema)
 export const ticketCredentialResponseSchema = z.strictObject({
   ticket: ticketSchema,
   credential: admissionPayloadSchema,

@@ -2,6 +2,11 @@
 
 Updated: 2026-09-13
 
+Work paused at the user's offline checkpoint. Read
+[resume checkpoint](./resume-checkpoint.md) before continuing; it records the
+saved payment/web work, incomplete activation modules, credentials setup and
+ordered next steps. The release remains in progress.
+
 ## Scope and evidence rules
 
 Implement the academic release in [architecture decisions](./architecture-decisions.md)
@@ -245,6 +250,11 @@ activation, platform administration and refund/payout workflows are unfinished.
       checks remain before claiming release completion.
 
 ## Evidence log
+
+The offline checkpoint additionally passes 219 tests across 19 files, full
+format/lint/type checks, and the web/Worker/marketing build. Its newer event
+screens and partial activation code still need the acceptance work recorded in
+[resume checkpoint](./resume-checkpoint.md).
 
 | Date       | Evidence                                                    | Result                                                                                                                      |
 | ---------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |

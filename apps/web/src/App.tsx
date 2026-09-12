@@ -4,6 +4,8 @@ import { useAccount } from "@/auth/context"
 import { readAuthRoute, withoutAuthSecrets } from "@/auth/navigation"
 import { AuthProvider } from "@/auth/provider"
 import { AppShell } from "@/components/app-shell"
+import { EventsRoute } from "@/events"
+import { isEventPath } from "@/events/policies"
 
 const initialURL = new URL(window.location.href)
 const route = readAuthRoute(initialURL)
@@ -16,6 +18,12 @@ if (
 
 function AppRoutes() {
   const { messages: t } = useAccount()
+  if (isEventPath(window.location.pathname))
+    return (
+      <AppShell>
+        <EventsRoute path={window.location.pathname} />
+      </AppShell>
+    )
   if (window.location.pathname === "/account")
     return (
       <AppShell>

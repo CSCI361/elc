@@ -8,10 +8,24 @@ import { requireVerifiedSession } from "../auth/session"
 import { ApiFailure } from "../db/transitions"
 import type { Bindings } from "../env"
 import { completeZeroTotalOrder } from "./issue"
-import { readTicket } from "./read"
+import { readOrderTickets, readTicket } from "./read"
 import { reverseCheckIn, scanOnline } from "./scan"
 
 export const ticketRoutes = new Hono<{ Bindings: Bindings }>()
+  .get("/orders/:orderId/tickets", async (c) => {
+    const session = await requireVerifiedSession(c)
+    const cursor = c.req.query("cursor")
+    if (cursor && cursor.length > 128)
+      throw new ApiFailure("INVALID_INPUT", 400, "Invalid ticket cursor.")
+    return c.json(
+      await readOrderTickets(
+        c.env,
+        session.user.id,
+        c.req.param("orderId"),
+        cursor
+      )
+    )
+  })
   .post("/orders/:orderId/complete", async (c) => {
     const session = await requireVerifiedSession(c)
     const parsed = completeOrderSchema.safeParse(

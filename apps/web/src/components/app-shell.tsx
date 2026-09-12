@@ -9,6 +9,7 @@ import type { ReactNode } from "react"
 import { useAccount } from "@/auth/context"
 import { LocaleSelect } from "@/auth/locale-select"
 import { useTheme } from "./theme-provider"
+import { useEventText } from "@/events/messages"
 
 export function AppShell({
   children,
@@ -19,6 +20,7 @@ export function AppShell({
 }) {
   const { messages: t, status } = useAccount()
   const { theme, setTheme } = useTheme()
+  const { t: eventLabel } = useEventText()
   const dark =
     theme === "dark" ||
     (theme === "system" &&
@@ -64,6 +66,42 @@ export function AppShell({
           </a>
         </nav>
       </header>
+      <nav className="event-navigation" aria-label={eventLabel("discover")}>
+        <a
+          href="/events"
+          aria-current={
+            window.location.pathname === "/" ||
+            window.location.pathname.startsWith("/events")
+              ? "page"
+              : undefined
+          }
+        >
+          {eventLabel("discover")}
+        </a>
+        <a
+          href="/organizer/events"
+          aria-current={
+            window.location.pathname.startsWith("/organizer/events")
+              ? "page"
+              : undefined
+          }
+        >
+          {eventLabel("organize")}
+        </a>
+        {status === "active" ? (
+          <a
+            href="/orders"
+            aria-current={
+              window.location.pathname.startsWith("/orders") ||
+              window.location.pathname.startsWith("/tickets")
+                ? "page"
+                : undefined
+            }
+          >
+            {eventLabel("orders")}
+          </a>
+        ) : null}
+      </nav>
       <main
         id="main-content"
         className={authLayout ? "auth-layout" : "main-layout"}

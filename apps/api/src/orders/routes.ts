@@ -3,9 +3,16 @@ import { requireVerifiedSession } from "../auth/session"
 import type { Bindings } from "../env"
 import { startCheckout, replaceCheckout } from "./checkout"
 import { abandonCheckout, readCheckout } from "./lifecycle"
+import { readAccountOrders } from "./account"
 
 /** Mount at /api; authentication identifies the actor, SQL rechecks eligibility. */
 export const orderRoutes = new Hono<{ Bindings: Bindings }>()
+  .get("/me/orders", async (c) => {
+    const session = await requireVerifiedSession(c)
+    return c.json(
+      await readAccountOrders(c.env.DB, session.user.id, c.req.query())
+    )
+  })
   .post("/checkouts", async (c) => {
     const session = await requireVerifiedSession(c)
     return c.json(

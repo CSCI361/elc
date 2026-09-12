@@ -1,0 +1,286 @@
+import {
+  checkoutResponseSchema,
+  completedOrderResponseSchema,
+  paymentResponseSchema,
+  orderTicketsResponseSchema,
+  type CheckoutResponse,
+} from "@elc/shared"
+import { useState } from "react"
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  ClockIcon,
+  TicketIcon,
+} from "@phosphor-icons/react"
+import { Button } from "@/components/ui/button"
+import { segment, useCommand, useResource, useServerNow } from "./api"
+import { useEventText } from "./messages"
+import { clockText, money, remainingSeconds } from "./policies"
+import { EventError, Loading } from "./ui"
+
+function OrderTickets({ orderId }: { orderId: string }) {
+  const { t } = useEventText()
+  const [cursor, setCursor] = useState("")
+  const result = useResource(
+    `/orders/${segment(orderId)}/tickets${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`,
+    orderTicketsResponseSchema
+  )
+  return (
+    <section className="event-panel">
+      <h2>{t("tickets")}</h2>
+      {result.error ? (
+        <EventError error={result.error} retry={result.reload} />
+      ) : null}
+      {result.loading ? <Loading /> : null}
+      <div className="order-ticket-list">
+        {result.data?.items.map((ticket) => (
+          <a href={`/tickets/${segment(ticket.id)}`} key={ticket.id}>
+            <TicketIcon size={24} aria-hidden />
+            <span>
+              <strong>{ticket.attendeeName}</strong>
+              <small>
+                {ticket.seat
+                  ? `${ticket.seat.section} ${ticket.seat.row}${ticket.seat.number}`
+                  : t("general_admission")}{" "}
+                · {t(ticket.state)}
+              </small>
+            </span>
+            <ArrowRightIcon size={20} aria-hidden />
+          </a>
+        ))}
+      </div>
+      <div className="event-pagination">
+        {cursor ? (
+          <button className="text-action" onClick={() => setCursor("")}>
+            {t("firstPage")}
+          </button>
+        ) : null}
+        {result.data?.nextCursor ? (
+          <button
+            className="text-action"
+            onClick={() => setCursor(result.data?.nextCursor ?? "")}
+          >
+            {t("more")}
+          </button>
+        ) : null}
+      </div>
+    </section>
+  )
+}
+
+function CheckoutActions({
+  data,
+  reload,
+}: {
+  data: CheckoutResponse
+  reload: () => void
+}) {
+  const { t } = useEventText()
+  const command = useCommand()
+  const now = useServerNow()
+  const remaining = remainingSeconds(data.reservation.expiresAt, now)
+  const active =
+    data.order.state === "pending" &&
+    data.reservation.state === "active" &&
+    remaining > 0
+  const paymentId = data.reservation.paymentAttemptId
+  return (
+    <section className="event-panel checkout-actions">
+      {command.error ? (
+        <EventError error={command.error} retry={reload} />
+      ) : null}
+      {active ? (
+        <>
+          <div className="reservation-clock">
+            <ClockIcon size={24} aria-hidden />
+            <div>
+              <span>{t("remaining")}</span>
+              <strong aria-live="off">{clockText(remaining)}</strong>
+              <time dateTime={data.reservation.expiresAt}>
+                {new Intl.DateTimeFormat(undefined, {
+                  timeStyle: "short",
+                }).format(new Date(data.reservation.expiresAt))}
+              </time>
+            </div>
+          </div>
+          {data.order.totalMinor === 0 && !paymentId ? (
+            <Button
+              className="auth-button"
+              disabled={command.pending}
+              onClick={() => {
+                void command
+                  .send(
+                    `/orders/${segment(data.order.id)}/complete`,
+                    completedOrderResponseSchema,
+                    { expectedRevision: data.revision }
+                  )
+                  .then((result) => {
+                    if (result) reload()
+                  })
+              }}
+            >
+              {command.pending ? t("loading") : t("completeFree")}
+            </Button>
+          ) : paymentId ? (
+            <a
+              className="primary-link"
+              href={`/payments/${segment(paymentId)}`}
+            >
+              {t("paymentTitle")}
+              <ArrowRightIcon size={18} aria-hidden />
+            </a>
+          ) : (
+            <>
+              <p>{t("paymentNote")}</p>
+              <Button
+                className="auth-button"
+                disabled={command.pending}
+                onClick={() => {
+                  void command
+                    .send(
+                      `/orders/${segment(data.order.id)}/payment`,
+                      paymentResponseSchema,
+                      { expectedRevision: data.revision }
+                    )
+                    .then((result) => {
+                      if (result)
+                        window.location.assign(
+                          `/payments/${segment(result.payment.id)}`
+                        )
+                    })
+                }}
+              >
+                {command.pending ? t("paymentPending") : t("pay")}
+              </Button>
+            </>
+          )}
+          <Button
+            variant="outline"
+            className="auth-button"
+            disabled={command.pending}
+            onClick={() => {
+              void command
+                .send(
+                  `/orders/${segment(data.order.id)}/abandon`,
+                  checkoutResponseSchema,
+                  { expectedRevision: data.revision }
+                )
+                .then((result) => {
+                  if (result) reload()
+                })
+            }}
+          >
+            {t("abandon")}
+          </Button>
+        </>
+      ) : (
+        <>
+          <h2>
+            {t(data.order.state === "pending" ? "expired" : data.order.state)}
+          </h2>
+          {data.order.state === "expired" || data.order.state === "pending" ? (
+            <p>{t("expiredHint")}</p>
+          ) : null}
+          <a
+            className="secondary-link"
+            href={`/events/${segment(data.order.eventId)}`}
+          >
+            {t("details")}
+          </a>
+        </>
+      )}
+    </section>
+  )
+}
+
+export function CheckoutPage({ orderId }: { orderId: string }) {
+  const { locale, t } = useEventText()
+  const resource = useResource(
+    `/orders/${segment(orderId)}`,
+    checkoutResponseSchema,
+    5000
+  )
+  if (!resource.data)
+    return resource.error ? (
+      <EventError error={resource.error} retry={resource.reload} />
+    ) : (
+      <Loading />
+    )
+  const { order } = resource.data
+  return (
+    <div className="events-page">
+      <a className="back-link" href={`/events/${segment(order.eventId)}`}>
+        <ArrowLeftIcon size={18} aria-hidden />
+        {t("details")}
+      </a>
+      <div className="event-page-heading">
+        <div>
+          <span className="eyebrow">
+            {t("order")} · {t(order.state)}
+          </span>
+          <h1>{t(order.state === "completed" ? "ticketReady" : "checkout")}</h1>
+        </div>
+      </div>
+      {resource.error ? (
+        <EventError error={resource.error} retry={resource.reload} />
+      ) : null}
+      <div className="event-detail-grid">
+        <div>
+          <section className="event-panel">
+            <h2>{t("tickets")}</h2>
+            {order.items.map((item) => (
+              <article className="order-line" key={item.id}>
+                <div>
+                  <h3>{item.ticketTypeName}</h3>
+                  <p>
+                    {t("quantity")}: {item.quantity}
+                  </p>
+                  {item.seats.map((seat) => (
+                    <span className="seat-chip" key={seat.seatId}>
+                      {seat.section} {seat.row}
+                      {seat.number}
+                    </span>
+                  ))}
+                  <p>
+                    {resource.data?.attendees
+                      .find((attendees) => attendees.orderItemId === item.id)
+                      ?.names.join(", ")}
+                  </p>
+                </div>
+                <strong>{money(item.totalMinor, locale)}</strong>
+              </article>
+            ))}
+            <dl className="order-totals">
+              <div>
+                <dt>{t("subtotal")}</dt>
+                <dd>{money(order.subtotalMinor, locale)}</dd>
+              </div>
+              <div>
+                <dt>{t("discount")}</dt>
+                <dd>−{money(order.discountMinor, locale)}</dd>
+              </div>
+              <div className="order-total">
+                <dt>{t("total")}</dt>
+                <dd>{money(order.totalMinor, locale)}</dd>
+              </div>
+            </dl>
+          </section>
+          <section className="event-panel">
+            <h2>{t("refundPolicy")}</h2>
+            <p>{t("refundHint")}</p>
+            <p className="preserve-lines">
+              {resource.data.refundPolicy.instructions}
+            </p>
+          </section>
+        </div>
+        <div>
+          {order.state === "completed" ? (
+            <OrderTickets orderId={order.id} />
+          ) : (
+            <CheckoutActions data={resource.data} reload={resource.reload} />
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}

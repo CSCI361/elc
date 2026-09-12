@@ -10,6 +10,7 @@ import { ApiFailure, assertSql } from "./db/transitions"
 import { ticketRoutes } from "./tickets"
 import { orderRoutes } from "./orders/routes"
 import { eventsRoutes } from "./events"
+import { paymentRoutes } from "./payments/routes"
 
 function authenticationDependencies(env: Bindings): AuthDependencies {
   if (env.ENVIRONMENT !== "local") return {}
@@ -110,6 +111,7 @@ export const app = new Hono<{
   .route("/api", ticketRoutes)
   .route("/api", orderRoutes)
   .route("/api", eventsRoutes)
+  .route("/api", paymentRoutes)
   .all("/api/*", (c) =>
     c.json(
       {

@@ -18,6 +18,8 @@ import {
   offlineSnapshotSchema,
   orderItemSchema,
   policy,
+  paymentCheckoutRequestSchema,
+  providerPaymentStatusSchema,
   reservationExpiresAt,
   startCheckoutSchema,
   supportUploadSchema,
@@ -188,8 +190,13 @@ describe("ticketing request contracts", () => {
       kind: "refund",
       providerEventId: "provider-event-1",
       providerPaymentId: "provider-payment-1",
+      providerOrderId: "provider-order-1",
       providerRefundId: "provider-refund-1",
       paymentAttemptId: "payment-1",
+      purpose: "ticket_order",
+      subjectId: "order-1",
+      accountId: "account-1",
+      requestHash: "a".repeat(64),
       refundId: "refund-1",
       state: "succeeded",
       amountMinor: 900_000,
@@ -199,6 +206,53 @@ describe("ticketing request contracts", () => {
     expect(
       verifiedProviderEventSchema.safeParse({ ...refundEvent, kind: "payment" })
         .success
+    ).toBe(false)
+  })
+
+  it("requires frozen provider identity and separates checkout IDs from order IDs", () => {
+    const request = {
+      paymentAttemptId: "payment-1",
+      idempotencyKey: "dispatch-1",
+      amountMinor: 900_000,
+      currency: "KZT",
+      purpose: "ticket_order",
+      subjectId: "order-1",
+      accountId: "account-1",
+      requestHash: "a".repeat(64),
+      customerEmail: "buyer@example.test",
+      successUrl: "https://app.example.test/payments/return",
+      returnUrl: "https://app.example.test/orders/order-1",
+    }
+    expect(paymentCheckoutRequestSchema.safeParse(request).success).toBe(true)
+    expect(
+      paymentCheckoutRequestSchema.safeParse({ ...request, requestHash: "" })
+        .success
+    ).toBe(false)
+    const status = {
+      paymentAttemptId: request.paymentAttemptId,
+      amountMinor: request.amountMinor,
+      currency: request.currency,
+      purpose: request.purpose,
+      subjectId: request.subjectId,
+      accountId: request.accountId,
+      requestHash: request.requestHash,
+      providerPaymentId: "checkout-1",
+      providerOrderId: null,
+      state: "pending",
+      refundedAmountMinor: 0,
+    }
+    expect(providerPaymentStatusSchema.safeParse(status).success).toBe(true)
+    expect(
+      providerPaymentStatusSchema.safeParse({
+        ...status,
+        providerOrderId: undefined,
+      }).success
+    ).toBe(false)
+    expect(
+      providerPaymentStatusSchema.safeParse({
+        ...status,
+        refundedAmountMinor: -1,
+      }).success
     ).toBe(false)
   })
 })

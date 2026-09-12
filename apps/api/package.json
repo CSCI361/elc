@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@polar-sh/sdk": "1.0.0-alpha.21",
     "@elc/shared": "workspace:*",
     "hono": "^4.13.7",
     "better-auth": "^1.7.4",

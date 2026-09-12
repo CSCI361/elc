@@ -391,6 +391,18 @@ export const paymentAttempts = sqliteTable(
       enum: ["polar_sandbox", "simulation"],
     }).notNull(),
     providerPaymentId: text("provider_payment_id"),
+    providerOrderId: text("provider_order_id"),
+    actorId: text("actor_id").references(() => user.id),
+    requestHash: text("request_hash"),
+    requestJson: text("request_json"),
+    checkoutUrl: text("checkout_url"),
+    dispatchState: text("dispatch_state", {
+      enum: ["prepared", "dispatched", "uncertain", "reconciled"],
+    })
+      .notNull()
+      .default("prepared"),
+    lastErrorCode: text("last_error_code"),
+    updatedAt: integer("updated_at").notNull().default(0),
     idempotencyKey: text("idempotency_key").notNull().unique(),
     amountMinor: integer("amount_minor").notNull(),
     currency: text("currency").notNull().default("KZT"),
@@ -402,9 +414,95 @@ export const paymentAttempts = sqliteTable(
       t.provider,
       t.providerPaymentId
     ),
+    uniqueIndex("provider_order_identity").on(t.provider, t.providerOrderId),
     check(
       "payment_amount",
       sql`${t.amountMinor} > 0 AND ${t.currency} = 'KZT'`
+    ),
+  ]
+)
+
+export const activationSettings = sqliteTable(
+  "activation_settings",
+  {
+    id: text("id").primaryKey(),
+    feeMinor: integer("fee_minor").notNull().default(500_000),
+    currency: text("currency").notNull().default("KZT"),
+    revision: integer("revision").notNull().default(0),
+    updatedAt: integer("updated_at").notNull(),
+    updatedBy: text("updated_by"),
+  },
+  (t) => [
+    check(
+      "activation_settings_values",
+      sql`${t.id} = 'default' AND ${t.feeMinor} >= 30000 AND ${t.feeMinor} <= 100000000 AND ${t.currency} = 'KZT' AND ${t.revision} >= 0`
+    ),
+  ]
+)
+
+export const eventActivations = sqliteTable(
+  "event_activations",
+  {
+    eventId: text("event_id")
+      .primaryKey()
+      .references(() => events.id),
+    revision: integer("revision").notNull().default(0),
+    displayName: text("display_name").notNull(),
+    legalName: text("legal_name").notNull(),
+    contact: text("contact").notNull(),
+    dummyPayoutReference: text("dummy_payout_reference").notNull(),
+    profileUpdatedAt: integer("profile_updated_at").notNull(),
+    emailCheckedAt: integer("email_checked_at").notNull(),
+    identityCheck: text("identity_check", {
+      enum: ["pending", "passed", "failed"],
+    })
+      .notNull()
+      .default("pending"),
+    identityCheckedAt: integer("identity_checked_at"),
+    payoutCheck: text("payout_check", { enum: ["pending", "passed", "failed"] })
+      .notNull()
+      .default("pending"),
+    payoutCheckedAt: integer("payout_checked_at"),
+    termsVersion: text("terms_version"),
+    termsAcceptedAt: integer("terms_accepted_at"),
+    successfulPaymentAttemptId: text("successful_payment_attempt_id")
+      .unique()
+      .references(() => paymentAttempts.id),
+    activatedAt: integer("activated_at"),
+    suspendedAt: integer("suspended_at"),
+    suspensionReason: text("suspension_reason"),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (t) => [
+    check(
+      "activation_values",
+      sql`${t.revision} >= 0 AND ${t.identityCheck} IN ('pending', 'passed', 'failed') AND ${t.payoutCheck} IN ('pending', 'passed', 'failed') AND (${t.successfulPaymentAttemptId} IS NULL) = (${t.activatedAt} IS NULL) AND (${t.termsVersion} IS NULL) = (${t.termsAcceptedAt} IS NULL)`
+    ),
+  ]
+)
+
+export const activationAttempts = sqliteTable(
+  "activation_attempts",
+  {
+    paymentAttemptId: text("payment_attempt_id")
+      .primaryKey()
+      .references(() => paymentAttempts.id),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => eventActivations.eventId),
+    checklistRevision: integer("checklist_revision").notNull(),
+    feeSettingsRevision: integer("fee_settings_revision").notNull(),
+    feeMinor: integer("fee_minor").notNull(),
+    currency: text("currency").notNull().default("KZT"),
+    checklistSnapshotJson: text("checklist_snapshot_json").notNull(),
+    termsVersion: text("terms_version").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [
+    index("activation_event_attempts").on(t.eventId, t.createdAt),
+    check(
+      "activation_attempt_values",
+      sql`${t.checklistRevision} >= 0 AND ${t.feeSettingsRevision} >= 0 AND ${t.feeMinor} >= 30000 AND ${t.currency} = 'KZT' AND json_valid(${t.checklistSnapshotJson}) = 1`
     ),
   ]
 )
@@ -421,9 +519,34 @@ export const refunds = sqliteTable("refunds", {
     .default("pending"),
   amountMinor: integer("amount_minor").notNull(),
   providerRefundId: text("provider_refund_id"),
+  dispatchState: text("dispatch_state", {
+    enum: ["prepared", "dispatched", "uncertain", "reconciled"],
+  })
+    .notNull()
+    .default("prepared"),
+  requestJson: text("request_json"),
+  lastErrorCode: text("last_error_code"),
+  updatedAt: integer("updated_at").notNull().default(0),
   createdAt: integer("created_at").notNull(),
   confirmedAt: integer("confirmed_at"),
 })
+
+export const providerEvents = sqliteTable(
+  "provider_events",
+  {
+    id: text("id").primaryKey(),
+    provider: text("provider").notNull(),
+    providerEventId: text("provider_event_id").notNull(),
+    inputHash: text("input_hash").notNull(),
+    paymentAttemptId: text("payment_attempt_id").notNull(),
+    payloadJson: text("payload_json").notNull(),
+    receivedAt: integer("received_at").notNull(),
+    processedAt: integer("processed_at"),
+  },
+  (t) => [
+    uniqueIndex("provider_event_identity").on(t.provider, t.providerEventId),
+  ]
+)
 
 export const tickets = sqliteTable(
   "tickets",

@@ -405,21 +405,59 @@ export type Ticket = z.infer<typeof ticketSchema>
 export type PaymentAttempt = z.infer<typeof paymentAttemptSchema>
 export type Refund = z.infer<typeof refundSchema>
 
-export type PaymentCheckoutRequest = {
-  paymentAttemptId: string
-  idempotencyKey: string
-  amountMinor: number
-  currency: "KZT"
-  purpose: "ticket_order" | "event_activation"
-  subjectId: string
-}
-
-export const providerPaymentStatusSchema = z.strictObject({
-  providerPaymentId: entityIdSchema,
+export const paymentBindingSchema = z.strictObject({
   paymentAttemptId: entityIdSchema,
-  state: paymentStateSchema,
+  purpose: z.enum(["ticket_order", "event_activation"]),
+  subjectId: entityIdSchema,
+  accountId: entityIdSchema,
+  requestHash: z.string().regex(/^[a-f0-9]{64}$/),
   amountMinor: z.int().positive(),
   currency: currencySchema,
+})
+
+export const paymentCheckoutRequestSchema = paymentBindingSchema.extend({
+  idempotencyKey: requestIdSchema,
+  customerEmail: z.email(),
+  successUrl: z.url(),
+  returnUrl: z.url(),
+})
+
+export const providerCheckoutSchema = z.strictObject({
+  /** Polar's checkout ID, consistently distinct from its order ID. */
+  providerPaymentId: entityIdSchema,
+  checkoutUrl: z.url(),
+})
+
+export const paymentLookupRequestSchema = z.strictObject({
+  providerPaymentId: entityIdSchema,
+  providerOrderId: entityIdSchema.optional(),
+  expected: paymentBindingSchema,
+})
+
+export const providerPaymentStatusSchema = paymentBindingSchema.extend({
+  providerPaymentId: entityIdSchema,
+  providerOrderId: entityIdSchema.nullable(),
+  state: paymentStateSchema,
+  refundedAmountMinor: z.int().nonnegative(),
+})
+
+export const providerRefundRequestSchema = z.strictObject({
+  refundId: entityIdSchema,
+  providerPaymentId: entityIdSchema,
+  providerOrderId: entityIdSchema,
+  idempotencyKey: requestIdSchema,
+  expected: paymentBindingSchema,
+  amountMinor: z.int().positive(),
+  currency: currencySchema,
+  reason: refundSchema.shape.reason,
+})
+
+export const providerRefundStatusSchema = paymentBindingSchema.extend({
+  providerPaymentId: entityIdSchema,
+  providerOrderId: entityIdSchema,
+  providerRefundId: entityIdSchema,
+  refundId: entityIdSchema,
+  state: refundStateSchema,
 })
 
 export const verifiedPaymentEventSchema = providerPaymentStatusSchema.extend({
@@ -427,16 +465,9 @@ export const verifiedPaymentEventSchema = providerPaymentStatusSchema.extend({
   providerEventId: entityIdSchema,
 })
 
-export const verifiedRefundEventSchema = z.strictObject({
+export const verifiedRefundEventSchema = providerRefundStatusSchema.extend({
   kind: z.literal("refund"),
   providerEventId: entityIdSchema,
-  providerPaymentId: entityIdSchema,
-  providerRefundId: entityIdSchema,
-  paymentAttemptId: entityIdSchema,
-  refundId: entityIdSchema,
-  state: refundStateSchema,
-  amountMinor: z.int().positive(),
-  currency: currencySchema,
 })
 
 export const verifiedProviderEventSchema = z.discriminatedUnion("kind", [
@@ -445,29 +476,67 @@ export const verifiedProviderEventSchema = z.discriminatedUnion("kind", [
 ])
 
 export type ProviderPaymentStatus = z.infer<typeof providerPaymentStatusSchema>
+export type PaymentBinding = z.infer<typeof paymentBindingSchema>
+export type PaymentCheckoutRequest = z.infer<
+  typeof paymentCheckoutRequestSchema
+>
+export type ProviderCheckout = z.infer<typeof providerCheckoutSchema>
+export type PaymentLookupRequest = z.infer<typeof paymentLookupRequestSchema>
+export type ProviderRefundRequest = z.infer<typeof providerRefundRequestSchema>
+export type ProviderRefundStatus = z.infer<typeof providerRefundStatusSchema>
 export type VerifiedPaymentEvent = z.infer<typeof verifiedPaymentEventSchema>
 export type VerifiedRefundEvent = z.infer<typeof verifiedRefundEventSchema>
 export type VerifiedProviderEvent = z.infer<typeof verifiedProviderEventSchema>
 
+export type ProviderErrorCode =
+  | "INVALID_REQUEST"
+  | "NOT_CONFIGURED"
+  | "AMOUNT_UNSUPPORTED"
+  | "PROVIDER_REJECTED"
+  | "PROVIDER_UNAVAILABLE"
+  | "INVALID_RESPONSE"
+  | "PAYMENT_MISMATCH"
+  | "REFUND_MISMATCH"
+  | "INVALID_WEBHOOK"
+  | "RECONCILIATION_REQUIRED"
+
+/** An uncertain outcome must be reconciled before another financial request. */
+export class ProviderOperationError extends Error {
+  readonly code: ProviderErrorCode
+  readonly outcome: "definite_failure" | "uncertain"
+  readonly httpStatus?: number
+  readonly retryAfterSeconds?: number
+  constructor(
+    code: ProviderErrorCode,
+    outcome: "definite_failure" | "uncertain",
+    message: string,
+    httpStatus?: number,
+    retryAfterSeconds?: number
+  ) {
+    super(message)
+    this.name = "ProviderOperationError"
+    this.code = code
+    this.outcome = outcome
+    this.httpStatus = httpStatus
+    this.retryAfterSeconds = retryAfterSeconds
+  }
+}
+
 /** Providers report payment facts; only the API commits orders and ticket issuance. */
 export interface PaymentAdapter {
-  createCheckout(request: PaymentCheckoutRequest): Promise<{
-    providerPaymentId: string
-    checkoutUrl: string
-  }>
-  lookupPayment(providerPaymentId: string): Promise<ProviderPaymentStatus>
-  refund(request: {
-    refundId: string
-    providerPaymentId: string
-    idempotencyKey: string
-    amountMinor: number
-    currency: "KZT"
-  }): Promise<{
-    providerRefundId: string
-    state: "pending" | "succeeded" | "failed"
-  }>
+  createCheckout(request: PaymentCheckoutRequest): Promise<ProviderCheckout>
+  /** A null result is not proof that a previous POST did not reach the provider. */
+  recoverCheckout(
+    request: PaymentCheckoutRequest
+  ): Promise<ProviderCheckout | null>
+  lookupPayment(request: PaymentLookupRequest): Promise<ProviderPaymentStatus>
+  refund(request: ProviderRefundRequest): Promise<ProviderRefundStatus>
+  lookupRefund(
+    request: ProviderRefundRequest
+  ): Promise<ProviderRefundStatus | null>
+  /** Verify and normalize signed facts without network I/O; the API compares its frozen binding. */
   verifyWebhook(
     body: string,
     headers: Readonly<Record<string, string>>
-  ): Promise<VerifiedProviderEvent>
+  ): Promise<VerifiedProviderEvent | null>
 }

@@ -16,4 +16,6 @@ export interface Bindings {
   RESEND_API_KEY?: string
   POLAR_ACCESS_TOKEN?: string
   POLAR_WEBHOOK_SECRET?: string
+  POLAR_PRODUCT_ID?: string
+  POLAR_ORGANIZATION_ID?: string
 }

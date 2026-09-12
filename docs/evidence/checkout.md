@@ -54,4 +54,16 @@ With those grants, the first HTTP scan succeeds, an identical retry returns its 
 
 Private D1 assertions confirmed one canonical ticket, two retained check-in records, exactly one active admission, one completion outbox job, no payment attempt, a completed order and a consumed reservation. The script then deleted only its generated accounts and their event records, including audit/outbox entries and private development mail, and verified cleanup. It never prints passwords, verification links, cookies or admission credentials. Formatting, lint and type checks passed for the verification script.
 
+## Finalization of recorded paid orders
+
+`completePaidOrder(env, paymentAttemptId)` is a server-only function in `apps/api/src/tickets/issue.ts`. Payment orchestration must first persist an authoritative normalized success. The finalizer shares canonical credential generation and atomic ticket issuance with zero-total completion; no HTTP route accepts a caller's claim of provider success.
+
+The committing batch requires a succeeded ticket-order attempt, a recorded success timestamp, the same provider identity, the exact positive KZT amount, and the matching `reservations.payment_attempt_id`. It rechecks the order revision, active unexpired hold, purchaser/event eligibility, sales windows, inventory/capacity and promo allocation. Existing refund records of any state and admission blocks prevent first-time issuance. Paid-sales activation is required for a snapshotted paid ticket even if its catalog type is later changed to free.
+
+The stable internal receipt uses actor `system:paid-issuance` and the payment-attempt ID. Concurrent retries create one set of canonical tickets and one completion outbox job. A fulfilled receipt can replay after a later refund or account suspension without issuing again or reopening the order. The finalizer never modifies the succeeded payment fact. Eligibility failures return an application error for orchestration to handle, including compensation when appropriate.
+
+`vp test apps/api/src/tickets/paid.integration.test.ts` passed all 21 tests against real local D1 and the application migrations. Cases cover concurrent retry, paid/zero entry-point separation, an expired paid hold whose last place is resold, pending/failed/cancelled payments, missing reservation linkage or success timestamp, cancellation/expiry/refund/admission blocks during preparation, revision changes, account/activation loss, paid-type reclassification, frozen baskets, committed promo attribution, immutable provider identity and replay after refund. The shared refactor also passed all 12 existing zero-total/admission tests. Scoped formatting, lint and type checks passed without warnings.
+
+These tests insert synthetic normalized payment records in D1. They prove finalization behavior and preservation of financial facts, not Polar checkout, webhook verification or refund execution.
+
 Provider payment confirmation, compensation and refunds are separate transitions. No Polar transaction, external email delivery, remote deployment or mobile acceptance is established by these checkout tests. The provider access gap remains recorded in [provider-readiness.md](provider-readiness.md).
