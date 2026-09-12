@@ -1,0 +1,191 @@
+# elc implementation plan
+
+Updated: 2026-09-13
+
+## Scope and evidence rules
+
+Implement the academic release in [architecture decisions](./architecture-decisions.md)
+and [SRS v0.3](./elc_SRS_Initial_Draft.pdf). The architecture's explicit overrides
+govern. All former stretch features, Google sign-in, and Astro marketing are
+required. Payments, verification, and payouts remain sandboxed or simulated.
+The documented production, native attendee/organizer, and store-publication
+exclusions remain in force. No feature is removed by implementation ordering.
+
+Status uses `pending`, `in progress`, `implemented`, and `verified`. Implemented
+means code exists; verified requires the evidence listed below. Local tests do
+not prove deployed behavior, provider compatibility, browser usability, or
+physical-device acceptance. Missing access stays explicitly pending. Each
+milestone requires integration review, relevant checks, and a conventional local
+commit. The integration owner maintains this plan after each coherent unit.
+
+## Starting state
+
+- Baseline commit: `762c289`; clean worktree at implementation start.
+- React web starter only; no product services, migrations, or tests.
+- `vp install` and `vp run build` pass.
+- `vp check` fails on the button's mixed component/utility export.
+- `vp test` exits with no test files.
+- Branch: `feat/academic-release`.
+
+## Dependency-ordered milestones
+
+| ID  | Milestone                                                         | Depends on                              | Owner                                      | Status      |
+| --- | ----------------------------------------------------------------- | --------------------------------------- | ------------------------------------------ | ----------- |
+| M0  | Plan, workspace, checks, and development commands                 | None                                    | Integration                                | In progress |
+| M1  | Shared contracts, policies, authentication, schema and migrations | M0                                      | Contracts + integration                    | In progress |
+| M2  | Workers ticketing flow, payment adapter and correctness proof     | M1                                      | Integration + provider verification        | Pending     |
+| M3  | Attendee, organizer and platform administration web workflows     | M1, M2                                  | Web implementation                         | Pending     |
+| M4  | Tickets, delivery, campaigns and calendar exports                 | M2, M3                                  | API + web implementation                   | Pending     |
+| M5  | Expo online/offline check-in and reconciliation                   | M1, M2, M4                              | Mobile implementation                      | Pending     |
+| M6  | Support, attachments, live updates, analytics and history         | M2, M3                                  | API + web implementation                   | Pending     |
+| M7  | Marketing, localization, accessibility and operational safeguards | M1; integrated workflows for acceptance | Integration                                | Pending     |
+| M8  | Deployed integration, physical devices and release rehearsal      | M0-M7                                   | Integration + user-provided access/devices | Pending     |
+
+Owners above describe work areas, not an invented assignment to human team
+members. Focused agents may implement independent areas after their contracts
+are reviewed; the integration owner reviews changes and commits deliberately.
+
+## Acceptance tracking
+
+### M0: workspace and tooling
+
+- [ ] Move the existing UI to `apps/web` without losing its design system.
+- [ ] Establish `apps/api`, `apps/mobile`, `apps/marketing`, and `packages/shared`.
+- [ ] Configure pnpm workspaces, Vite+ formatting/lint/type checks and tests.
+- [ ] Fix existing validation failures; configure meaningful application builds.
+- [ ] Provide documented local setup, migrations, seed data and development commands.
+- [ ] Commit CI checks, secret exclusions, and local/preview/demo resource configuration.
+
+### M1: contracts, access and data
+
+- [ ] Shared Zod schemas cover ownership, states, endpoint errors, pagination,
+      money/time rules, seating, calendar IDs, scan operations, attachment metadata
+      and analytics reporting IDs. Public responses exclude database internals.
+- [ ] Better Auth email/password, verification, reset and Google sign-in work on
+      web and Expo; native API requests attach their authenticated session.
+- [ ] Better Auth-generated schema and application Drizzle schema have reviewed
+      SQL migrations applied through Wrangler, with reproducible seed fixtures.
+- [ ] Verified-account transactions and support; matching-email private invitations
+      with expiry/revocation; event staff permissions; explicit platform grants.
+- [ ] Negative authorization tests cover unrelated events/orders/tickets/cases,
+      downloads, exports, analytics, history and unassigned mobile users.
+
+### M2: first complete ticketing flow and infrastructure proof
+
+- [ ] Publish -> activate -> reserve inventory/promo -> KZT sandbox checkout ->
+      verified payment -> canonical ticket/PDF/email -> check in -> reject duplicate.
+- [ ] Repeat with general admission, assigned seats, free registration and a
+      fully discounted paid ticket (activation still required; no provider checkout).
+- [ ] Implement KZT 5,000 activation and compensation on failed activation;
+      organizer-paid 3% fee, full-refund fee reversal and seven-day payout holds.
+- [ ] Ten-minute holds, one active checkout/account/event, six-ticket default,
+      immutable payment-attempt contents and server-calculated price snapshots.
+- [ ] Prove atomic last-ticket, same-seat, multi-seat and limited-promo races on
+      D1/Workers. Zero-row conditional writes must not allow partial commits.
+- [ ] Prove duplicate/out-of-order payment events, expired/abandoned holds,
+      cancellation during payment, late-payment compensation and refund retries.
+- [ ] Prove simultaneous check-ins, idempotent retries and authorized reversals.
+- [ ] Orders, inventory, promo, tickets, audit and outbox commit together; queue
+      failure/replay cannot duplicate tickets or lose required side effects.
+- [ ] Record actual Polar KZT checkout/refund compatibility. Use the documented
+      internal-simulation fallback only with recorded evidence and decision.
+- [ ] Run a deployed smoke test and mixed reporting/checkout/scanner workload.
+      Target 95% of scan results within two seconds using the specified dataset.
+
+### M3: web workflows and product policy
+
+- [ ] Attendee discovery, event details, private invitation acceptance, registration,
+      checkout, confirmation, account orders, ticket downloads and support entry points.
+- [ ] Organizer profiles, event creation/edit/preview/publish/unpublish/cancel,
+      visibility, capacity, ticket types/windows/hiding, staff and activation checklist.
+- [ ] Accessible SVG seat map for the specified 80-seat hall, state labels,
+      keyboard selection, atomic holds and preserved seat snapshots.
+- [ ] Platform search, reported-event review, user/event suspension, activation
+      inspection, fee/settings configuration, operational exports and audit records.
+- [ ] Full refunds requested through cases; voluntary cutoff/admission checks,
+      automatic event-cancellation refunds, pending-refund admission block,
+      conditional restocking and consumed completed promo redemptions.
+- [ ] Simulated payout records, unresolved-order holds and later adjustments.
+
+### M4: tickets, delivery, campaigns and calendars
+
+- [ ] Versioned opaque admission credentials distinct from campaign links; digital
+      and printed copies share one admission and survive safe PDF regeneration.
+- [ ] Protected A4 PDFs include all required fields and Kazakh/Russian fonts;
+      grayscale paper scanning succeeds on physical iOS and Android devices.
+- [ ] Resend notifications cover all documented account, ticket, payment, event,
+      refund, payout and support events. Delivery failures remain separate.
+- [ ] Campaign creation/defaults/enabling, percentage/fixed discounts, applicability,
+      expiry, limits and attributed reporting; scanners reject campaign QR codes.
+- [ ] Calendar links and `.ics` on event/confirmation views; stable UID, sequence,
+      time zones, cancellation metadata and fresh IDs when events are duplicated.
+- [ ] Verify replacement procedures that leave one calendar entry in Google web,
+      Outlook web and Apple Calendar iOS/macOS; no automatic-sync claims.
+
+### M5: mobile and offline
+
+- [ ] Expo native development builds, Google/email sign-in, assigned-event list,
+      camera scans, attendee search, counts and permission-checked reversal.
+- [ ] SQLCipher cache with SecureStore keys; signed account/device/event snapshots,
+      token hashes without raw credentials and four-hour expiry capped by event end.
+- [ ] Minute refresh while connected; provisional results, snapshot age and separate
+      pending counts; unknown/expired data and clock rollback require connectivity.
+- [ ] Stable scan operation IDs, local atomic duplicate prevention, restart-safe
+      journals, batch replay, per-operation results and audited local undo.
+- [ ] Two disconnected devices produce one canonical admission and a recorded
+      conflict after sync; current cancellation/refund/revocation checks apply.
+- [ ] Same-account journal recovery after sign-out, device revocation/loss incident,
+      24-hour acknowledgement cleanup and seven-day unsynchronized expiry.
+- [ ] Organizer/check-in-lead conflict review with reasons; unauthorized operations
+      may be audited but cannot gain admission authority.
+
+### M6: support, analytics and history
+
+- [ ] Contextual attendee and organizer-to-platform cases, categories, assignment,
+      four statuses, messages, notifications and relationship-scoped access.
+- [ ] JPEG/PNG/PDF validation, quarantine, 5 MiB/three-file limits, metadata removal,
+      safe PDF restrictions, authorized attachment downloads and abandoned cleanup.
+- [ ] Durable Object WebSockets publish committed updates; permission revocation,
+      reconnect/cursor catch-up and duplicate handling preserve D1 history.
+- [ ] Authoritative capacity, ticket, gross/discount/refund/net/payout, ticket-type,
+      campaign and attendance metrics with correct date/time-zone semantics.
+- [ ] Required charts with matching tables, event/date/type filters and bounded
+      queries; provisional offline results excluded from confirmed attendance.
+- [ ] GA4 opt-in per origin, sanitized approved public-route events, reporting IDs,
+      server credentials, scoped aggregates, one-hour cache and failure fallback.
+- [ ] Retained past/cancelled events, append-only scoped activity timeline and
+      allowlisted duplication into a fresh unactivated draft without transactions.
+
+### M7-M8: complete release evidence
+
+- [ ] Astro marketing deployed separately with application links and required locales.
+- [ ] Kazakh/Russian/English across web/mobile/marketing/email/PDF; preference and
+      fallback behavior; organizer content remains as entered.
+- [ ] WCAG 2.1 AA event pages and keyboard/focus/labels/errors/contrast through checkout.
+- [ ] Current/previous browser versions recorded; iOS 16.4+/Android 10+ acceptance
+      with physical models, OS/build IDs and minimum-version simulator coverage.
+- [ ] Isolated local/preview/demo bindings, reviewed deployment configuration,
+      server-only secrets, protected assets, HTTPS and redacted operational logs.
+- [ ] Daily retryable retention cleanup, 180-day history, documented expiry/holds,
+      30-day logs/outbox payloads/SQL exports and private backup access.
+- [ ] D1 recovery window recorded; pre-migration exports/bookmarks; disposable
+      restore rehearsal pauses mutations/consumers/sync, reapplies cleanup and
+      reconciles payments, delivery, snapshots and admissions before resumption.
+- [ ] Full automated checks, deployed mixed workload, browser end-to-end scenarios,
+      physical print/offline acceptance and final integrated demonstration recorded.
+- [ ] Every acceptance item links to source/tests/run evidence; no required pending
+      checks remain before claiming release completion.
+
+## Evidence log
+
+| Date       | Evidence                                                    | Result                                                                   |
+| ---------- | ----------------------------------------------------------- | ------------------------------------------------------------------------ |
+| 2026-09-13 | Repository inspection at `762c289`, dependency installation | Clean baseline; install passes; starter validation issues recorded above |
+
+## External checks awaiting access or execution
+
+Provider and device availability is being inspected. Cloudflare deployment,
+Polar sandbox transactions, Google OAuth, Resend delivery, GA4 reports, supported
+calendar clients and physical iOS/Android tests have no acceptance evidence yet.
+Missing credentials do not establish provider incompatibility. Continue local
+implementation and integration while these checks remain pending.
