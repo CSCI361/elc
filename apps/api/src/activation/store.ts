@@ -8,6 +8,7 @@ import {
 import { ApiFailure } from "../db/transitions"
 import { findEvent } from "../events/store"
 import type { PaymentRow } from "../payments/store"
+import { requirePlatformPermission } from "../auth/permissions"
 
 export type ActivationDependencies = {
   now?: () => number
@@ -75,8 +76,11 @@ export async function readActivation(
   eventId: string,
   actorId: string,
   now = Date.now(),
-  platformRead = false
+  platformRead = false,
+  dependencies: { beforeReturn?: () => Promise<void> } = {}
 ) {
+  if (platformRead)
+    await requirePlatformPermission(db, actorId, "platform:moderate")
   const event = platformRead
     ? await findEvent(db, eventId)
     : await requireActivationOwner(db, eventId, actorId)
@@ -153,6 +157,9 @@ export async function readActivation(
       ].includes(reason)
     ) ||
     (!!successful && blockers.length > 0)
+  await dependencies.beforeReturn?.()
+  if (platformRead)
+    await requirePlatformPermission(db, actorId, "platform:moderate")
   return activationResponseSchema.parse({
     activation: {
       eventId,
@@ -206,7 +213,9 @@ export async function readActivation(
             amountMinor: latest.amount_minor,
             currency: latest.currency,
             checkoutUrl:
-              latest.state === "pending" ? latest.checkout_url : null,
+              !platformRead && latest.state === "pending"
+                ? latest.checkout_url
+                : null,
             refundState: latest.refund_state,
           }
         : null,

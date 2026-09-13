@@ -20,7 +20,17 @@ checks and web/Worker/Astro builds pass. The web entry is 644.04 kB minified and
 retains the existing size warning. Browser acceptance covers organizer reports,
 delivery recovery, traffic reporting and consent in Kazakh, Russian and English.
 GA4 tests intercept transport responses; actual Google receipt remains pending.
-Migration 0024 is applied to local D1. No new deployment or push was performed.
+Migrations through 0026 are applied to local D1. No new deployment or push was performed.
+
+Administration now has account/event search, suspension/resume, activation
+inspection, paid-sales controls and exact fee settings. Current source checks
+and builds pass, and browser acceptance passes in all three languages, including
+revocation, stale updates and session removal. A full regression run is in
+progress; the 1,044-test count above is the previous completed run. Focused
+administration, activation and offline checks pass. See
+[administration evidence](./evidence/administration.md). Snapshot invalidation
+uses the separate `invalidated_at` column and preserves signed manifests.
+Operational order/payment/audit search is the next administration unit.
 
 The pending Polar checkout has now been submitted and fully refunded. Payment
 `49249daf-eefa-4817-8061-4cc493d898d5` is succeeded; order
@@ -36,7 +46,7 @@ port 5173. Astro's development daemon is available on `127.0.0.1:4321`.
 The GA4 browser fixtures were removed. The local build copies `.dev.vars` into
 its Worker output, so do not use that build directory for a remote deployment.
 
-Remaining work includes broader platform administration, durable authentication
+Remaining work includes operational search/exports, durable authentication
 mail, retention cleanup and backup/restore, followed by the external and device
 acceptance in the implementation plan. Cloudflare R2 enrollment and a reachable
 webhook endpoint remain unavailable. Google OAuth, Resend and live GA4 are not

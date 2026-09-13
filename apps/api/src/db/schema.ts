@@ -23,6 +23,7 @@ export const profiles = sqliteTable("profiles", {
   contact: text("contact"),
   dummyPayoutReference: text("dummy_payout_reference"),
   suspendedAt: integer("suspended_at"),
+  moderationRevision: integer("moderation_revision").notNull().default(0),
   updatedAt: integer("updated_at").notNull(),
 })
 
@@ -793,6 +794,7 @@ export const offlineSnapshots = sqliteTable(
       .references(() => events.id),
     issuedAt: integer("issued_at").notNull(),
     expiresAt: integer("expires_at").notNull(),
+    invalidatedAt: integer("invalidated_at"),
     eventEndsAt: integer("event_ends_at").notNull(),
     ticketCount: integer("ticket_count").notNull(),
     keyId: text("key_id").notNull(),

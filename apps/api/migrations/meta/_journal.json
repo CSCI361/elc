@@ -176,6 +176,20 @@
       "when": 1789286969201,
       "tag": "0024_ga4_report_cache",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1789289421760,
+      "tag": "0025_account_moderation_revision",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "6",
+      "when": 1789290501899,
+      "tag": "0026_offline_snapshot_invalidation",
+      "breakpoints": true
     }
   ]
 }

@@ -38,6 +38,7 @@ import { syncOfflineScans } from "./sync"
 import { listOfflineAdmissions, reviewOfflineAdmission } from "./review"
 import { unresolvedOrderOfflineAdmissionSql } from "./guards"
 import { createOfflineRoutes } from "./index"
+import { setSuspension } from "../administration/service"
 
 describe("offline snapshots, synchronization and review on D1", () => {
   let fixture: Awaited<ReturnType<typeof createAuthTestDatabase>>
@@ -224,6 +225,85 @@ describe("offline snapshots, synchronization and review on D1", () => {
       .bind(...guard.bindings)
       .first<number>("n")
   }
+
+  it.each(["account", "event"] as const)(
+    "keeps pre-suspension scans reconcilable but rejects later captures after %s resumes",
+    async (kind) => {
+      const early = await issue()
+      const late = await issue()
+      const { device, manifest } = await snapshot()
+      now += 1000
+      const earlyUnit = await scanUnit(manifest, early.ticketId)
+      now += 1000
+      await setSuspension(
+        db,
+        "admin",
+        kind,
+        kind === "account" ? "scanner" : "event",
+        {
+          requestId: id(),
+          expectedRevision: 0,
+          suspended: true,
+          reason: "Review offline access",
+        },
+        { now: clock }
+      )
+      const lateUnit = await scanUnit(manifest, late.ticketId, 2)
+      now += 1000
+      await setSuspension(
+        db,
+        "admin",
+        kind,
+        kind === "account" ? "scanner" : "event",
+        {
+          requestId: id(),
+          expectedRevision: 1,
+          suspended: false,
+          reason: "Review complete",
+        },
+        { now: clock }
+      )
+      await expect(
+        getOfflineManifest(
+          env(),
+          "scanner",
+          "event",
+          manifest.snapshotId,
+          clock
+        )
+      ).rejects.toMatchObject({ code: "SNAPSHOT_EXPIRED" })
+      await expect(
+        getOfflineSnapshotPage(
+          env(),
+          "scanner",
+          "event",
+          manifest.snapshotId,
+          0,
+          clock
+        )
+      ).rejects.toMatchObject({ code: "SNAPSHOT_EXPIRED" })
+      const response = await syncOfflineScans(
+        db,
+        "scanner",
+        "event",
+        batch("scanner", device.id, [earlyUnit, lateUnit]),
+        { now: clock }
+      )
+      expect(response.results.map((row) => row.result)).toEqual([
+        "checked_in",
+        "snapshot_expired",
+      ])
+      expect(response.results[1]!.reviewState).toBe("unresolved")
+      const fresh = await issueOfflineSnapshot(
+        env(),
+        "scanner",
+        "event",
+        { requestId: id(), deviceId: device.id },
+        { now: clock }
+      )
+      expect(fresh.snapshotId).not.toBe(manifest.snapshotId)
+    }
+  )
 
   it("requires explicit scanning permission for registration and guards revocation at commit", async () => {
     await expect(

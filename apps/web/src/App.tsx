@@ -42,6 +42,11 @@ const AnalyticsIndexPage = lazy(() =>
 const DeliveryPage = lazy(() =>
   import("@/delivery/page").then((module) => ({ default: module.DeliveryPage }))
 )
+const AdministrationPage = lazy(() =>
+  import("@/administration/page").then((module) => ({
+    default: module.AdministrationPage,
+  }))
+)
 
 const initialURL = new URL(window.location.href)
 const invitationMemory = createInvitationMemory(readInvitationToken(initialURL))
@@ -68,6 +73,21 @@ if (
 
 function AppRoutes() {
   const { messages: t } = useAccount()
+  const administrationSection = /^\/admin\/(accounts|events|settings)$/.exec(
+    window.location.pathname
+  )?.[1]
+  if (administrationSection)
+    return (
+      <AppShell>
+        <Suspense fallback={<Loading />}>
+          <AdministrationPage
+            section={
+              administrationSection as "accounts" | "events" | "settings"
+            }
+          />
+        </Suspense>
+      </AppShell>
+    )
   const delivery = deliveryRoute(window.location.pathname)
   if (delivery)
     return (

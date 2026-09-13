@@ -30,6 +30,7 @@ export type SnapshotRow = {
   event_id: string
   issued_at: number
   expires_at: number
+  invalidated_at: number | null
   event_ends_at: number
   ticket_count: number
   key_id: string

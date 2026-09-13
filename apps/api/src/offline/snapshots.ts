@@ -177,7 +177,7 @@ export async function issueOfflineSnapshot(
     }
   }
   const snapshot = await loadSnapshot(db, id, actorId, eventId)
-  if (snapshot.expires_at <= clock())
+  if (snapshot.expires_at <= clock() || snapshot.invalidated_at !== null)
     throw new ApiFailure(
       "SNAPSHOT_EXPIRED",
       409,
@@ -245,7 +245,7 @@ export async function issueOfflineSnapshot(
       ...assertSql(
         db,
         `EXISTS (SELECT 1 FROM offline_snapshots s JOIN events e ON e.id = s.event_id
-          WHERE s.id = ? AND s.expires_at > ? AND e.cancelled_at IS NULL AND e.suspended_at IS NULL${dependencies.now ? "" : " AND s.expires_at > CAST(unixepoch('subsecond') * 1000 AS INTEGER)"})`,
+          WHERE s.id = ? AND s.expires_at > ? AND s.invalidated_at IS NULL AND e.cancelled_at IS NULL AND e.suspended_at IS NULL${dependencies.now ? "" : " AND s.expires_at > CAST(unixepoch('subsecond') * 1000 AS INTEGER)"})`,
         [id, clock()]
       ),
       db
@@ -278,7 +278,7 @@ async function readableSnapshot(
   const device = await loadDevice(db, snapshot.device_id, eventId, actorId)
   if (device.revoked_at !== null)
     throw new ApiFailure("FORBIDDEN", 403, "This device has been revoked.")
-  if (snapshot.expires_at <= now)
+  if (snapshot.expires_at <= now || snapshot.invalidated_at !== null)
     throw new ApiFailure(
       "SNAPSHOT_EXPIRED",
       409,
@@ -318,7 +318,7 @@ function authorizedSnapshotStatement(
   const authorization = staffAuthorizationSql(actorId, eventId, "ticket:scan")
   return db
     .prepare(`SELECT s.* FROM offline_snapshots s JOIN offline_devices d ON d.id = s.device_id JOIN events e ON e.id = s.event_id
-    WHERE s.id = ? AND s.account_id = ? AND s.event_id = ? AND s.expires_at > ? AND s.manifest_json IS NOT NULL
+    WHERE s.id = ? AND s.account_id = ? AND s.event_id = ? AND s.expires_at > ? AND s.invalidated_at IS NULL AND s.manifest_json IS NOT NULL
       AND d.account_id = s.account_id AND d.event_id = s.event_id AND d.revoked_at IS NULL
       AND e.cancelled_at IS NULL AND e.suspended_at IS NULL AND (${authorization.predicate})${injectedClock ? "" : " AND s.expires_at > CAST(unixepoch('subsecond') * 1000 AS INTEGER)"}`)
     .bind(snapshotId, actorId, eventId, now, ...authorization.bindings)

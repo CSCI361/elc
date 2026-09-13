@@ -15,21 +15,37 @@ export function DeliveryNavigation() {
       15000
     ),
     { locale } = useAccount()
-  if (
-    resource.error ||
-    !resource.data?.permissions.includes("platform:recover")
-  )
-    return null
+  if (resource.error || !resource.data) return null
   return (
-    <a
-      href="/admin/deliveries"
-      aria-current={
-        window.location.pathname.startsWith("/admin/deliveries")
-          ? "page"
-          : undefined
-      }
-    >
-      {labels[locale]}
-    </a>
+    <>
+      {resource.data.permissions.includes("platform:moderate") ||
+      resource.data.permissions.includes("platform:configure") ? (
+        <a
+          href={
+            resource.data.permissions.includes("platform:moderate")
+              ? "/admin/accounts"
+              : "/admin/settings"
+          }
+        >
+          {locale === "kk"
+            ? "Платформаны басқару"
+            : locale === "ru"
+              ? "Управление платформой"
+              : "Platform administration"}
+        </a>
+      ) : null}
+      {resource.data.permissions.includes("platform:recover") ? (
+        <a
+          href="/admin/deliveries"
+          aria-current={
+            window.location.pathname.startsWith("/admin/deliveries")
+              ? "page"
+              : undefined
+          }
+        >
+          {labels[locale]}
+        </a>
+      ) : null}
+    </>
   )
 }

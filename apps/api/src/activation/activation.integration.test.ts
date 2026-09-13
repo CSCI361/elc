@@ -761,6 +761,37 @@ describe("paid-sales activation transitions on D1", () => {
     ).toBe(0)
   })
 
+  it("shows pending payment status to moderators without sharing the owner's checkout link", async () => {
+    await ready()
+    const provider: PaymentAdapter = {
+      ...adapter(),
+      lookupPayment: async (request) => ({
+        ...request.expected,
+        providerPaymentId: request.providerPaymentId,
+        state: "pending",
+        providerOrderId: null,
+        refundedAmountMinor: 0,
+      }),
+    }
+    await startActivationPayment(
+      environment(),
+      provider,
+      "owner",
+      "event",
+      change(1),
+      { now: clock }
+    )
+    const own = await readActivation(db, "event", "owner", now)
+    expect(own.activation.latestPayment?.checkoutUrl).toBe(
+      "https://sandbox.polar.sh/checkout/test"
+    )
+    const inspected = await readActivation(db, "event", "admin", now, true)
+    expect(inspected.activation.latestPayment).toMatchObject({
+      state: "pending",
+      checkoutUrl: null,
+    })
+  })
+
   it("uses the shared payment dispatcher and compensates a changed checklist without activation", async () => {
     await ready()
     const provider = adapter()

@@ -1,0 +1,33 @@
+.administration-table table {
+  min-width: 32rem;
+}
+.administration-table th,
+.administration-table td {
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.administration-table th:first-child {
+  max-width: 20rem;
+}
+.administration-record dl {
+  display: grid;
+  grid-template-columns: minmax(8rem, 1fr) minmax(0, 2fr);
+  gap: 0.75rem 1rem;
+  margin-block: 1rem;
+}
+.administration-record dt {
+  font-weight: 700;
+}
+.administration-record dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .administration-record dl {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+  }
+  .administration-record dd {
+    margin-bottom: 0.75rem;
+  }
+}

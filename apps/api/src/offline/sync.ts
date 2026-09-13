@@ -50,7 +50,7 @@ function syncOutcomeSql(
       WHEN NOT (${auth.predicate}) OR NOT EXISTS (SELECT 1 FROM offline_devices WHERE id = ? AND account_id = ? AND event_id = ? AND revoked_at IS NULL) THEN 'forbidden'
       WHEN NOT EXISTS (SELECT 1 FROM offline_snapshots s JOIN offline_snapshot_tickets st ON st.snapshot_id = s.id
         WHERE s.id = ? AND s.account_id = ? AND s.device_id = ? AND s.event_id = ? AND s.manifest_json IS NOT NULL AND st.ticket_id = ? AND st.token_hash = ?) THEN 'invalid'
-      WHEN NOT EXISTS (SELECT 1 FROM offline_snapshots WHERE id = ? AND issued_at <= ? AND expires_at > ?)
+      WHEN NOT EXISTS (SELECT 1 FROM offline_snapshots WHERE id = ? AND issued_at <= ? AND expires_at > ? AND (invalidated_at IS NULL OR invalidated_at > ?))
         OR ? > ? OR ? < ? OR EXISTS (SELECT 1 FROM offline_operations WHERE device_id = ? AND ((device_sequence < ? AND captured_at > ?) OR (device_sequence > ? AND captured_at < ?))) THEN 'snapshot_expired'
       WHEN EXISTS (SELECT 1 FROM offline_snapshot_tickets WHERE snapshot_id = ? AND ticket_id = ? AND (json_extract(payload_json, '$.admissionBlocked') = 1 OR json_extract(payload_json, '$.state') <> 'valid' OR json_extract(payload_json, '$.activeCheckInId') IS NOT NULL)) THEN 'admission_blocked'
       WHEN EXISTS (SELECT 1 FROM tickets t JOIN payment_attempts p ON p.subject_id = t.order_id AND p.purpose = 'ticket_order' JOIN refunds r ON r.payment_attempt_id = p.id WHERE t.id = ? AND r.state IN ('pending', 'succeeded')) THEN 'admission_blocked'
@@ -67,6 +67,7 @@ function syncOutcomeSql(
       scan.ticketId,
       scan.tokenHash,
       scan.snapshotId,
+      capturedAt,
       capturedAt,
       capturedAt,
       capturedAt,

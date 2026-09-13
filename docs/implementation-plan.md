@@ -19,6 +19,15 @@ Google-side receipt remain pending. The saved Polar late-payment test also now
 passes with one confirmed KZT 9,000 refund, zero tickets and no held inventory;
 see [compensation evidence](./evidence/polar-compensation.md).
 
+Administration now provides account/event search and suspension, activation
+inspection, paid-sales moderation and activation-fee settings, with real local
+browser evidence in all three languages. Suspension preserves signed offline
+snapshots and records a separate invalidation timestamp. Migrations 0025 and
+0026 are applied locally. Focused administration, activation and offline tests
+pass, as do full checks and builds. The full regression run is in progress.
+See [administration evidence](./evidence/administration.md). Broader operational
+order/payment/audit search and exports remain next in this workstream.
+
 ## Scope and evidence rules
 
 Implement the academic release in [architecture decisions](./architecture-decisions.md)
@@ -245,8 +254,10 @@ with checkout and preserve held/sold inventory and historical snapshots. Their a
 for discovery, GA/assigned-seat purchase, protected QR display and the activation
 checklist. [Activation evidence](./evidence/activation.md) covers fee snapshots,
 current eligibility, administrative fee/moderation APIs and compensation races.
-Staff/invitation management, cancellation, platform administration screens and
-refund/payout workflows remain in progress or pending.
+Staff/invitation management, cancellation, refunds and simulated payouts have
+subsequent evidence in their dedicated records. Account/event administration,
+activation inspection and settings now have [browser evidence](./evidence/administration.md).
+Operational searches/exports and the remaining external acceptance are pending.
 
 ### M4: tickets, delivery, campaigns and calendars
 
