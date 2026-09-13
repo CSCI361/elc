@@ -13,6 +13,7 @@ import {
   type AuthDependencies,
 } from "./email"
 import { authSchemaOptions } from "./schema-options"
+import { loadAuthEmailLocale } from "./locale"
 
 export type { AuthDependencies, AuthEmail, AuthEmailTransport } from "./email"
 
@@ -79,16 +80,36 @@ export function createAuth(
       autoSignIn: false,
       resetPasswordTokenExpiresIn: 60 * 60,
       revokeSessionsOnPasswordReset: true,
-      sendResetPassword: async ({ user, url }) =>
-        sendEmail(resetPasswordEmail(user.email, url)),
+      sendResetPassword: async ({ user, url }, request) =>
+        sendEmail(
+          resetPasswordEmail(
+            user.email,
+            url,
+            await loadAuthEmailLocale(
+              env.DB,
+              user.id,
+              request?.headers.get("Accept-Language")
+            )
+          )
+        ),
     },
     emailVerification: {
       sendOnSignUp: true,
       sendOnSignIn: false,
       autoSignInAfterVerification: false,
       expiresIn: 60 * 60,
-      sendVerificationEmail: async ({ user, url }) =>
-        sendEmail(verificationEmail(user.email, url)),
+      sendVerificationEmail: async ({ user, url }, request) =>
+        sendEmail(
+          verificationEmail(
+            user.email,
+            url,
+            await loadAuthEmailLocale(
+              env.DB,
+              user.id,
+              request?.headers.get("Accept-Language")
+            )
+          )
+        ),
     },
     socialProviders:
       env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET

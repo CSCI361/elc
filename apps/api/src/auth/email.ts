@@ -1,3 +1,5 @@
+import type { Locale } from "@elc/shared"
+
 export type AuthEmail = {
   kind: "verify-email" | "reset-password"
   to: string
@@ -88,20 +90,83 @@ export function createEmailSender(
   }
 }
 
-export function verificationEmail(to: string, url: string): AuthEmail {
+const copy: Record<
+  Locale,
+  {
+    verificationSubject: string
+    verificationInstruction: string
+    verificationIgnore: string
+    resetSubject: string
+    resetInstruction: string
+    resetIgnore: string
+    expiry: string
+    demo: string
+  }
+> = {
+  kk: {
+    verificationSubject: "elc тіркелгіңізді растаңыз",
+    verificationInstruction:
+      "elc тіркелгіңізді пайдалану үшін электрондық пошта мекенжайыңызды мына сілтеме арқылы растаңыз:",
+    verificationIgnore:
+      "Бұл тіркелгіні сіз жасамаған болсаңыз, хатты елемеуге болады.",
+    resetSubject: "elc құпиясөзін қалпына келтіру",
+    resetInstruction:
+      "elc құпиясөзін қалпына келтіру үшін мына сілтемені ашыңыз:",
+    resetIgnore:
+      "Құпиясөзді қалпына келтіруді сіз сұрамаған болсаңыз, хатты елемеуге болады.",
+    expiry: "Бұл сілтеме 1 сағат бойы жарамды.",
+    demo: "elc оқу мақсатындағы демонстрациялық жоба.",
+  },
+  ru: {
+    verificationSubject: "Подтвердите учётную запись elc",
+    verificationInstruction:
+      "Чтобы пользоваться учётной записью elc, подтвердите адрес электронной почты по этой ссылке:",
+    verificationIgnore:
+      "Если вы не создавали эту учётную запись, проигнорируйте письмо.",
+    resetSubject: "Сброс пароля elc",
+    resetInstruction: "Чтобы сбросить пароль elc, откройте эту ссылку:",
+    resetIgnore: "Если вы не запрашивали сброс пароля, проигнорируйте письмо.",
+    expiry: "Эта ссылка действительна в течение одного часа.",
+    demo: "elc создан как учебный демонстрационный проект.",
+  },
+  en: {
+    verificationSubject: "Verify your elc account",
+    verificationInstruction:
+      "Verify your email address to use your elc account:",
+    verificationIgnore:
+      "If you did not create this account, you can ignore this email.",
+    resetSubject: "Reset your elc password",
+    resetInstruction: "Use this link to reset your elc password:",
+    resetIgnore: "If you did not request a reset, you can ignore this email.",
+    expiry: "This link expires in one hour.",
+    demo: "elc is an academic demonstration.",
+  },
+}
+
+export function verificationEmail(
+  to: string,
+  url: string,
+  locale: Locale = "kk"
+): AuthEmail {
+  const text = copy[locale]
   return {
     kind: "verify-email",
     to,
-    subject: "Verify your elc account",
-    text: `Verify your email address to use your elc account:\n\n${url}\n\nThis link expires in one hour. If you did not create this account, you can ignore this email.\n\nelc is an academic demonstration.`,
+    subject: text.verificationSubject,
+    text: `${text.verificationInstruction}\n\n${url}\n\n${text.expiry} ${text.verificationIgnore}\n\n${text.demo}`,
   }
 }
 
-export function resetPasswordEmail(to: string, url: string): AuthEmail {
+export function resetPasswordEmail(
+  to: string,
+  url: string,
+  locale: Locale = "kk"
+): AuthEmail {
+  const text = copy[locale]
   return {
     kind: "reset-password",
     to,
-    subject: "Reset your elc password",
-    text: `Use this link to reset your elc password:\n\n${url}\n\nThis link expires in one hour. If you did not request a reset, you can ignore this email.\n\nelc is an academic demonstration.`,
+    subject: text.resetSubject,
+    text: `${text.resetInstruction}\n\n${url}\n\n${text.expiry} ${text.resetIgnore}\n\n${text.demo}`,
   }
 }
