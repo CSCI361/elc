@@ -19,6 +19,11 @@ import { activeAccountSql } from "../events/store"
 import type { SqlPredicate } from "../orders/guards"
 import { supportCaseAccessSql, supportEventReadSql } from "./guards"
 import {
+  attachmentLinkStatements,
+  linkedAttachmentDtos,
+  readyAttachments,
+} from "./attachments/link"
+import {
   caseDto,
   changeDto,
   parseSupport,
@@ -44,6 +49,7 @@ type Mutation = {
   row: CaseRow
   kind: ChangeRow["kind"]
   body?: string
+  attachmentIds?: string[]
   guards: SqlPredicate[]
   dependencies: SupportDependencies
 }
@@ -187,6 +193,12 @@ async function commit(
   mutation: Mutation
 ): Promise<SupportMutationResponse> {
   const { actorId, requestId, hash, previous, kind } = mutation
+  const attachments = await readyAttachments(
+    db,
+    actorId,
+    mutation.row.id,
+    mutation.attachmentIds ?? []
+  )
   const author =
     mutation.body === undefined
       ? null
@@ -232,7 +244,7 @@ async function commit(
   }
   const response = supportMutationResponseSchema.parse({
     case: caseDto(row),
-    change: changeDto(change, message),
+    change: changeDto(change, message, linkedAttachmentDtos(attachments)),
   })
   const statements = mutation.guards.flatMap((guard) =>
     assertSql(db, guard.predicate, guard.bindings)
@@ -279,7 +291,7 @@ async function commit(
         )
     )
   }
-  if (message)
+  if (message) {
     statements.push(
       db
         .prepare(
@@ -295,6 +307,16 @@ async function commit(
           now
         )
     )
+    statements.push(
+      ...attachmentLinkStatements(
+        db,
+        attachments,
+        message,
+        now,
+        !mutation.dependencies.now
+      )
+    )
+  }
   statements.push(
     db
       .prepare(
@@ -452,6 +474,7 @@ export async function addSupportMessage(
     },
     kind: "message",
     body: input.body,
+    attachmentIds: input.attachmentIds,
     guards: [supportCaseAccessSql(actorId, caseId)],
     dependencies,
   })

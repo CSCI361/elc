@@ -52,8 +52,10 @@ tests, 33 offline backend tests and 12 simulated payout tests. Support live test
 run through workerd with real authentication and Durable Objects. The mobile
 scanner and payout web view have passed their scoped checks. Refund recovery
 adds ten D1 tests; the mobile online unit adds twenty-four tests across native
-transport, scanner access and Expo authentication. Native offline storage and
-support attachments are in progress.
+transport, scanner access and Expo authentication. Support attachments now have
+11 passing D1/R2/workerd tests, and all 33 support tests pass together. Content
+validation, private downloads, atomic message links and cleanup are implemented;
+the attachment composer is in progress. Native offline storage is in progress.
 
 This is partial release coverage. Actual refunds and signed webhooks, remaining
 web workflows, delivery, reporting, Expo/offline, external OAuth/email/analytics,

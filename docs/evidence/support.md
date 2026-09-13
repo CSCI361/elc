@@ -75,4 +75,4 @@ Hibernation is exercised with Miniflare's runtime eviction API while keeping soc
 
 Browser support, assignment, live refresh and revocation checks are recorded separately in [web support and refunds evidence](web-support-refunds.md).
 
-Remote deployment, actual notification delivery, reconnect/idle-alarm behavior against a deployed Durable Object, multi-region load, attachment validation and retention cleanup remain pending. The deployment prerequisites are recorded in [the preview plan](../deployment-preview-plan.md).
+Private upload validation, atomic attachment references, authorized downloads and abandoned-upload cleanup are implemented and tested in [support attachment evidence](support-attachments.md). Remote deployment, actual notification delivery, reconnect/idle-alarm behavior against a deployed Durable Object, multi-region load and general retention cleanup remain pending. The deployment prerequisites are recorded in [the preview plan](../deployment-preview-plan.md).

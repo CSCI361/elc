@@ -1032,3 +1032,72 @@ export const supportCaseChanges = sqliteTable(
     ),
   ]
 )
+
+export const supportAttachments = sqliteTable(
+  "support_attachments",
+  {
+    id: text("id").primaryKey(),
+    caseId: text("case_id")
+      .notNull()
+      .references(() => supportCases.id),
+    uploaderId: text("uploader_id")
+      .notNull()
+      .references(() => user.id),
+    messageId: text("message_id").references(() => supportMessages.id),
+    position: integer("position"),
+    uploadRequestId: text("upload_request_id").notNull(),
+    inputHash: text("input_hash").notNull(),
+    safeFilename: text("safe_filename").notNull(),
+    declaredType: text("declared_type").notNull(),
+    originalSize: integer("original_size").notNull(),
+    originalSha256: text("original_sha256").notNull(),
+    quarantineKey: text("quarantine_key").notNull().unique(),
+    objectKey: text("object_key").notNull().unique(),
+    contentType: text("content_type"),
+    contentSize: integer("content_size"),
+    contentSha256: text("content_sha256"),
+    validatorVersion: text("validator_version").notNull(),
+    status: text("status", {
+      enum: [
+        "quarantined",
+        "ready",
+        "attached",
+        "rejected",
+        "deleting",
+        "deleted",
+      ],
+    }).notNull(),
+    rejectionCode: text("rejection_code"),
+    createdAt: integer("created_at").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    validatedAt: integer("validated_at"),
+    attachedAt: integer("attached_at"),
+    deletedAt: integer("deleted_at"),
+    cleanupAfter: integer("cleanup_after"),
+  },
+  (t) => [
+    uniqueIndex("support_upload_request").on(t.uploaderId, t.uploadRequestId),
+    uniqueIndex("support_attachment_position")
+      .on(t.messageId, t.position)
+      .where(sql`${t.messageId} IS NOT NULL`),
+    index("support_upload_cleanup").on(t.cleanupAfter, t.status),
+    index("support_attachment_message").on(t.caseId, t.messageId),
+    index("support_upload_uploader").on(t.uploaderId, t.status),
+    check(
+      "support_attachment_domain",
+      sql`${t.status} IN ('quarantined','ready','attached','rejected','deleting','deleted') AND ${t.declaredType} IN ('image/jpeg','image/png','application/pdf') AND ${t.originalSize} BETWEEN 1 AND 5242880 AND length(${t.safeFilename}) BETWEEN 1 AND 160 AND length(${t.inputHash}) = 64 AND length(${t.originalSha256}) = 64 AND ${t.expiresAt} > ${t.createdAt} AND ${t.expiresAt} <= ${t.createdAt} + 86400000 AND (${t.contentType} IS NULL OR ${t.contentType} = ${t.declaredType}) AND (${t.contentSize} IS NULL OR ${t.contentSize} BETWEEN 1 AND 5242880) AND (${t.contentSha256} IS NULL OR length(${t.contentSha256}) = 64)`
+    ),
+    check(
+      "support_attachment_ready",
+      sql`${t.status} NOT IN ('ready','attached') OR (${t.contentType} IS NOT NULL AND ${t.contentSize} IS NOT NULL AND ${t.contentSha256} IS NOT NULL AND ${t.validatedAt} IS NOT NULL AND ${t.rejectionCode} IS NULL)`
+    ),
+    check(
+      "support_attachment_link",
+      sql`(${t.messageId} IS NULL AND ${t.position} IS NULL AND ${t.attachedAt} IS NULL AND ${t.status} <> 'attached') OR (${t.messageId} IS NOT NULL AND ${t.position} IS NOT NULL AND ${t.position} BETWEEN 0 AND 2 AND ${t.attachedAt} IS NOT NULL AND ${t.status} = 'attached')`
+    ),
+    check(
+      "support_attachment_deleted",
+      sql`(${t.status} = 'deleted') = (${t.deletedAt} IS NOT NULL)`
+    ),
+  ]
+)

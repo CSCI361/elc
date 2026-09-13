@@ -42,7 +42,14 @@ export const supportRevisionSchema = z.strictObject({
   requestId: requestIdSchema,
   expectedRevision: sequence,
 })
-export const addSupportMessageSchema = supportRevisionSchema.extend({ body })
+export const addSupportMessageSchema = supportRevisionSchema.extend({
+  body,
+  attachmentIds: z
+    .array(entityIdSchema)
+    .max(3)
+    .refine((ids) => new Set(ids).size === ids.length)
+    .optional(),
+})
 export const assignSupportCaseSchema = supportRevisionSchema.extend({
   assigneeId: entityIdSchema.nullable(),
 })
@@ -75,6 +82,18 @@ export const supportMessageApiSchema = z.strictObject({
   authorName: z.string(),
   body: z.string(),
   createdAt: utcTimestampSchema,
+  attachments: z
+    .array(
+      z.strictObject({
+        id: entityIdSchema,
+        fileName: z.string(),
+        contentType: z.enum(["image/jpeg", "image/png", "application/pdf"]),
+        size: z.int().min(1).max(5242880),
+        position: z.int().min(0).max(2),
+      })
+    )
+    .max(3)
+    .optional(),
 })
 export const supportStateSnapshotSchema = z.strictObject({
   status: supportStatusSchema,
@@ -167,3 +186,34 @@ export const supportLiveFrameSchema = z.discriminatedUnion("type", [
   }),
 ])
 export type SupportLiveFrame = z.infer<typeof supportLiveFrameSchema>
+
+export const createSupportUploadSchema = z.strictObject({
+  requestId: requestIdSchema,
+  fileName: z.string().min(1).max(160),
+  contentType: z.enum(["image/jpeg", "image/png", "application/pdf"]),
+})
+export const supportUploadResponseSchema = z.strictObject({
+  attachment: z.strictObject({
+    id: entityIdSchema,
+    caseId: entityIdSchema,
+    fileName: z.string(),
+    status: z.enum([
+      "quarantined",
+      "ready",
+      "attached",
+      "rejected",
+      "deleting",
+      "deleted",
+    ]),
+    contentType: z
+      .enum(["image/jpeg", "image/png", "application/pdf"])
+      .nullable(),
+    size: z.int().min(1).max(5242880).nullable(),
+    errorCode: z.string().nullable(),
+    expiresAt: utcTimestampSchema,
+  }),
+})
+export type SupportMessageAttachment = NonNullable<
+  SupportMessage["attachments"]
+>[number]
+export type SupportUploadResponse = z.infer<typeof supportUploadResponseSchema>

@@ -10,6 +10,7 @@ import {
 import { requireActiveAccount } from "../auth/permissions"
 import { ApiFailure, requestHash } from "../db/transitions"
 import { supportAccessExpression, supportCaseAccessSql } from "./guards"
+import { attachmentDto, messageAttachments } from "./attachments/store"
 import {
   caseDto,
   changeDto,
@@ -159,10 +160,22 @@ export async function listSupportMessages(
       .bind(caseId, query.after, row.last_sequence, actorId, query.limit + 1)
       .all<MessageRow>()
   ).results
-  await requireSupportCase(db, actorId, caseId)
   const selected = rows.slice(0, query.limit)
+  const attachments = await messageAttachments(
+    db,
+    caseId,
+    selected.map((message) => message.id)
+  )
+  await requireSupportCase(db, actorId, caseId)
   return supportMessageListSchema.parse({
-    items: selected.map(messageDto),
+    items: selected.map((message) =>
+      messageDto(
+        message,
+        attachments
+          .filter((file) => file.message_id === message.id)
+          .map(attachmentDto)
+      )
+    ),
     nextCursor: rows.length > query.limit ? selected.at(-1)!.sequence : null,
     throughSequence: row.last_sequence,
     caseRevision: row.revision,
@@ -202,12 +215,20 @@ export async function listSupportChanges(
           .all<MessageRow>()
       ).results
     : []
+  const attachments = await messageAttachments(
+    db,
+    caseId,
+    messages.map((message) => message.id)
+  )
   await requireSupportCase(db, actorId, caseId)
   return supportChangeListSchema.parse({
     items: selected.map((change) =>
       changeDto(
         change,
-        messages.find((message) => message.id === change.message_id)
+        messages.find((message) => message.id === change.message_id),
+        attachments
+          .filter((file) => file.message_id === change.message_id)
+          .map(attachmentDto)
       )
     ),
     nextCursor: rows.length > query.limit ? selected.at(-1)!.sequence : null,

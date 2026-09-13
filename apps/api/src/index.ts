@@ -4,6 +4,7 @@ import type { Bindings } from "./env"
 import { createPolarSandboxAdapter } from "./payments/polar"
 import { consumePaymentOutbox, dispatchPaymentOutbox } from "./payments/outbox"
 import { simulateDuePayouts } from "./payments/payouts"
+import { cleanupSupportAttachments } from "./support"
 import {
   consumeSupportLiveOutbox,
   dispatchSupportLiveOutbox,
@@ -18,6 +19,7 @@ export default {
     context.waitUntil(dispatchPaymentOutbox(env))
     context.waitUntil(dispatchSupportLiveOutbox(env))
     context.waitUntil(simulateDuePayouts(env.DB))
+    context.waitUntil(cleanupSupportAttachments(env))
   },
   async queue(batch, env) {
     let provider: PaymentAdapter | undefined

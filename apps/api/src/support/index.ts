@@ -18,6 +18,9 @@ import type { SupportDependencies } from "./store"
 import { consumeSupportLiveOutbox } from "./live/outbox"
 import { upgradeSupportLive } from "./live/upgrade"
 import { listSupportAssignees } from "./assignees"
+import { receiveSupportUpload } from "./attachments/routes"
+import { downloadSupportAttachment } from "./attachments/download"
+import { removeSupportUpload } from "./attachments/service"
 
 type Environment = { Bindings: Bindings }
 type Dependencies = SupportDependencies & {
@@ -59,6 +62,30 @@ export function createSupportRoutes(dependencies: Dependencies = {}) {
       )
     )
     .get("/support/cases/:caseId/live", upgradeSupportLive)
+    .post("/support/cases/:caseId/attachments", async (c) =>
+      receiveSupportUpload(c, await actor(c), dependencies)
+    )
+    .delete("/support/cases/:caseId/attachments/:attachmentId", async (c) =>
+      c.json(
+        await removeSupportUpload(
+          c.env,
+          await actor(c),
+          c.req.param("caseId"),
+          c.req.param("attachmentId"),
+          dependencies
+        )
+      )
+    )
+    .get(
+      "/support/cases/:caseId/attachments/:attachmentId/download",
+      async (c) =>
+        downloadSupportAttachment(
+          c.env,
+          await actor(c),
+          c.req.param("caseId"),
+          c.req.param("attachmentId")
+        )
+    )
     .get("/support/cases/:caseId/assignees", async (c) =>
       c.json(
         await listSupportAssignees(
@@ -143,3 +170,4 @@ export {
   consumeSupportLiveOutbox,
   dispatchSupportLiveOutbox,
 } from "./live/outbox"
+export { cleanupSupportAttachments } from "./attachments/service"

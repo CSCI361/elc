@@ -6,6 +6,7 @@ import {
   type SupportAudience,
   type SupportCategory,
   type SupportStatus,
+  type SupportMessageAttachment,
 } from "@elc/shared"
 import { requireActiveAccount } from "../auth/permissions"
 import { ApiFailure } from "../db/transitions"
@@ -96,7 +97,10 @@ export function caseDto(row: CaseRow) {
       ["refund", "dispute", "compensation"].includes(row.category),
   })
 }
-export function messageDto(row: MessageRow) {
+export function messageDto(
+  row: MessageRow,
+  attachments: SupportMessageAttachment[] = []
+) {
   return supportMessageApiSchema.parse({
     id: row.id,
     caseId: row.case_id,
@@ -105,9 +109,14 @@ export function messageDto(row: MessageRow) {
     authorName: row.author_name,
     body: row.body,
     createdAt: iso(row.created_at),
+    attachments,
   })
 }
-export function changeDto(row: ChangeRow, message?: MessageRow) {
+export function changeDto(
+  row: ChangeRow,
+  message?: MessageRow,
+  attachments: SupportMessageAttachment[] = []
+) {
   return supportCaseChangeApiSchema.parse({
     id: row.id,
     caseId: row.case_id,
@@ -116,7 +125,7 @@ export function changeDto(row: ChangeRow, message?: MessageRow) {
     kind: row.kind,
     before: row.kind === "created" ? null : JSON.parse(row.before_json),
     after: JSON.parse(row.after_json),
-    message: message ? messageDto(message) : null,
+    message: message ? messageDto(message, attachments) : null,
     createdAt: iso(row.created_at),
   })
 }

@@ -6,7 +6,7 @@ export class ApiFailure extends HTTPException {
 
   constructor(
     code: ApiErrorCode,
-    status: 400 | 401 | 403 | 404 | 409 | 429 | 503,
+    status: 400 | 401 | 403 | 404 | 409 | 413 | 429 | 503,
     message: string
   ) {
     super(status, { message })
