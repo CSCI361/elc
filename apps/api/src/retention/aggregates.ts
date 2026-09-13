@@ -1,3 +1,4 @@
+import { retireUnreferencedImageStatements } from "../events/images/cleanup"
 import { assertSql, isTransitionConflict } from "../db/transitions"
 import { DAY, HISTORY_MS, eligibleEventSql } from "./policy"
 
@@ -16,6 +17,8 @@ const eventEntityIds = `SELECT id FROM events WHERE id=? UNION SELECT id FROM or
  UNION SELECT id FROM support_cases WHERE event_id=? UNION SELECT id FROM support_messages WHERE case_id IN (${caseIds})
  UNION SELECT id FROM support_case_changes WHERE case_id IN (${caseIds})
  UNION SELECT id FROM support_attachments WHERE case_id IN (${caseIds})
+ UNION SELECT id FROM event_images WHERE event_id=?
+ UNION SELECT id FROM event_image_assets WHERE event_id=?
  UNION SELECT id FROM email_deliveries WHERE event_id=?
  UNION SELECT id FROM offline_devices WHERE event_id=? UNION SELECT id FROM offline_snapshots WHERE event_id=?
  UNION SELECT operation_id FROM offline_operations WHERE event_id=?
@@ -201,7 +204,9 @@ export async function retireEvent(
       db.prepare("DELETE FROM invitations WHERE event_id=?").bind(id),
       db.prepare("DELETE FROM event_permissions WHERE event_id=?").bind(id),
       db.prepare("DELETE FROM audit_entries WHERE event_id=?").bind(id),
+      db.prepare("DELETE FROM event_images WHERE event_id=?").bind(id),
       db.prepare("DELETE FROM events WHERE id=?").bind(id),
+      ...retireUnreferencedImageStatements(db, now),
     ])
     return true
   } catch (error) {

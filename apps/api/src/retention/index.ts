@@ -1,3 +1,4 @@
+import { cleanupEventImageAssets } from "../events/images/cleanup"
 import { Hono } from "hono"
 import { requireVerifiedSession } from "../auth/session"
 import type { Bindings } from "../env"
@@ -33,9 +34,18 @@ export async function runRetentionCleanup(
 ) {
   const dependencies = now === undefined ? {} : { now: () => now }
   const aggregates = await cleanupRetainedAggregates(env.DB, dependencies)
+  const images = await cleanupEventImageAssets(env.DB, now)
   const snapshots = await cleanupExpiredSnapshots(env.DB, now)
   const payloads = await cleanupCompletedPayloads(env.DB, now)
   const profiles = await cleanupInactiveProfiles(env.DB, now)
   const objects = await cleanupRetentionObjects(env, dependencies)
-  return { ...aggregates, snapshots, payloads, profiles, ...objects }
+  return {
+    ...aggregates,
+    imageAssetsRetired: images.retired,
+    imageAssetsDeleted: images.deleted,
+    snapshots,
+    payloads,
+    profiles,
+    ...objects,
+  }
 }

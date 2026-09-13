@@ -8,7 +8,7 @@ import {
 import { policy } from "@elc/shared"
 import { requireActiveAccount } from "../auth/permissions"
 import { ApiFailure, requestHash } from "../db/transitions"
-import { eventDto, type EventRow } from "../events/store"
+import { eventDto, eventImageProjection, type EventRow } from "../events/store"
 import { reportingPeriod } from "../reporting/dates"
 import { supportAccessExpression } from "../support/guards"
 import {
@@ -88,7 +88,7 @@ export async function listOrganizerHistory(
   await dependencies.beforeReturn?.()
   const rows = (
     await db
-      .prepare(`SELECT e.*, ${retentionColumns}, (${eventAuthoritySql("event:manage")}) AS can_manage
+      .prepare(`SELECT e.*, ${eventImageProjection}, ${retentionColumns}, (${eventAuthoritySql("event:manage")}) AS can_manage
     FROM events e WHERE ${conditions.join(" AND ")} ORDER BY e.starts_at DESC, e.id DESC LIMIT ?`)
       .bind(actorId, ...bindings, input.limit + 1)
       .all<EventRow & RetentionRow & { can_manage: number }>()
@@ -201,7 +201,7 @@ export async function readEventHistory(
   const currentNow = dependencies.now?.() ?? Date.now()
   const [metadata, entries] = await db.batch([
     db
-      .prepare(`SELECT e.*, ${retentionColumns}, (${eventAuthoritySql("event:manage")}) AS can_manage FROM events e
+      .prepare(`SELECT e.*, ${eventImageProjection}, ${retentionColumns}, (${eventAuthoritySql("event:manage")}) AS can_manage FROM events e
       WHERE e.id = ? AND ${eventAuthoritySql("history:read")} AND ${retainedSql}`)
       .bind(actorId, eventId, actorId, currentNow),
     db.prepare(sql).bind(...bindings, input.limit + 1),

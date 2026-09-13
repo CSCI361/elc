@@ -7,6 +7,7 @@ import {
 } from "./common"
 import { calendarIdentitySchema, reportingIdSchema } from "./operations"
 import { eventPhaseSchema } from "./states"
+import { eventImageSchema } from "./event-images-api"
 import {
   createCampaignSchema,
   createEventSchema,
@@ -59,6 +60,7 @@ export const eventListQuerySchema = paginationQuerySchema.extend({
 })
 
 export const eventApiSchema = eventSchema.safeExtend({
+  images: z.array(eventImageSchema).max(5).default([]),
   revision: revisionSchema,
   reportingId: reportingIdSchema,
   refundInstructions: refundInstructionsSchema,

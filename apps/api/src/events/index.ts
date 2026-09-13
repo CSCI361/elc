@@ -27,6 +27,7 @@ import {
 } from "./mutations"
 import { listEvents, readCampaigns, readEvent, readInventory } from "./queries"
 import type { EventContext } from "./store"
+import { createEventImageRoutes } from "./images/routes"
 
 type Environment = { Bindings: Bindings; Variables: { requestId: string } }
 type Dependencies = {
@@ -99,6 +100,7 @@ export function createEventsRoutes(dependencies: Dependencies = {}) {
     }
   }
   return new Hono<Environment>()
+    .route("/", createEventImageRoutes({ ...dependencies, identify }))
     .get("/events", async (c) =>
       c.json(
         await listEvents(

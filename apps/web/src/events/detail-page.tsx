@@ -35,6 +35,8 @@ import {
 import { SeatMap } from "./seat-map"
 import { EventError, Field, Loading } from "./ui"
 import { CalendarActions } from "./exports"
+import { EventImageGallery } from "./image-gallery"
+import { useImageText } from "./image-messages"
 import { supportHref } from "@/support/policies"
 import { useSupportText } from "@/support/messages"
 import { usePublicEventAnalytics } from "@/analytics/collection"
@@ -312,21 +314,26 @@ function ReservationForm({
 }
 
 export function EventDetailPage({ eventId }: { eventId: string }) {
+  const preview =
+    new URLSearchParams(window.location.search).get("preview") === "true"
+  const { t: imageText } = useImageText()
+  const previewNow = useServerNow()
   const { t: supportText } = useSupportText()
   const { locale, t } = useEventText()
   const detail = useResource(
-    `/events/${segment(eventId)}`,
-    eventDetailResponseSchema
+    `/events/${segment(eventId)}${preview ? "/preview" : ""}`,
+    eventDetailResponseSchema,
+    15000
   )
   const inventory = useResource(
-    `/events/${segment(eventId)}/inventory`,
+    `/events/${segment(eventId)}/inventory${preview ? "?preview=true" : ""}`,
     inventoryResponseSchema,
     10000
   )
   const trackCheckout = usePublicEventAnalytics(
-    detail.error ? undefined : detail.data?.event
+    detail.error || preview ? undefined : detail.data?.event
   )
-  if (!detail.data)
+  if (detail.error || !detail.data)
     return detail.error ? (
       <EventError error={detail.error} retry={detail.reload} />
     ) : (
@@ -339,6 +346,17 @@ export function EventDetailPage({ eventId }: { eventId: string }) {
         <ArrowLeftIcon size={18} aria-hidden />
         {t("discover")}
       </a>
+      {preview ? (
+        <div className="event-inline-note" role="note">
+          <p>{imageText("previewNotice")}</p>
+          <a
+            className="secondary-link"
+            href={`/organizer/events/${segment(event.id)}`}
+          >
+            {imageText("backToEditor")}
+          </a>
+        </div>
+      ) : null}
       <div className="event-detail-heading">
         <div className="event-badges">
           <span>{event.category}</span>
@@ -356,6 +374,7 @@ export function EventDetailPage({ eventId }: { eventId: string }) {
           </span>
         </div>
       </div>
+      <EventImageGallery event={event} />
       <div className="event-detail-grid">
         <div>
           <section className="event-panel event-description">
@@ -397,7 +416,37 @@ export function EventDetailPage({ eventId }: { eventId: string }) {
           {inventory.error ? (
             <EventError error={inventory.error} retry={inventory.reload} />
           ) : null}
-          {inventory.data ? (
+          {inventory.data && preview ? (
+            <section className="event-panel">
+              <h2>{imageText("previewTickets")}</h2>
+              <div className="ticket-type-options">
+                {inventory.data.ticketTypes.map((type) => (
+                  <div className="ticket-type-option" key={type.id}>
+                    <div>
+                      <h3>{type.name}</h3>
+                      <p>{type.description}</p>
+                      <strong>{money(type.priceMinor, locale)}</strong>
+                      <small>
+                        {t("available")}: {type.available}
+                      </small>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {event.seatingMode === "assigned" ? (
+                <SeatMap
+                  seats={purchasableSeats(
+                    inventory.data,
+                    event.paidSalesState === "active",
+                    previewNow
+                  )}
+                  selected={[]}
+                  disabled
+                  onSelect={() => {}}
+                />
+              ) : null}
+            </section>
+          ) : inventory.data ? (
             <ReservationForm
               event={event}
               inventory={inventory.data}

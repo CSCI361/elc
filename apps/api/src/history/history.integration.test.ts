@@ -14,6 +14,7 @@ import {
   updateTicketType,
 } from "../events/mutations"
 import { findEvent, type EventContext } from "../events/store"
+import { listEvents, readEvent } from "../events/queries"
 import { createSupportCase } from "../support/service"
 import { startCheckout } from "../orders/checkout"
 import { completeZeroTotalOrder } from "../tickets/issue"
@@ -426,6 +427,98 @@ describe("organizer history and duplication on real D1", () => {
         { now: clock }
       )
     ).rejects.toMatchObject({ status: 400 })
+  })
+
+  it("copies an ordered gallery to fresh event-scoped URLs while sharing immutable assets", async () => {
+    for (const [index, alt] of [
+      "Campus entrance",
+      "Accessible auditorium",
+    ].entries()) {
+      const asset = `image-asset-${index}`,
+        image = `image-link-${index}`
+      await db.batch([
+        db
+          .prepare(`INSERT INTO event_image_assets(id,event_id,uploader_id,request_id,input_hash,expected_revision,alt_text,object_key,content_type,original_size,content_size,content_sha256,created_at,expires_at)
+          VALUES (?,?,'owner',?,?,2,?,?,'image/png',100,100,?,?,?)`)
+          .bind(
+            asset,
+            eventId,
+            `image-upload-${index}`,
+            "a".repeat(64),
+            alt,
+            `private/event-images/${asset}`,
+            "b".repeat(64),
+            now,
+            now + 3600000
+          ),
+        db
+          .prepare("UPDATE event_image_assets SET state='ready' WHERE id=?")
+          .bind(asset),
+        db
+          .prepare(
+            "INSERT INTO event_images(id,event_id,asset_id,position,alt_text,created_at) VALUES (?,?,?,?,?,?)"
+          )
+          .bind(image, eventId, asset, index, alt, now),
+      ])
+    }
+    const original = await readEvent(db, eventId, now)
+    expect(original.event.images.map((image) => image.altText)).toEqual([
+      "Campus entrance",
+      "Accessible auditorium",
+    ])
+    expect(
+      (await listEvents(db, { limit: 20, phase: "completed" }, now)).items.find(
+        (event) => event.id === eventId
+      )?.images
+    ).toEqual(original.event.images)
+    expect(
+      (await readEventHistory(db, "owner", eventId, {}, { now: clock })).event
+        .images
+    ).toEqual(original.event.images)
+    const result = await duplicatePastEvent(db, "manager", eventId, request(), {
+      now: clock,
+    })
+    const duplicate = await readEvent(db, result.eventId, now, "manager", true)
+    expect(duplicate.event.images.map((image) => image.altText)).toEqual(
+      original.event.images.map((image) => image.altText)
+    )
+    expect(duplicate.event.images.map((image) => image.id)).not.toEqual(
+      original.event.images.map((image) => image.id)
+    )
+    expect(duplicate.event.images[0]!.url).toContain(
+      `/events/${result.eventId}/images/`
+    )
+    expect(
+      (
+        await db
+          .prepare(
+            "SELECT asset_id FROM event_images WHERE event_id=? ORDER BY position"
+          )
+          .bind(result.eventId)
+          .all<{ asset_id: string }>()
+      ).results
+    ).toEqual([{ asset_id: "image-asset-0" }, { asset_id: "image-asset-1" }])
+    expect(
+      (
+        await db
+          .prepare("SELECT count(*) n FROM event_image_assets")
+          .first<{ n: number }>()
+      )?.n
+    ).toBe(2)
+    await expect(
+      readEvent(db, result.eventId, now, "other")
+    ).rejects.toMatchObject({ status: 404 })
+    await expect(
+      db
+        .prepare(
+          "UPDATE event_image_assets SET state='deleting',retired_at=? WHERE id='image-asset-0'"
+        )
+        .bind(now)
+        .run()
+    ).rejects.toThrow()
+    expect((await readEvent(db, eventId, now)).event.images).toEqual(
+      original.event.images
+    )
   })
 
   it("duplicates reusable general admission while preserving original tickets and excluding all history and grants", async () => {

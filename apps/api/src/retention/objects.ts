@@ -16,7 +16,7 @@ type Dependencies = {
 }
 const identifier = "[A-Za-z0-9][A-Za-z0-9_-]{0,127}"
 const keyPattern = new RegExp(
-  `^private/(support-(?:quarantine|files)/${identifier}|email-deliveries/${identifier}/[a-f0-9]{64}\\.json)$`
+  `^private/(support-(?:quarantine|files)/${identifier}|event-images/${identifier}|email-deliveries/${identifier}/[a-f0-9]{64}\\.json)$`
 )
 const prefixPattern = new RegExp(`^private/ticket-pdfs/${identifier}/$`)
 
@@ -81,26 +81,41 @@ export async function cleanupRetentionObjects(
         if (page.truncated) cursor = page.cursor
       }
       const doneAt = clock()
-      if (cursor === null && row.created_at <= doneAt - PAYLOAD_MS) {
-        await env.DB.prepare(
-          "DELETE FROM retention_object_jobs WHERE id=? AND lease_token=? AND lease_until>?"
-        )
-          .bind(row.id, token, doneAt)
-          .run()
-      } else {
-        await env.DB.prepare(`UPDATE retention_object_jobs SET cursor=?,last_swept_at=?,completed_at=?,
-     next_attempt_at=?,lease_token=NULL,lease_until=0 WHERE id=? AND lease_token=? AND lease_until>?`)
-          .bind(
-            cursor,
-            doneAt,
-            cursor ? null : doneAt,
-            cursor ? doneAt : doneAt + DAY,
-            row.id,
-            token,
-            doneAt
-          )
-          .run()
-      }
+      const acknowledge =
+        cursor === null && row.created_at <= doneAt - PAYLOAD_MS
+          ? env.DB.prepare(
+              "DELETE FROM retention_object_jobs WHERE id=? AND lease_token=? AND lease_until>?"
+            ).bind(row.id, token, doneAt)
+          : env.DB.prepare(`UPDATE retention_object_jobs SET cursor=?,last_swept_at=?,completed_at=?,next_attempt_at=?,lease_token=NULL,lease_until=0
+          WHERE id=? AND lease_token=? AND lease_until>?`).bind(
+              cursor,
+              doneAt,
+              cursor ? null : doneAt,
+              cursor ? doneAt : doneAt + DAY,
+              row.id,
+              token,
+              doneAt
+            )
+      // Complete image retirement in the same lease-guarded batch as its object acknowledgement.
+      // Even a first sweep after 30 days cannot erase the only proof that the asset was deleted.
+      await env.DB.batch([
+        ...(cursor === null &&
+        row.mode === "key" &&
+        row.object_key.startsWith("private/event-images/")
+          ? [
+              env.DB.prepare(`UPDATE event_image_assets SET state='deleted',deleted_at=?
+          WHERE object_key=? AND state='deleting' AND NOT EXISTS(SELECT 1 FROM event_images i WHERE i.asset_id=event_image_assets.id)
+          AND EXISTS(SELECT 1 FROM retention_object_jobs WHERE id=? AND lease_token=? AND lease_until>?)`).bind(
+                doneAt,
+                row.object_key,
+                row.id,
+                token,
+                doneAt
+              ),
+            ]
+          : []),
+        acknowledge,
+      ])
       swept++
     } catch {
       retry++

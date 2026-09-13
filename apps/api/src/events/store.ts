@@ -25,6 +25,7 @@ export type EventContext = {
 }
 
 export type EventRow = {
+  images_json?: string
   id: string
   organizer_id: string
   title: string
@@ -57,8 +58,17 @@ export type EventRow = {
 
 export const iso = (value: number) => new Date(value).toISOString()
 
+/** Read the ordered gallery in the same D1 statement as its event revision. */
+export const eventImageProjection = `COALESCE((SELECT json_group_array(json_object(
+  'id',i.id,'url','/api/events/'||i.event_id||'/images/'||i.id,
+  'altText',i.alt_text,'position',i.position,'contentType',i.content_type,'sizeBytes',i.content_size))
+  FROM (SELECT l.id,l.event_id,l.alt_text,l.position,a.content_type,a.content_size
+    FROM event_images l JOIN event_image_assets a ON a.id=l.asset_id
+    WHERE l.event_id=e.id AND a.state='ready' ORDER BY l.position,l.id) i),'[]') AS images_json`
+
 export function eventDto(row: EventRow, now: number) {
   return eventApiSchema.parse({
+    images: JSON.parse(row.images_json ?? "[]"),
     id: row.id,
     organizerId: row.organizer_id,
     title: row.title,
@@ -107,7 +117,7 @@ export async function findEvent(
   eventId: string
 ): Promise<EventRow> {
   const event = await db
-    .prepare("SELECT * FROM events WHERE id = ?")
+    .prepare(`SELECT e.*,${eventImageProjection} FROM events e WHERE e.id = ?`)
     .bind(eventId)
     .first<EventRow>()
   if (!event) throw new ApiFailure("NOT_FOUND", 404, "Event not found.")

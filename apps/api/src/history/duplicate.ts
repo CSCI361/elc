@@ -136,6 +136,12 @@ export async function duplicatePastEvent(
         SELECT lower(hex(randomblob(16))),?,json_extract(m.value,'$.newId'),i.section,i.row,i.number,i.accessible,i.enabled
         FROM inventory i JOIN json_each(?) m ON json_extract(m.value,'$.oldId') = i.ticket_type_id WHERE i.event_id = ?`)
         .bind(id, mapping, sourceEventId),
+      db
+        .prepare(`INSERT INTO event_images(id,event_id,asset_id,position,alt_text,created_at)
+        SELECT lower(hex(randomblob(16))),?,i.asset_id,i.position,i.alt_text,?
+        FROM event_images i JOIN event_image_assets a ON a.id=i.asset_id AND a.state='ready'
+        WHERE i.event_id=? ORDER BY i.position`)
+        .bind(id, now, sourceEventId),
       ...inventoryGuards(db, id),
       db
         .prepare(`INSERT INTO audit_entries (id,event_id,actor_id,scope,action,entity_id,description,correlation_id,created_at)

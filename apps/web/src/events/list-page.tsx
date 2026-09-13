@@ -10,6 +10,7 @@ import { useState, type FormEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { segment, useResource } from "./api"
 import { useEventText } from "./messages"
+import { EventImageCover } from "./image-gallery"
 import { dateText } from "./policies"
 import { EventError, Field, Loading } from "./ui"
 import { useDirectoryAnalytics } from "@/analytics/collection"
@@ -24,10 +25,14 @@ export function EventCard({
   const { locale, t } = useEventText()
   return (
     <article className="event-card">
-      <div className="event-card-art" aria-hidden>
-        <TicketIcon size={72} weight="thin" />
-        <span>{event.category}</span>
-      </div>
+      {event.images.length ? (
+        <EventImageCover event={event} />
+      ) : (
+        <div className="event-card-art" aria-hidden>
+          <TicketIcon size={72} weight="thin" />
+          <span>{event.category}</span>
+        </div>
+      )}
       <div className="event-card-body">
         <div className="event-badges">
           <span>{t(event.phase)}</span>
@@ -141,9 +146,10 @@ export function EventListPage({ organizer = false }: { organizer?: boolean }) {
         </div>
       ) : null}
       <div className="event-grid">
-        {resource.data?.items.map((event) => (
-          <EventCard key={event.id} event={event} organizer={organizer} />
-        ))}
+        {!resource.error &&
+          resource.data?.items.map((event) => (
+            <EventCard key={event.id} event={event} organizer={organizer} />
+          ))}
       </div>
       <nav className="event-pagination" aria-label={t("more")}>
         {initial.has("cursor") ? (

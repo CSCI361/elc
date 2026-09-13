@@ -15,7 +15,13 @@ import {
   requireEventReadAccess,
 } from "../auth/permissions"
 import { ApiFailure } from "../db/transitions"
-import { eventDto, findEvent, iso, type EventRow } from "./store"
+import {
+  eventDto,
+  eventImageProjection,
+  findEvent,
+  iso,
+  type EventRow,
+} from "./store"
 
 const cursorSchema = z.strictObject({
   at: z.int(),
@@ -96,7 +102,7 @@ export async function listEvents(
     bindings.push(cursor.at, cursor.at, cursor.id)
   }
   const result = await db
-    .prepare(`SELECT e.* FROM events e WHERE ${where.join(" AND ")}
+    .prepare(`SELECT e.*,${eventImageProjection} FROM events e WHERE ${where.join(" AND ")}
     ORDER BY e.starts_at ASC, e.id ASC LIMIT ?`)
     .bind(...bindings, query.limit + 1)
     .all<EventRow>()
@@ -196,9 +202,11 @@ export async function readEvent(
 ) {
   await allowRead(db, eventId, actorId, preview)
   const event = await findEvent(db, eventId)
+  const types = await ticketTypes(db, eventId, now, preview)
+  await allowRead(db, eventId, actorId, preview)
   return eventDetailResponseSchema.parse({
     event: eventDto(event, now),
-    ticketTypes: await ticketTypes(db, eventId, now, preview),
+    ticketTypes: types,
   })
 }
 

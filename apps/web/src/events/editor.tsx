@@ -25,6 +25,8 @@ import { duplicateHref, eventHistoryHref } from "@/history/policies"
 import { supportHref } from "@/support/policies"
 import { CancellationPanel } from "@/support/cancellation-panel"
 import { CalendarActions } from "./exports"
+import { EventImagePanel, ImageDraftHint } from "./image-panel"
+import { useImageText } from "./image-messages"
 import { Button } from "@/components/ui/button"
 import { EventApiError, segment, useCommand, useResource } from "./api"
 import { useEventText } from "./messages"
@@ -459,6 +461,7 @@ export function EventEditorPage({ eventId }: { eventId?: string }) {
           {t("organize")}
         </a>
         <h1>{t("newEvent")}</h1>
+        <ImageDraftHint />
         <EventForm />
       </div>
     )
@@ -495,6 +498,7 @@ function RetainedEventActions({ event }: { event: EventApi }) {
 }
 
 function ExistingEventEditor({ eventId }: { eventId: string }) {
+  const { t: imageText } = useImageText()
   const { t: payoutText } = usePayoutText()
   const { t: supportText } = useSupportText()
   const { account } = useAccount()
@@ -502,7 +506,8 @@ function ExistingEventEditor({ eventId }: { eventId: string }) {
   const { locale, t } = useEventText()
   const detail = useResource(
     `/events/${segment(eventId)}/preview`,
-    eventDetailResponseSchema
+    eventDetailResponseSchema,
+    15000
   )
   const inventory = useResource(
     `/events/${segment(eventId)}/inventory?preview=true`,
@@ -513,7 +518,7 @@ function ExistingEventEditor({ eventId }: { eventId: string }) {
     detail.reload()
     inventory.reload()
   }
-  if (!detail.data)
+  if (detail.error || !detail.data)
     return detail.error ? (
       <EventError error={detail.error} retry={reload} />
     ) : (
@@ -592,6 +597,13 @@ function ExistingEventEditor({ eventId }: { eventId: string }) {
               {accessText("title")}
             </a>
           ) : null}
+          <a
+            className="secondary-link"
+            href={`/events/${segment(event.id)}?preview=true`}
+          >
+            {imageText("previewEvent")}
+            <ArrowUpRightIcon size={18} aria-hidden />
+          </a>
           {published ? (
             <a className="secondary-link" href={`/events/${segment(event.id)}`}>
               {t("details")}
@@ -622,6 +634,15 @@ function ExistingEventEditor({ eventId }: { eventId: string }) {
         <EventError error={command.error} retry={reload} />
       ) : null}
       <CancellationPanel event={event} onChanged={reload} />
+      <EventImagePanel
+        key={`${account?.user.id}:${event.id}`}
+        event={event}
+        onChanged={(fresh) => {
+          detail.update(fresh)
+          inventory.reload()
+        }}
+        onDenied={reload}
+      />
       <div className="editor-grid">
         <EventForm
           key={`event:${event.revision}`}

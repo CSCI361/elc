@@ -34,6 +34,73 @@ export const profiles = sqliteTable("profiles", {
   updatedAt: integer("updated_at").notNull(),
 })
 
+export const eventImageAssets = sqliteTable(
+  "event_image_assets",
+  {
+    id: text("id").primaryKey(),
+    // Original upload scope remains immutable when another event shares the asset.
+    eventId: text("event_id").notNull(),
+    uploaderId: text("uploader_id")
+      .notNull()
+      .references(() => user.id),
+    requestId: text("request_id").notNull(),
+    inputHash: text("input_hash").notNull(),
+    expectedRevision: integer("expected_revision").notNull(),
+    altText: text("alt_text").notNull(),
+    objectKey: text("object_key").notNull().unique(),
+    contentType: text("content_type").notNull(),
+    originalSize: integer("original_size").notNull(),
+    contentSize: integer("content_size").notNull(),
+    contentSha256: text("content_sha256").notNull(),
+    state: text("state").notNull().default("staged"),
+    leaseToken: text("lease_token"),
+    leaseUntil: integer("lease_until").notNull().default(0),
+    attempts: integer("attempts").notNull().default(0),
+    createdAt: integer("created_at").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    retiredAt: integer("retired_at"),
+    deletedAt: integer("deleted_at"),
+  },
+  (t) => [
+    uniqueIndex("event_image_upload_request").on(t.uploaderId, t.requestId),
+    index("event_image_asset_cleanup").on(t.state, t.expiresAt, t.retiredAt),
+    index("event_image_asset_upload_event").on(t.eventId),
+    check(
+      "event_image_asset_values",
+      sql`${t.contentType} IN ('image/jpeg','image/png') AND ${t.originalSize} BETWEEN 1 AND 5242880 AND ${t.contentSize} BETWEEN 1 AND 5242880 AND length(${t.contentSha256})=64 AND length(${t.inputHash})=64 AND ${t.expectedRevision}>=0 AND length(trim(${t.altText})) BETWEEN 1 AND 500 AND ${t.attempts}>=0 AND ${t.state} IN ('staged','ready','deleting','deleted') AND ${t.expiresAt}>${t.createdAt} AND ${t.expiresAt}<=${t.createdAt}+86400000`
+    ),
+    check(
+      "event_image_asset_retirement",
+      sql`(${t.state} IN ('deleting','deleted'))=(${t.retiredAt} IS NOT NULL) AND (${t.state}='deleted')=(${t.deletedAt} IS NOT NULL)`
+    ),
+  ]
+)
+
+export const eventImages = sqliteTable(
+  "event_images",
+  {
+    id: text("id").primaryKey(),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => events.id),
+    assetId: text("asset_id")
+      .notNull()
+      .references(() => eventImageAssets.id),
+    position: integer("position").notNull(),
+    altText: text("alt_text").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [
+    uniqueIndex("event_image_position").on(t.eventId, t.position),
+    uniqueIndex("event_image_asset_link").on(t.eventId, t.assetId),
+    index("event_image_asset_references").on(t.assetId),
+    check(
+      "event_image_link_values",
+      sql`${t.position} BETWEEN 0 AND 4 AND length(trim(${t.altText})) BETWEEN 1 AND 500`
+    ),
+  ]
+)
+
 export const ga4Reports = sqliteTable(
   "ga4_reports",
   {

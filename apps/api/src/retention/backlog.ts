@@ -52,6 +52,14 @@ export async function getRetentionBacklog(db: D1Database, now = Date.now()) {
       )
       .bind(now)
   )
+  statements.push(
+    db
+      .prepare(`SELECT count(*) AS count FROM event_image_assets a
+   WHERE NOT EXISTS(SELECT 1 FROM event_images i WHERE i.asset_id=a.id)
+    AND ((a.state='staged' AND (a.expires_at<=? OR NOT EXISTS(SELECT 1 FROM events e WHERE e.id=a.event_id)))
+     OR a.state='ready' OR (a.state='deleting' AND NOT EXISTS(SELECT 1 FROM retention_object_jobs j WHERE j.object_key=a.object_key AND j.bucket='files' AND j.mode='key')))`)
+      .bind(now)
+  )
   const results = await db.batch(statements)
   const counts = results.map((result) =>
     Number((result.results[0] as { count: number }).count)
@@ -67,6 +75,7 @@ export async function getRetentionBacklog(db: D1Database, now = Date.now()) {
     accounts,
     objects,
     expiredAuthIntents,
+    imageAssets,
   ] = counts
   return {
     events: events!,
@@ -79,6 +88,7 @@ export async function getRetentionBacklog(db: D1Database, now = Date.now()) {
     accounts: accounts!,
     objects: objects!,
     expiredAuthIntents: expiredAuthIntents!,
+    imageAssets: imageAssets!,
     clear: counts.every((count) => count === 0),
   }
 }

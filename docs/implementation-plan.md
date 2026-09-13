@@ -7,16 +7,18 @@ Work resumed at the user's request from checkpoint `3edfe08`. The
 incomplete activation modules, credentials setup and ordered next steps. The
 release remains in progress.
 
-Latest integration adds [durable authentication mail](./evidence/durable-authentication-mail.md),
+Latest integration adds [event image storage](./evidence/event-images-api.md) and
+[the web gallery and organizer preview](./evidence/event-images-web.md). Events
+have up to five ordered JPEG/PNG images with required alternative text. Uploads
+use validated immutable objects and durable retry intents. Duplication retains
+shared assets; reference-aware retention removes them after their last use.
+Migrations through 0029 are applied locally.
+
+The preceding commits add [durable authentication mail](./evidence/durable-authentication-mail.md),
 [retention cleanup](./evidence/retention.md) and
-[backup recovery](./evidence/backup-recovery.md). Registration and reset messages
-use encrypted, expiring D1 intents and the existing delivery coordinator.
-Daily cleanup retains current financial/admission holds and commits retryable
-private-file deletion jobs. Recovery pauses API access and background work;
-the disposable SQL/R2 rehearsal runs retention before resumption. Migrations
-through 0028 are applied locally. Commit `9de6914` saves authentication,
-retention and the recovery gate; the following backup tooling commit includes
-this plan update.
+[backup recovery](./evidence/backup-recovery.md). Commit `9de6914` saves encrypted
+expiring authentication intents, retention and the recovery gate; `cd28130`
+saves backup tooling and its disposable restore rehearsal.
 
 Earlier completed units include [platform administration](./evidence/administration.md)
 and [operational searches/CSV export](./evidence/operational-records.md).
@@ -26,9 +28,9 @@ browser evidence. Suspension preserves signed offline snapshots and records a
 separate invalidation timestamp. Operational searches expose retention deadlines
 and unresolved-work holds.
 
-The full suite passes 1,111 tests across 72 files (452.65 seconds). Full formatting, lint and type
-checks and web/Worker/Astro builds pass. The web entry is 647.22 kB minified and
-retains the existing size warning. Backup verification also passes 34 safety
+The image integration passes 1,137 tests across 73 files (473.37 seconds),
+full formatting, lint and type checks across 408 files, and web/Worker/Astro
+builds. Its web entry is 658.10 kB minified and retains the existing size warning. Backup verification also passes 34 safety
 tests and one disposable restore rehearsal. Local Worker authentication and
 complete ticketing regressions pass. The new durable-auth browser flow passes
 in all three languages, including password reset. Administration and operational-record browser
@@ -43,8 +45,14 @@ Google-side receipt remain pending. The saved Polar late-payment test passes
 with one confirmed KZT 9,000 refund, zero tickets and no held inventory; see
 [compensation evidence](./evidence/polar-compensation.md).
 
-The remaining local implementation audit includes event-image upload/storage,
-which the architecture requires but the current event schema does not represent.
+The local image browser flow passes uploads, gallery edits, a lost-response
+retry, all three localized phone previews, public covers and access revocation.
+The local audit identified the next missing workflows: organizer campaign
+management and Campaign QR generation (SRS 4.14), event-scoped organizer
+registration/order views (SRS 4.4 and 4.16), and editable organizer contact/payout
+profiles (SRS 4.1). Campaign APIs already exist, but no organizer campaign screen
+or Campaign QR renderer is present. Implement and verify that workflow next,
+including an attributed discounted order and rejection of its QR at admission.
 The daily backup workflow is checked in but disabled until its reviewed target,
 credentials and environment are configured. External and device acceptance below
 remains required before release completion.
@@ -356,8 +364,10 @@ device acceptance remain separate required checks.
       with physical models, OS/build IDs and minimum-version simulator coverage.
 - [ ] Isolated local/preview/demo bindings, reviewed deployment configuration,
       server-only secrets, protected assets, HTTPS and redacted operational logs.
-- [ ] Event images use validated immutable object keys, authorized organizer
+- [x] Event images use validated immutable object keys, authorized organizer
       changes, public event delivery and deletion under the event's retention policy.
+      Verified locally through D1/R2 tests and the browser evidence above; deployed
+      R2 acceptance remains part of the infrastructure gate.
 - [ ] Daily retryable retention cleanup, 180-day history, documented expiry/holds,
       30-day logs/outbox payloads/SQL exports and private backup access.
 - [ ] D1 recovery window recorded; pre-migration exports/bookmarks; disposable

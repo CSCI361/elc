@@ -138,6 +138,7 @@ const accountReferences = `NOT EXISTS (SELECT 1 FROM events WHERE organizer_id=p
  AND NOT EXISTS (SELECT 1 FROM support_messages WHERE author_id=p.user_id)
  AND NOT EXISTS (SELECT 1 FROM support_case_changes WHERE actor_id=p.user_id)
  AND NOT EXISTS (SELECT 1 FROM support_attachments WHERE uploader_id=p.user_id)
+ AND NOT EXISTS (SELECT 1 FROM event_image_assets WHERE uploader_id=p.user_id)
  AND NOT EXISTS (SELECT 1 FROM email_deliveries WHERE recipient_id=p.user_id)
  AND NOT EXISTS (SELECT 1 FROM platform_grants WHERE user_id=p.user_id)
  AND NOT EXISTS (SELECT 1 FROM session WHERE user_id=p.user_id AND expires_at>?)`

@@ -25,6 +25,7 @@ import { cleanupDeliveryPayloads } from "./delivery/payload-cleanup"
 import { cleanupTrafficReports } from "./traffic/read"
 import { recoveryPaused } from "./recovery/gate"
 import { runRetentionCleanup } from "./retention"
+import { cleanupEventImageAssets } from "./events/images/cleanup"
 import {
   cleanupAuthEmailIntents,
   createAuthDeliverySources,
@@ -54,6 +55,7 @@ export default {
     context.waitUntil(cleanupDeliveryPayloads(env))
     context.waitUntil(cleanupTrafficReports(env.DB))
     context.waitUntil(cleanupAuthEmailIntents(env))
+    context.waitUntil(cleanupEventImageAssets(env.DB))
   },
   async queue(batch, env) {
     if (recoveryPaused(env)) {

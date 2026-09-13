@@ -7,63 +7,62 @@ checkpoint, not a completed academic release.
 
 ## Current continuation state
 
-Updated on 2026-09-13 after durable authentication mail, retention and backup
-recovery integration. The sections below this update preserve the original
-offline checkpoint and are historical. The academic release remains in progress.
+Updated on 2026-09-13 after event image integration. The historical sections
+below preserve the original offline checkpoint. The academic release remains
+in progress.
 
-The branch is `feat/academic-release`. Commit `9de6914` adds durable authentication
-mail, retention cleanup and the recovery gate. The commit containing this update
-adds backup/restore tooling, CI checks and a disabled daily backup workflow.
-Earlier completed units include `8ca0c4f` (operational search/CSV), `186836e`
-(administration), `66371ee` (actual Polar compensation), `f4fc144` (analytics
-consent), `677e080` (GA4 reporting) and `5d90c8f` (organizer overview).
+The branch is `feat/academic-release`. Its committed baseline includes
+`9de6914` (durable authentication mail and retention) and `cd28130` (private SQL
+backups and recovery rehearsal). The commit containing this checkpoint adds migration 0029,
+shared gallery contracts, immutable validated R2 uploads, authorized downloads,
+revision-guarded gallery edits, shared-asset duplication and reference-aware
+retention. The web editor has localized uploads, alternative text, ordering,
+removal and reliable retries. Draft/published organizer previews show galleries
+and read-only ticket/seat details with event analytics disabled.
 
-Validation for this integration:
+Migrations through 0029 are applied to persistent local D1. Full integration
+validation is complete; no test or build process remains running. No deployment
+or push was performed.
 
-- `vp test`: 1,111 tests across 72 files pass in 452.65 seconds.
-- `vp run verify:backup`: 34 Node safety tests and one complete migrated-schema
-  D1/R2 restore rehearsal pass. The rehearsal uses production auth cleanup,
-  retention and backlog checks; provider outcomes remain synthetic.
-- Full formatting, lint and type checks pass without warnings across 397 files.
-  Web/Worker/Astro builds pass. The web entry remains 647.22 kB minified with its
-  existing size warning. The build log is `.wrangler/recovery-build.log`.
-- `vp run verify:local-auth` and `vp run verify:local-ticketing` pass against the
-  local Worker. The latter covers PDFs, calendars, scanning and reversal as well
-  as ticket issuance. Both remove their synthetic D1/R2 fixtures.
-- `.wrangler/web-auth-durable-results.json` records passing registration,
-  verification and sign-in in all three languages at 390 pixels, plus browser
-  password reset. There are no page errors. Private fixtures were removed.
+Validation completed for the image unit:
 
-Migrations through 0028 are applied to persistent local D1. The next migration is 0029. No deployment or push was performed. No validation process remains running
-for these completed units.
+- `vp test`: 1,137 tests across 73 files pass in 473.37 seconds.
+  Log: `.wrangler/event-images-tests.log`.
+- Full formatting, lint and type checks pass without warnings across 408 files.
+- The image suite verifies 25 cases. All 21 retention cases pass; the combined
+  first 44 cases took 121.60 seconds and two additional cases took 7.11 seconds.
+- Event/history integration passed 27 cases, including ordered image DTOs and
+  duplication that shares assets but creates fresh image associations.
+- Web/Worker/Astro builds pass. The web entry is 658.10 kB minified, with its
+  existing size warning. Build log: `.wrangler/event-images-build.log`.
+- `vp run verify:backup` passes 34 Node safety tests and one complete migrated
+  D1/R2 restore rehearsal with the new image tables.
+- `vp run verify:local-ticketing` passes against the real local Worker, including
+  issuance, protected PDFs, calendars, scanning, reversal and fixture cleanup.
+- `.wrangler/web-event-images-results.json` records a passing browser run with
+  no page errors. It covers PNG/JPEG uploads, lost-acknowledgement retry without
+  duplicates, gallery edits, KK/RU/EN phone previews, public covers and image
+  access revocation. All synthetic D1/R2/mail fixtures were removed.
 
-Authentication callbacks now commit encrypted one-hour intents and durable email
-jobs. Token expiry, consumption, account changes and suspension stop sends.
-Accepted provider IDs are reconciled by lookup. Local mail still uses the private
-mailbox. A separate account-activity record supports retention without changing
-saved-locale behavior. See [authentication evidence](./evidence/durable-authentication-mail.md).
+See [API evidence](./evidence/event-images-api.md) and
+[web evidence](./evidence/event-images-web.md). The API cleanup accounts for a
+first successful object sweep after more than 30 days by recording the asset's
+deleted state in the same guarded batch that removes its object job.
 
-Daily retention is declared at 00:00 UTC. Atomic D1 retirement preserves current
-payment/refund/admission holds and captures R2 deletion jobs before deleting
-records. Jobs retry and repeat sweeps for late writes. The recovery API exposes
-deadlines and holds. See [retention evidence](./evidence/retention.md).
+The preceding integration passed 1,111 tests across 72 files, full checks/build,
+local Worker auth/ticketing regressions, and localized durable-auth browser
+registration/reset. Authentication uses encrypted expiring D1 intents. Daily
+retention preserves financial and admission holds. `RECOVERY_MODE=paused` is
+outside D1 and gates APIs, background work and support connections. Backup CI
+is checked in but remains disabled until its target and credentials are set.
+See the [runbook](./backup-recovery.md) and [implementation plan](./implementation-plan.md).
 
-`RECOVERY_MODE=paused` is a deployment setting outside D1. It blocks all API reads
-and writes, skips scheduled work, retries queue batches and restricts support
-Durable Objects. Deployment draining and provider reconciliation remain required.
-The SQL importer restores tables/data before transition triggers and verifies
-foreign keys. The daily GitHub backup workflow remains disabled until its target,
-credentials and environment are configured. See the [runbook](./backup-recovery.md)
-and [local recovery evidence](./evidence/backup-recovery.md).
-
-Next local implementation: event images. SRS section 4.2 requires them, but the
-current event schema has no image records. The SRS gives no image type/count/size
-limits. A read-only design review recommends validated JPEG/PNG uploads, an ordered
-gallery with alt text, immutable shared assets for event duplication, access checks
-through the event API, and reference-aware retention. Reuse the complete image
-validator in `support/attachments/images.ts`; support-specific limits are not SRS
-requirements for event images. Coordinate shared contracts/schema before API/web
-work. Both focused agents have finished and hold no writable files.
+Next: implement organizer campaign management and Campaign QR generation.
+The APIs already exist; the organizer screen and QR renderer are missing. The
+acceptance flow is campaign QR -> event -> discount -> attributed order, with
+campaign QR rejection at admission. Further local gaps include event-scoped
+organizer registration/order views and editable organizer contact/payout
+profiles. Both agents have returned ownership and have no running processes.
 
 The completed Polar compensation fixture must be preserved: payment
 `49249daf-eefa-4817-8061-4cc493d898d5` succeeded; order
