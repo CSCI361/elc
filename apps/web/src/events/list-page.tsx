@@ -12,6 +12,7 @@ import { segment, useResource } from "./api"
 import { useEventText } from "./messages"
 import { dateText } from "./policies"
 import { EventError, Field, Loading } from "./ui"
+import { useDirectoryAnalytics } from "@/analytics/collection"
 
 export function EventCard({
   event,
@@ -68,6 +69,7 @@ export function EventCard({
 }
 
 export function EventListPage({ organizer = false }: { organizer?: boolean }) {
+  useDirectoryAnalytics(!organizer)
   const { t } = useEventText()
   const initial = new URLSearchParams(window.location.search)
   const [query, setQuery] = useState(initial.get("q") ?? "")

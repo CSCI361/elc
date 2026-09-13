@@ -37,15 +37,22 @@ import { EventError, Field, Loading } from "./ui"
 import { CalendarActions } from "./exports"
 import { supportHref } from "@/support/policies"
 import { useSupportText } from "@/support/messages"
+import { usePublicEventAnalytics } from "@/analytics/collection"
 
 function ReservationForm({
   event,
   inventory,
   refresh,
+  trackCheckout,
 }: {
   event: EventApi
   inventory: Inventory
   refresh: () => void
+  trackCheckout: (
+    valueMinor: number,
+    quantity: number,
+    campaignCode: string
+  ) => void
 }) {
   const { status, messages } = useAccount()
   const { locale, t } = useEventText()
@@ -110,7 +117,10 @@ function ReservationForm({
         items: parsed.data.items,
         ...(parsed.data.promoCode ? { promoCode: parsed.data.promoCode } : {}),
       })
-      if (result) window.location.assign(`/orders/${segment(result.order.id)}`)
+      if (result) {
+        trackCheckout(result.order.totalMinor, count, campaign)
+        window.location.assign(`/orders/${segment(result.order.id)}`)
+      }
     } catch (error) {
       command.setError(
         new EventApiError(
@@ -313,6 +323,9 @@ export function EventDetailPage({ eventId }: { eventId: string }) {
     inventoryResponseSchema,
     10000
   )
+  const trackCheckout = usePublicEventAnalytics(
+    detail.error ? undefined : detail.data?.event
+  )
   if (!detail.data)
     return detail.error ? (
       <EventError error={detail.error} retry={detail.reload} />
@@ -389,6 +402,7 @@ export function EventDetailPage({ eventId }: { eventId: string }) {
               event={event}
               inventory={inventory.data}
               refresh={inventory.reload}
+              trackCheckout={trackCheckout}
             />
           ) : inventory.loading ? (
             <Loading />

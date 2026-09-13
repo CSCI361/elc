@@ -14,6 +14,7 @@ import { useSupportText } from "@/support/messages"
 import { useHistoryText } from "@/history/messages"
 import { useAnalyticsText } from "@/analytics/messages"
 import { DeliveryNavigation } from "@/delivery/navigation"
+import { AnalyticsConsent } from "@/analytics/consent"
 
 export function AppShell({
   children,
@@ -191,6 +192,7 @@ export function AppShell({
         <span>{t.footerNote}</span>
         <span>{t.privacyNote}</span>
       </footer>
+      <AnalyticsConsent />
     </div>
   )
 }

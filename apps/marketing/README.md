@@ -53,7 +53,7 @@ This configuration is ready for deployment but does not establish that a Worker 
 
 ## Analytics status
 
-No analytics scripts, cookies or external requests are included. GA4 collection and the separate marketing property stream remain pending until the shared consent system is implemented. That work must require explicit opt-in before loading GA4, support consent withdrawal, sanitize metadata and use separate reporting IDs. The current site must not be counted as completed GA4 integration.
+The shared consent controller keeps analytics off until the visitor explicitly allows it on this origin. Set `PUBLIC_GA4_MEASUREMENT_ID` only after configuring the separate marketing stream and privacy settings in [GA4 setup](../../docs/ga4-setup.md). Withdrawal disables collection and clears application-controlled analytics cookies. Local acceptance uses an intercepted tag; actual Google receipt and property configuration remain pending.
 
 ## References
 

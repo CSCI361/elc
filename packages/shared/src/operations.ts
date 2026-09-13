@@ -257,7 +257,12 @@ export const ga4EventSchema = z.strictObject({
   currency: currencySchema.optional(),
   valueMinor: minorAmountSchema.optional(),
   quantity: z.int().nonnegative().optional(),
-  pageKind: z.enum(["marketing", "public_event", "public_event_checkout"]),
+  pageKind: z.enum([
+    "marketing",
+    "public_directory",
+    "public_event",
+    "public_event_checkout",
+  ]),
 })
 
 export type OfflineSnapshot = z.infer<typeof offlineSnapshotSchema>

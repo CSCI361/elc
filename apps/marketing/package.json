@@ -13,6 +13,7 @@
     "deploy:demo": "node scripts/deploy.mjs demo"
   },
   "dependencies": {
+    "@elc/shared": "workspace:*",
     "@fontsource-variable/roboto": "^5.3.0",
     "astro": "^7.3.2"
   },

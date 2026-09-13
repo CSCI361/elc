@@ -2,6 +2,14 @@ import { z } from "zod"
 import { calendarDateSchema } from "./analytics-api"
 import { reportingIdSchema } from "./operations"
 
+export const publicTrafficContextRequestSchema = z.strictObject({
+  campaignCode: z.string().trim().min(1).max(64).optional(),
+})
+export const publicTrafficContextSchema = z.strictObject({
+  eventReportingId: reportingIdSchema,
+  campaignReportingId: reportingIdSchema.nullable(),
+})
+
 const counts = z.strictObject({
   pageViews: z.int().nonnegative(),
   eventViews: z.int().nonnegative(),

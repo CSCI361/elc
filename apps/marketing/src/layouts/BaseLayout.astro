@@ -2,6 +2,7 @@
 import "@fontsource-variable/roboto"
 import "../styles/global.css"
 import type { Locale } from "../content/copy"
+import AnalyticsConsent from "../components/AnalyticsConsent.astro"
 
 interface Props {
   locale: Locale
@@ -28,5 +29,6 @@ const { locale, title, description } = Astro.props
   </head>
   <body id="top">
     <slot />
+    <AnalyticsConsent locale={locale} />
   </body>
 </html>

@@ -1,0 +1,49 @@
+---
+import { analyticsConsentText } from "@elc/shared/analytics-copy"
+import type { Locale } from "@elc/shared"
+interface Props { locale: Locale }
+const { locale } = Astro.props
+const t = (key: Parameters<typeof analyticsConsentText>[1]) => analyticsConsentText(locale,key)
+---
+<section class="analytics-consent page-width" aria-labelledby="analytics-consent-title" data-analytics-consent data-locale={locale} data-measurement-id={import.meta.env.PUBLIC_GA4_MEASUREMENT_ID ?? ""}>
+  <h2 id="analytics-consent-title">{t("title")}</h2>
+  <p>{t("detail")}</p>
+  <p role="status" data-consent-status hidden></p>
+  <div class="analytics-consent-actions">
+    <button type="button" class="button button-outline" data-consent-allow>{t("allow")}</button>
+    <button type="button" class="button button-outline" data-consent-deny>{t("deny")}</button>
+  </div>
+</section>
+<script>
+  import { createBrowserAnalytics } from "@elc/shared/analytics-browser"
+  import { analyticsConsentText } from "@elc/shared/analytics-copy"
+  import { localeSchema } from "@elc/shared"
+  const section = document.querySelector<HTMLElement>("[data-analytics-consent]")
+  if (section) {
+    const locale = localeSchema.parse(section.dataset.locale)
+    const analytics = createBrowserAnalytics(section.dataset.measurementId)
+    const allow = section.querySelector<HTMLButtonElement>("[data-consent-allow]")!
+    const deny = section.querySelector<HTMLButtonElement>("[data-consent-deny]")!
+    const status = section.querySelector<HTMLElement>("[data-consent-status]")!
+    const approved = ["/","/en/","/ru/"].includes(window.location.pathname)
+    const render = () => {
+      const consent = analytics.snapshot()
+      allow.hidden = consent === "granted"
+      deny.textContent = analyticsConsentText(locale,consent === "granted" ? "withdraw" : "deny")
+      status.hidden = consent === "unset"
+      status.textContent = consent === "unset" ? "" : analyticsConsentText(locale,consent)
+      analytics.setPage(approved && consent === "granted" ? { kind:"marketing",locale } : null)
+    }
+    analytics.subscribe(render)
+    allow.addEventListener("click",() => analytics.setConsent("granted"))
+    deny.addEventListener("click",() => analytics.setConsent("denied"))
+    render()
+  }
+</script>
+<style>
+  .analytics-consent { border-top: 1px solid #d8d5cf; margin-block: 2rem; padding-block: 1.5rem; font-size: 0.875rem; }
+  .analytics-consent h2 { font-size: 1rem; }
+  .analytics-consent p { margin-block: 0.75rem; max-width: 70ch; }
+  .analytics-consent-actions { display: flex; flex-wrap: wrap; gap: 1rem; }
+  .analytics-consent [hidden] { display: none; }
+</style>

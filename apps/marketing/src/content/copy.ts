@@ -180,7 +180,7 @@ export const copy: Record<Locale, Copy> = {
       },
     ],
     footerDescription: "Қазақстандағы кездесулерге арналған оқу жобасы.",
-    footerPrivacy: "Бұл бет аналитика сұрауларын жібермейді.",
+    footerPrivacy: "Аналитика міндетті емес және рұқсат бергенше өшірулі.",
     top: "Бет басына",
   },
   ru: {
@@ -302,7 +302,7 @@ export const copy: Record<Locale, Copy> = {
       },
     ],
     footerDescription: "Учебный проект для встреч в Казахстане.",
-    footerPrivacy: "Эта страница не отправляет запросы аналитики.",
+    footerPrivacy: "Аналитика необязательна и выключена до вашего согласия.",
     top: "Наверх",
   },
   en: {
@@ -424,7 +424,7 @@ export const copy: Record<Locale, Copy> = {
       },
     ],
     footerDescription: "An academic project for gatherings in Kazakhstan.",
-    footerPrivacy: "This page sends no analytics requests.",
+    footerPrivacy: "Analytics is optional and stays off until you allow it.",
     top: "Back to top",
   },
 }

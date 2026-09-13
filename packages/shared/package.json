@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./analytics-browser": "./src/analytics-browser.ts",
+    "./analytics-copy": "./src/analytics-copy.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json"
