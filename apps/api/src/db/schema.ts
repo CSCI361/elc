@@ -12,6 +12,13 @@ import { user } from "./auth-schema"
 
 export * from "./auth-schema"
 
+export const accountActivity = sqliteTable("account_activity", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  lastSignInAt: integer("last_sign_in_at").notNull(),
+})
+
 export const profiles = sqliteTable("profiles", {
   userId: text("user_id")
     .primaryKey()
@@ -993,6 +1000,51 @@ export const emailDeliveries = sqliteTable(
     check(
       "email_delivery_states",
       sql`${t.pdfState} IN ('not_required', 'pending', 'ready', 'failed') AND ${t.emailState} IN ('pending', 'accepted', 'delivered', 'bounced', 'failed', 'suppressed', 'review_needed') AND ${t.attempts} >= 0 AND ${t.failures} >= 0 AND (${t.payloadKey} IS NULL) = (${t.payloadHash} IS NULL) AND (${t.firstAttemptAt} IS NULL OR (${t.payloadKey} IS NOT NULL AND ${t.lastAttemptAt} >= ${t.firstAttemptAt})) AND (${t.providerId} IS NULL OR ${t.firstAttemptAt} IS NOT NULL) AND json_valid(${t.metadataJson})`
+    ),
+  ]
+)
+
+export const authEmailIntents = sqliteTable(
+  "auth_email_intents",
+  {
+    deliveryId: text("delivery_id")
+      .primaryKey()
+      .references(() => emailDeliveries.id, { onDelete: "cascade" }),
+    encryptedPayload: text("encrypted_payload"),
+    expiresAt: integer("expires_at").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [
+    index("auth_email_expiry").on(t.expiresAt),
+    check(
+      "auth_email_lifetime",
+      sql`${t.expiresAt} > ${t.createdAt} AND ${t.expiresAt} <= ${t.createdAt} + 3600000`
+    ),
+  ]
+)
+
+export const retentionObjectJobs = sqliteTable(
+  "retention_object_jobs",
+  {
+    id: text("id").primaryKey(),
+    bucket: text("bucket").notNull(),
+    mode: text("mode").notNull(),
+    objectKey: text("object_key").notNull(),
+    cursor: text("cursor"),
+    createdAt: integer("created_at").notNull(),
+    nextAttemptAt: integer("next_attempt_at").notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    leaseToken: text("lease_token"),
+    leaseUntil: integer("lease_until").notNull().default(0),
+    lastSweptAt: integer("last_swept_at"),
+    completedAt: integer("completed_at"),
+  },
+  (t) => [
+    uniqueIndex("retention_object_identity").on(t.bucket, t.mode, t.objectKey),
+    index("retention_object_due").on(t.nextAttemptAt, t.leaseUntil),
+    check(
+      "retention_object_values",
+      sql`${t.bucket}='files' AND ${t.mode} IN ('key','prefix') AND ${t.attempts} >= 0`
     ),
   ]
 )

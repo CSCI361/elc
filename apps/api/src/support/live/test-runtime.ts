@@ -33,7 +33,10 @@ export async function buildSupportTestWorker() {
   return entry.code
 }
 
-export async function createSupportLiveRuntime(script: string) {
+export async function createSupportLiveRuntime(
+  script: string,
+  recoveryMode?: "paused"
+) {
   const runtime = new Miniflare(
     convertV4MiniflareOptions({
       name: "support-live-test",
@@ -54,6 +57,7 @@ export async function createSupportLiveRuntime(script: string) {
         APP_ORIGIN: "https://elc.test",
         AUTH_SECRET: "Disposable support live authentication fixture secret",
         EMAIL_FROM: "elc <noreply@example.invalid>",
+        ...(recoveryMode ? { RECOVERY_MODE: recoveryMode } : {}),
       },
     })
   )

@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { execFile } from "node:child_process"
 import { randomUUID } from "node:crypto"
 import { promisify } from "node:util"
+import { cleanupLocalFixtureMail } from "./lib/local-mail-cleanup.mjs"
 
 const execute = promisify(execFile)
 const origin = "http://localhost:5173"
@@ -114,6 +115,11 @@ try {
   process.exitCode = 1
 } finally {
   try {
+    await cleanupLocalFixtureMail(
+      query,
+      `SELECT id FROM user WHERE email='${email}'`,
+      ".wrangler/state/v3/r2"
+    )
     await query(
       `DELETE FROM development_mail WHERE recipient = '${email}'; DELETE FROM profiles WHERE user_id IN (SELECT id FROM user WHERE email = '${email}'); DELETE FROM user WHERE email = '${email}';`
     )

@@ -6,7 +6,8 @@ import {
 } from "@elc/shared"
 import { HTTPException } from "hono/http-exception"
 import { secureHeaders } from "hono/secure-headers"
-import { createAuth, getAuthCapabilities, type AuthDependencies } from "./auth"
+import { createAuth, getAuthCapabilities } from "./auth"
+import { durableAuthDependencies as authenticationDependencies } from "./auth/delivery"
 import { requireVerifiedSession } from "./auth/session"
 import type { Bindings } from "./env"
 import { ApiFailure, assertSql } from "./db/transitions"
@@ -26,26 +27,8 @@ import { reportingRoutes } from "./reporting"
 import { historyRoutes } from "./history"
 import { deliveryRoutes } from "./delivery/routes"
 import { administrationRoutes } from "./administration"
-
-function authenticationDependencies(env: Bindings): AuthDependencies {
-  if (env.ENVIRONMENT !== "local") return {}
-  return {
-    sendEmail: async (email) => {
-      await env.DB.prepare(
-        "INSERT INTO development_mail (id, recipient, kind, subject, body, created_at) VALUES (?, ?, ?, ?, ?, ?)"
-      )
-        .bind(
-          crypto.randomUUID(),
-          email.to,
-          email.kind,
-          email.subject,
-          email.text,
-          Date.now()
-        )
-        .run()
-    },
-  }
-}
+import { recoveryPaused } from "./recovery/gate"
+import { retentionRoutes } from "./retention"
 
 export const app = new Hono<{
   Bindings: Bindings
@@ -57,6 +40,19 @@ export const app = new Hono<{
     c.set("requestId", requestId)
     c.header("X-Request-ID", requestId)
     c.header("Cache-Control", "no-store")
+    if (recoveryPaused(c.env)) {
+      c.header("Retry-After", "60")
+      return c.json(
+        {
+          error: {
+            code: "SERVICE_UNAVAILABLE",
+            message: "Service recovery is in progress. Please try again later.",
+            requestId,
+          },
+        },
+        503
+      )
+    }
     if (!["GET", "HEAD", "OPTIONS"].includes(c.req.method)) {
       const origin = c.req.header("Origin")
       const site = c.req.header("Sec-Fetch-Site")
@@ -155,6 +151,7 @@ export const app = new Hono<{
   .route("/api", historyRoutes)
   .route("/api", deliveryRoutes)
   .route("/api", administrationRoutes)
+  .route("/api", retentionRoutes)
   .all("/api/*", (c) =>
     c.json(
       {

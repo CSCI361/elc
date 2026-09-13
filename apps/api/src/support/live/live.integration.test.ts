@@ -87,6 +87,27 @@ describe("support WebSocket hibernation in workerd", () => {
     await database?.runtime.dispose()
   })
 
+  it("rejects support subscriptions and publications while deployment recovery is paused", async () => {
+    const paused = await createSupportLiveRuntime(code, "paused")
+    try {
+      const stub = paused.SUPPORT.get(
+        paused.SUPPORT.idFromName("recovery-fixture")
+      )
+      for (const [path, method] of [
+        ["/connect", "GET"],
+        ["/publish", "POST"],
+      ]) {
+        const response = await stub.fetch(`https://support.internal${path}`, {
+          method,
+        })
+        expect(response.status).toBe(503)
+        expect(response.headers.get("Retry-After")).toBe("60")
+      }
+    } finally {
+      await paused.runtime.dispose()
+    }
+  })
+
   async function signIn(user: string) {
     const response = await database.runtime.dispatchFetch(
       "https://elc.test/api/auth/sign-in/email",

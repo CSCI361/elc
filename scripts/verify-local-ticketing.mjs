@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import { cleanupLocalFixtureMail } from "./lib/local-mail-cleanup.mjs"
 import { execFile } from "node:child_process"
 import { randomUUID } from "node:crypto"
 import { fileURLToPath } from "node:url"
@@ -154,6 +155,11 @@ async function cleanup() {
     }
   }
   // Delete children first, preserving all records outside this run's exact accounts/events.
+  await cleanupLocalFixtureMail(
+    query,
+    users,
+    `${directory}.wrangler/state/v3/r2`
+  )
   await query(
     [
       `DELETE FROM outbox WHERE entity_id IN (${events}) OR entity_id IN (${orders}) OR entity_id IN (${tickets}) OR entity_id IN (${checkins})`,

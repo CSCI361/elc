@@ -23,6 +23,13 @@ import {
 } from "./delivery/fanout"
 import { cleanupDeliveryPayloads } from "./delivery/payload-cleanup"
 import { cleanupTrafficReports } from "./traffic/read"
+import { recoveryPaused } from "./recovery/gate"
+import { runRetentionCleanup } from "./retention"
+import {
+  cleanupAuthEmailIntents,
+  createAuthDeliverySources,
+  isAuthDelivery,
+} from "./auth/delivery"
 
 export type { AppType } from "./app"
 export { SupportCase } from "./support/live/room"
@@ -30,6 +37,14 @@ export { SupportCase } from "./support/live/room"
 export default {
   fetch: app.fetch,
   async scheduled(_controller, env, context) {
+    if (recoveryPaused(env)) return
+    if (_controller.cron === "0 0 * * *")
+      context.waitUntil(
+        (async () => {
+          await cleanupAuthEmailIntents(env)
+          await runRetentionCleanup(env)
+        })()
+      )
     context.waitUntil(dispatchPaymentOutbox(env))
     context.waitUntil(dispatchSupportLiveOutbox(env))
     context.waitUntil(simulateDuePayouts(env.DB))
@@ -38,19 +53,32 @@ export default {
     context.waitUntil(dispatchEmailDeliveries(env))
     context.waitUntil(cleanupDeliveryPayloads(env))
     context.waitUntil(cleanupTrafficReports(env.DB))
+    context.waitUntil(cleanupAuthEmailIntents(env))
   },
   async queue(batch, env) {
+    if (recoveryPaused(env)) {
+      batch.retryAll({ delaySeconds: 60 })
+      return
+    }
     let provider: PaymentAdapter | undefined
     const adapter = () => (provider ??= createPolarSandboxAdapter(env))
     let emailDependencies: DeliveryDependencies | undefined
-    const email = () =>
-      (emailDependencies ??= {
-        ...createDeliverySources(env, { fontBytes: new Uint8Array(fontBytes) }),
+    const email = () => {
+      const business = createDeliverySources(env, {
+        fontBytes: new Uint8Array(fontBytes),
+      })
+      const auth = createAuthDeliverySources(env)
+      return (emailDependencies ??= {
+        readCurrent: (row) =>
+          (isAuthDelivery(row) ? auth : business).readCurrent(row),
+        prepare: (row, current) =>
+          (isAuthDelivery(row) ? auth : business).prepare(row, current),
         adapter: createResendEmailAdapter({ apiKey: env.RESEND_API_KEY }),
         available:
           env.ENVIRONMENT === "local" ||
           /^[A-Za-z0-9_-]{1,256}$/.test(env.RESEND_API_KEY ?? ""),
       })
+    }
     for (const message of batch.messages) {
       try {
         const body = message.body

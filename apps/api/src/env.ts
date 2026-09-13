@@ -6,6 +6,8 @@ export interface Bindings {
   SUPPORT: DurableObjectNamespace
   ASSETS: Fetcher
   ENVIRONMENT: "local" | "preview" | "demo"
+  /** Deployment setting outside restored D1. Unrecognized values also pause access. */
+  RECOVERY_MODE?: "running" | "paused"
   APP_ORIGIN: string
   AUTH_URL?: string
   AUTH_SECRET: string

@@ -126,6 +126,19 @@ export function createAuth(
       // Each protected request reads D1 so revocation takes effect immediately.
       cookieCache: { enabled: false },
     },
+    databaseHooks: {
+      session: {
+        create: {
+          after: async (session) => {
+            await env.DB.prepare(`INSERT INTO account_activity(user_id,last_sign_in_at)
+              SELECT id,? FROM user WHERE id=?
+              ON CONFLICT(user_id) DO UPDATE SET last_sign_in_at=MAX(account_activity.last_sign_in_at,excluded.last_sign_in_at)`)
+              .bind(Date.now(), session.userId)
+              .run()
+          },
+        },
+      },
+    },
     account: {
       accountLinking: { enabled: true, trustedProviders: ["google"] },
     },

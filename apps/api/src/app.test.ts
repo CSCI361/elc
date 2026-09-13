@@ -13,6 +13,32 @@ vi.mock("./exports/assets/NotoSans-Regular.bin", async () => {
 })
 
 describe("application API boundary", () => {
+  it.each([
+    "/api/health",
+    "/api/me",
+    "/api/auth/get-session",
+    "/api/payments/webhook",
+    "/api/offline/sync",
+  ])("pauses %s before touching restored data", async (path) => {
+    const prepare = vi.fn(() => {
+      throw new Error("Paused requests must not read D1")
+    })
+    const response = await app.request(
+      `http://localhost${path}`,
+      {
+        method:
+          path.endsWith("sync") || path.endsWith("webhook") ? "POST" : "GET",
+      },
+      { RECOVERY_MODE: "paused", DB: { prepare } } as unknown as Bindings
+    )
+    expect(response.status).toBe(503)
+    expect(response.headers.get("Retry-After")).toBe("60")
+    expect(response.headers.get("Cache-Control")).toBe("no-store")
+    expect(apiErrorSchema.parse(await response.json()).error.code).toBe(
+      "SERVICE_UNAVAILABLE"
+    )
+    expect(prepare).not.toHaveBeenCalled()
+  })
   it("returns the shared error contract and matching correlation header for unknown API routes", async () => {
     const response = await app.request("http://localhost/api/unknown")
     const body = apiErrorSchema.parse(await response.json())

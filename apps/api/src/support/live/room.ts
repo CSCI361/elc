@@ -1,5 +1,6 @@
 import { DurableObject } from "cloudflare:workers"
 import type { Bindings } from "../../env"
+import { recoveryPaused } from "../../recovery/gate"
 import { liveAccess } from "./access"
 import {
   clientMessageSchema,
@@ -39,6 +40,10 @@ export class SupportCase extends DurableObject<Bindings> {
   }
 
   private async authorize(ws: WebSocket) {
+    if (recoveryPaused(this.env)) {
+      this.close(ws, 1013, "Service recovery is in progress.")
+      return null
+    }
     const state = this.connection(ws)
     if (!state) return null
     if (
@@ -87,6 +92,11 @@ export class SupportCase extends DurableObject<Bindings> {
   }
 
   async fetch(request: Request): Promise<Response> {
+    if (recoveryPaused(this.env))
+      return new Response(null, {
+        status: 503,
+        headers: { "Retry-After": "60" },
+      })
     const url = new URL(request.url)
     if (request.method === "GET" && url.pathname === "/connect")
       return this.upgradeConnection(request, url)
