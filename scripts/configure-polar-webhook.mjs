@@ -73,7 +73,7 @@ try {
         })
       : await call("/webhooks/endpoints", "POST", {
           ...body,
-          organization_id: env.POLAR_ORGANIZATION_ID,
+          // The scoped organization token supplies this association.
         })
     assert.equal(endpoint.organization_id, env.POLAR_ORGANIZATION_ID)
     assert.equal(endpoint.api_version, "2026-04")

@@ -7,7 +7,18 @@ Work resumed at the user's request from checkpoint `3edfe08`. The
 incomplete activation modules, credentials setup and ordered next steps. The
 release remains in progress.
 
-The current integration adds [organizer attendee, order and check-in records](./evidence/organizer-records-web.md)
+Commit `e1ac9b3` adds [saved organizer profiles](./evidence/organizer-profile-web.md)
+and an [account-scoped profile API](./evidence/organizer-profile-api.md). A separate
+profile table preserves locale and moderation behavior. Atomic revisions and
+stable acknowledgements handle stale or uncertain saves. Activation prefill is
+explicit, and account edits preserve event checklist/payment snapshots. Migration
+0030 is applied locally after a protected export. Browser acceptance passes in
+all three languages at phone width, along with 52 focused cases, full checks and
+builds. Full regression passes 1,316 tests across 79 files in 548.22 seconds.
+The first run exposed an existing auth-email fixture clock race; commit
+`e7b287e` aligns JWT and delivery clocks, and the fresh full run passes.
+
+Commit `4da23aa` adds [organizer attendee, order and check-in records](./evidence/organizer-records-web.md)
 and a [retained event records API](./evidence/organizer-records-api.md). The
 workspace supports localized search, pagination and linked records, preserves
 historical ticket and refund snapshots, and separates reported offline admission
@@ -65,13 +76,39 @@ with one confirmed KZT 9,000 refund, zero tickets and no held inventory; see
 The local image browser flow passes uploads, gallery edits, a lost-response
 retry, all three localized phone previews, public covers and access revocation.
 Event-scoped organizer registration/order views (SRS 4.4 and 4.16) are integrated
-and verified by the full regression. Editable organizer contact/payout profiles
-(SRS 4.1) remain next. The new workspace keeps purchaser order access separate
+and verified by the full regression. Organizer contact/payout profiles (SRS 4.1) pass the full regression. The
+requirements review identified the concrete gaps below. The new workspace keeps purchaser order access separate
 from authorized organizer records.
 
 The daily backup workflow is checked in but disabled until its reviewed target,
 credentials and environment are configured. External and device acceptance below
 remains required before release completion.
+
+## Remaining local work from the requirements review
+
+The profile integration review identified these concrete gaps. Each needs its
+own implementation and evidence before the release can be considered complete.
+
+- Recheck current account and relationship authority after asynchronous work in
+  legacy ticket, order, payment and activation reads (architecture section 5).
+- Add bounded scheduled cleanup for idle expired reservations, including payment
+  races, promo release and the recovery pause (architecture Cron responsibilities).
+- Add offline device revocation, incident handling and conflict-review screens
+  using the existing authorized APIs. Show assigned-seat snapshots in cached
+  attendee search (SRS 4.3.1 and architecture offline operations).
+- Add a bounded platform-admin view of campaigns and committed promotional-code
+  activity, without granting organizer mutations (SRS 4.12).
+- Exercise restored-state reconciliation with nonempty payment, refund, delivery
+  and offline-admission domains. The existing disposable restore proves schema
+  integrity and an empty-domain recovery gate only.
+
+Actual [Polar signed delivery and a fulfilled-order refund](./evidence/polar-webhooks-refund.md)
+now pass through the local Worker. Five genuine events, exact replay, tampered
+body rejection and provider redelivery preserve one event/outbox row per event.
+The KZT 9,000 refund invalidated all three tickets; their credentials reject
+admission. The earlier compensated order remains intact. The temporary endpoint
+is disabled and the tunnel stopped. Paid event-cancellation refund and deployed
+runtime acceptance remain pending.
 
 ## Scope and evidence rules
 
@@ -139,8 +176,9 @@ The delivery adapter, localized templates, coordinator, canonical sources,
 fanout, review and workflow suites have passed their focused checks. Real
 Resend and deployed queue acceptance remain pending.
 
-This is partial release coverage. Actual refunds and signed webhooks, remaining
-web workflows, delivery, reporting, Expo/offline, external OAuth/email/analytics,
+This historical integration was partial release coverage. Subsequent units
+record actual refunds and signed webhooks above. Remaining web workflows,
+external delivery, Expo/offline acceptance, OAuth/email/analytics,
 deployment and physical-device checks remain open. The last full integration
 baseline passed 424 tests across 32 files. The subsequent 633-test run passed
 632 tests; its remaining test expected an older audit-trigger error name. The
@@ -263,14 +301,14 @@ event end without permitting new admission.
 verification/sign-in, event/type creation and publication, free reservation,
 zero-total completion, purchaser credential retrieval, explicit scanner grants,
 retry/duplicate handling, reversal and rescan. Private fixture grants stand in
-for the unfinished staff-assignment endpoint. This proves the local free flow;
+for the initial staff-assignment setup; the staff API and UI are now implemented. This proves the local free flow;
 external delivery, deployed load and native-device acceptance remain pending.
 Activation and mixed discounted payments now pass against Polar; synthetic D1
 tests cover compensation and queue replay. An actual late-payment compensation
-refund now passes; signed webhook delivery and other refund scenarios remain pending. Polar sandbox access
-and KZT product creation are recorded in
-[provider readiness](./evidence/provider-readiness.md); transaction and webhook
-compatibility are not yet proven.
+refund, fulfilled-order voluntary refund and signed provider delivery now pass.
+See [provider readiness](./evidence/provider-readiness.md) and
+[refund/webhook acceptance](./evidence/polar-webhooks-refund.md). Paid
+event-cancellation and deployed acceptance remain pending.
 
 ### M3: web workflows and product policy
 
@@ -423,33 +461,30 @@ screens and partial activation code still need the acceptance work recorded in
 | 2026-09-13 | Campaign integration                                                     | 1,207 tests in 75 files, full checks/builds and campaign QR browser acceptance pass                                         |
 | 2026-09-13 | [Organizer records](./evidence/organizer-records-web.md)                 | Local browser, 57 focused cases, full checks/builds and all 1,264 regression tests pass                                     |
 
+| 2026-09-13 | [Organizer profiles](./evidence/organizer-profile-web.md) | Browser, 52 focused cases and full regression of 1,316 tests pass |
+| 2026-09-13 | [Polar refund and signed delivery](./evidence/polar-webhooks-refund.md) | One fulfilled-order refund, three invalidated credentials, five genuine events and provider redelivery pass |
+
 ## External checks awaiting access or execution
 
-Cloudflare account grants and Polar sandbox browser access/KZT product creation
-are established. Actual late-payment full compensation is now verified. Cloudflare
-deployment, signed webhook delivery, other refund scenarios, Google OAuth, Resend delivery,
-GA4 reports, supported
-calendar clients and physical iOS/Android tests have no acceptance evidence yet.
-Missing credentials do not establish provider incompatibility. Continue local
-implementation and integration while these checks remain pending.
+Polar sandbox access, KZT activation and mixed-ticket checkout, late-payment
+compensation, a fulfilled-order voluntary refund, signed webhook delivery and
+provider redelivery now have acceptance evidence. The temporary endpoint is
+disabled and its HTTP/2 tunnel stopped. Preserve the private sandbox transaction
+state; both paid ticket orders have now been refunded through their respective
+compensation and voluntary flows.
 
-The saved browser session became available and the prepared late-payment test
-completed with a confirmed full refund. Both UDP and TCP tunnel connections on
-port 7844 previously failed; no webhook endpoint was created. Cloudflare R2
-is not enabled in the account. The local server and private sandbox run state
-remain available, and no unrelated remote database was changed.
+Remaining external checks include the paid event-cancellation refund, Cloudflare
+preview provisioning and deployed workload, R2 enrollment and backup lifecycle,
+actual Time Travel recovery, Google OAuth, Resend receipt, GA4 collection/reports,
+supported calendar clients and physical iOS/Android devices. No unrelated remote
+database was changed. Missing credentials do not establish provider
+incompatibility. Continue the concrete local units listed above while those
+checks remain pending.
 
-Resumed integration validation: 281/281 tests across 22 files passed, followed
-by scoped checks for the test setup change. Full checks and web/Worker/Astro
-builds passed. The web entry chunk is 548 kB minified and still emits a build
-warning. Full-suite setup initially exhausted macOS loopback ports; batching
-migration DDL and bounding parallel workerd test files fixed the run without
-changing the tests' concurrent business operations. `vp env doctor` passed.
-
-Latest integration validation: 424/424 tests across 32 files passed in 133 seconds.
-Scoped checks covered all API, web, shared, script and documentation files; the
-web/Worker/Astro build passed. The web entry chunk is now 584 kB minified and
-still emits the existing size warning. This integration includes support live
-delivery, cancellation/refunds, offline backend and simulated payout records.
-The full `vp check` reached three lint findings in the unfinished mobile files;
-that work remains outside this checkpoint and is being corrected by its owner.
+The current integration passes 1,316 tests across 79 files in 548.22 seconds,
+full checks across 440 files, and web/Worker/Astro builds. The web entry is
+665.07 kB minified and retains its existing size warning. Backup verification
+passes 34 safety cases and the disposable full-schema restore. Local browser
+checks pass for organizer profiles and the actual refunded ticket in all three
+languages at 390 pixels. These checks do not establish deployed or physical-device
+acceptance.

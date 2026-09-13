@@ -33,7 +33,7 @@ submit this checkout again. The repeatable probe prints only state, amounts and
 counts; it does not print credentials, customer details or checkout tokens.
 
 This establishes actual sandbox full-refund compatibility and compensation for
-a paid abandoned reservation. Signed provider webhook delivery, deployed runtime
-acceptance and remaining fulfilled-order cancellation/refund scenarios still
-need their own evidence. The existing activation and completed mixed-ticket
+a paid abandoned reservation. Signed provider delivery and a fulfilled-order voluntary refund now have
+[separate evidence](./polar-webhooks-refund.md). Deployed runtime and paid
+event-cancellation refund acceptance remain pending. The existing activation and completed mixed-ticket
 basket results remain recorded in [provider readiness](./provider-readiness.md).

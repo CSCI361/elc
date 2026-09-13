@@ -3,7 +3,9 @@
 Reviewed on 2026-09-13 (Asia/Almaty). This records provider documentation, access
 checks, completed sandbox activation and ticket payments, and a confirmed full
 refund for a paid abandoned reservation. See [compensation evidence](./polar-compensation.md).
-Signed webhook delivery and Cloudflare deployment acceptance remain pending.
+Signed webhook delivery and the fulfilled-order voluntary refund now pass through
+the local Worker. See [signed delivery and refund evidence](./polar-webhooks-refund.md).
+Cloudflare deployment acceptance remains pending.
 
 Polar documents KZT pricing, quantity pricing, discounts, refunds and signed
 webhooks. Its checkout buys one product; a list of products offers a choice.
@@ -43,8 +45,8 @@ and ticket encryption keys. No token value was printed or committed.
 Authenticated product list and product detail requests returned HTTP 200 with
 `Polar-Version: 2026-04`; the detail matched the product ID and KZT currency.
 The probe used `User-Agent: elc-sandbox-acceptance/1.0`; the initial default
-Python user-agent received 403. The completed checkout evidence below extends this initial access probe. Refund
-and webhook delivery remain pending. No provider contact or production operation occurred.
+Python user-agent received 403. The completed checkout, refund and signed-delivery evidence extends this initial
+access probe. No provider contact or production operation occurred.
 
 Polar sandbox uses a separate account, organization and token, with API base
 `https://sandbox-api.polar.sh/v1`. Production tokens do not authenticate there.
@@ -79,20 +81,18 @@ The browser submitted Polar's documented test card through its hosted checkout.
   now removes it before rendering navigation or constructing sign-in return URLs.
   A subsequent actual return retained only the app payment-attempt identifier.
 
-A second KZT 9,000 checkout was prepared and its local reservation was explicitly
-abandoned. The Mac locked before the final sandbox payment submission. Its latest
-verified state is payment `pending`, order `abandoned`, zero tickets and no refund.
-This is prepared late-payment compensation acceptance, not proof of a refund.
-The ignored `.wrangler/polar-acceptance.json` retains the scoped accounts and run
-identifiers; `.wrangler/polar-checkout.html` opens the current checkout privately.
+A second KZT 9,000 checkout was paid after its local reservation was abandoned.
+The app confirmed a full compensation refund, issued no tickets and retained no
+inventory. That fixture remains intact. The first completed mixed-ticket order
+was subsequently refunded through the attendee support and organizer approval
+flow; its three tickets now reject admission as refunded.
 
-A temporary webhook-only proxy passed path, method and signature-header boundary
-checks. Cloudflared 2026.9.1 could reach Cloudflare's API but its QUIC connections
-timed out and HTTP/2 connections on port 7844 were reset. The proxy and tunnel
-were stopped. No Polar webhook endpoint or signing secret was created by this
-attempt. The prepared configuration/proxy scripts require a working tunnel and
-still need actual provider delivery acceptance. This network result does not
-establish provider incompatibility. [Cloudflare quick tunnels](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/trycloudflare/)
+The later HTTP/2 tunnel connected successfully. A temporary sandbox endpoint
+using Standard Webhooks and API version `2026-04` delivered five real events to
+the local Worker, all HTTP 202. Exact duplicates and Polar redelivery retained
+one canonical event/outbox row per event; tampered bodies returned 400. The
+endpoint was disabled and the proxy/tunnel stopped after acceptance. See
+[signed delivery and refund evidence](./polar-webhooks-refund.md).
 
 Cloudflare's read-only R2 inventory request returned code `10042`, requiring R2
 activation in the account dashboard. The existing remote D1 database belongs to
@@ -143,15 +143,17 @@ webhook parsers from these two SDK generations.
 
 The examined API pages resolved to the `2026-04` reference. Versioning docs say to
 pin `Polar-Version` for requests and `api_version` for webhook endpoints. Supported
-versions change quarterly; the currently accepted version was not queried with
-credentials. Choose and verify the supported version before executing acceptance,
+versions change quarterly; the sandbox endpoint and actual delivered payloads were verified with
+credentials at version `2026-04`. Choose and verify the supported version before executing acceptance,
 then record the response version and `webhook-api-version`. Do not infer support
 from the reference URL or calendar alone.
 [API versioning](https://polar.sh/docs/api-reference/2026-04/versioning)
 
 ## Sandbox acceptance procedure
 
-Product API access is verified; transaction and webhook cases remain pending.
+Product API access, activation, the mixed-ticket payment, compensation, a
+fulfilled-order voluntary refund and signed webhook delivery are verified. The
+procedure below also covers remaining event-cancellation and deployment cases.
 Use a dedicated sandbox organization and synthetic
 customers. Store evidence with the chosen API/SDK version, request shape, object
 IDs, status, currency, amounts, event IDs and assertions. Exclude access tokens,

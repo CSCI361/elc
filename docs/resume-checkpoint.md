@@ -7,15 +7,16 @@ checkpoint, not a completed academic release.
 
 ## Current continuation state
 
-Updated on 2026-09-13 after campaign commit `a109124`. The historical sections below
-preserve the original offline checkpoint. The academic release remains in progress.
+Updated on 2026-09-13 after organizer profiles and actual Polar refund/webhook
+acceptance. The historical sections below preserve the original offline
+checkpoint. The academic release remains in progress.
 
 The branch is `feat/academic-release`. Committed baselines include `9de6914`
 (durable authentication mail and retention), `cd28130` (backup recovery) and
 `8360634` (event image galleries and organizer previews). Campaign commit `a109124`
 adds an organizer workspace, local Campaign QR generation/downloads and a
-server endpoint for attendee offer resolution. No migration is needed; persistent
-local D1 remains migrated through 0029.
+server endpoint for attendee offer resolution. That campaign unit needed no
+migration. The profile unit below applies migration 0030 to persistent local D1.
 
 Campaigns start disabled with 10%, 100 redemptions and the exact event window.
 Managers can create percentage or fixed-KZT offers, review and enable/disable
@@ -46,26 +47,62 @@ passed 1,137 tests, the local Worker ticketing regression and the backup restore
 rehearsal. The backup workflow remains disabled until reviewed configuration is
 available. Preserve the recovery gate and durable authentication/retention design.
 
-Current work adds the event-scoped organizer registrations workspace and records
-API. The full regression passes
-1,264 tests across 77 files in 574.34 seconds (`.wrangler/records-tests.log`). The API's 33 current cases and
-24 web policy cases are verified. The local browser flow passes 23 free-ticket
-records, cancellation, check-in reversal, search/drilldown, 20/3 pagination,
-KK/RU/EN phone layouts, history-only access and revoked/failed reads. Fixtures
-are cleaned; see `.wrangler/web-organizer-records-results.json`. Full checks pass
-430 files and all builds pass, with a 664.24 kB web entry and the existing size
-warning. Implementation needs no migration beyond 0029.
+Commit `4da23aa` saves organizer attendee/order/check-in records and passed 1,264
+tests across 77 files. Commit `e1ac9b3` adds saved organizer profiles through
+private GET/PATCH `/me/organizer-profile`. Its independent `organizer_profiles`
+table avoids implicitly saving a locale or altering moderation. Profile saves
+atomically guard revisions and commit stable retry acknowledgements and audit
+entries. Explicit activation prefill preserves checks and terms; later account
+edits leave event snapshots and eligibility unchanged.
 
-The commit containing this checkpoint saves the validated organizer records unit.
-Next: add
-editable organizer contact/payout profiles. The read-only review recommends a
-separate `organizer_profiles` table with user deletion cascading, four fields
-validated like the activation profile, and an independent revision. Creating an
-existing `profiles` row would incorrectly mark a locale as saved. Use private
-GET/PATCH `/me/organizer-profile`, actor-derived identity, atomic revision/receipt/
-audit writes and stable retry acknowledgements. Profile edits must leave every
-event activation/checklist/attempt and its eligibility unchanged; any activation
-prefill should be an explicit user action. No profile code has been written yet. No deployment or push was performed.
+Migration 0030 is applied locally. Before migration, a protected local SQL export
+was saved at `.wrangler/pre-migration-0030.sql` with its SHA-256 and 30-day expiry
+in `.wrangler/pre-migration-0030.json` (both mode 0600). Preserve it until its
+recorded deadline, then remove this local export. This is not provider Time
+Travel or remote lifecycle evidence. The first export probe used an unsupported
+Miniflare persistence option and found an empty ephemeral database; the corrected
+resourcePersistencePath read the known local acceptance fixture before export.
+
+The API's 30 cases, 22 web policy cases and extended real retention-cascade case
+pass. `.wrangler/web-organizer-profile-results.json` records a complete passing
+browser run with missing/read-only profile, lost acknowledgement recovery,
+locale preservation, stale edits, explicit activation prefill, unchanged event
+snapshots and automatic access/error refresh. It records no page errors and all
+fixtures cleaned. Russian mobile overflow was corrected and visually verified.
+Full checks pass 440 files; all builds pass (665.07 kB entry, existing warning).
+All 34 backup safety cases and the full-schema disposable restore pass.
+
+The first profile regression passed 1,315 of 1,316 tests in 572.60 seconds.
+Its one existing authentication-email failure came from different JWT and
+delivery clocks crossing a wall-clock second. Commit `e7b287e` makes the fixture sign with the same clock as delivery; all 11
+authentication-email cases pass. The fresh full regression passes 1,316 tests
+across 79 files in 548.22 seconds. Session 77043 completed with exit 0; its output
+is `.wrangler/profile-tests-final.log`. Full checks pass 440 files and builds pass.
+Commit `e1ac9b3` saves the profile integration.
+
+Real Polar signed delivery and the existing fulfilled-order voluntary refund now
+pass. See [evidence](./evidence/polar-webhooks-refund.md). The completed order
+`afe29372-a6b2-41e2-9519-5a7de409abac` is now refunded through its support case and
+organizer approval. One confirmed KZT 9,000 refund exists and all three original
+credentials reject admission as refunded. Do not submit that checkout again.
+The private `.wrangler/polar-voluntary.json` holds stable operation identities.
+
+The temporary HTTP/2 tunnel carried five genuine Polar events, all 202. Exact
+concurrent replays and actual provider redelivery kept one canonical event and
+outbox item per event; tampered bodies returned 400. Sanitized evidence is in
+`.wrangler/polar-webhook-results.json`; all 21 raw capture files were removed.
+The temporary endpoint was disabled and verified disabled. Proxy/tunnel sessions
+10729 and 39020 were stopped. The ignored `.dev.vars` now includes its signing
+secret, mode 0600; preserve it. The Worker was restarted in session 75107 and
+remains on localhost:5173. The temporary scan grant was restored through the API.
+
+The read-only requirements audits identified remaining local units in the plan:
+legacy read authorization races, bounded scheduled reservation expiry, offline
+device/conflict screens and cached seat labels, platform campaign review and a
+nonempty restored-state reconciliation rehearsal. Neither agent has an active
+implementation assignment. Validation is complete. Continue with authorization races and bounded reservation
+expiry, followed by the missing operator/admin screens and recovery rehearsal.
+Keep the external/device acceptance gates explicit; the release is incomplete.
 
 The completed Polar compensation fixture must be preserved: payment
 `49249daf-eefa-4817-8061-4cc493d898d5` succeeded; order
@@ -80,7 +117,7 @@ Preserve `.wrangler/polar-acceptance.json`, local D1/R2 state and ignored
 `.dev.vars` into Worker output, so never deploy that local build directory.
 
 Remaining acceptance includes Cloudflare R2 enrollment and preview provisioning,
-signed Polar webhooks and other actual refund scenarios, Google OAuth, Resend,
+paid event-cancellation refunds, Google OAuth, Resend,
 live GA4, remote retention/recovery and workload testing, supported calendar
 clients and physical iOS/Android devices. None is established by local tests.
 
