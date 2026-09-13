@@ -109,12 +109,19 @@ describe("durable authentication mail on D1 and R2", () => {
     adapter,
     available: true,
   })
-  const verify = async () =>
-    verificationEmail(
-      to,
-      `${env.APP_ORIGIN}/api/auth/verify-email?token=${await signJWT({ email: to }, env.AUTH_SECRET, 3600)}&callbackURL=%2Faccount`,
-      "ru"
-    )
+  const verify = async () => {
+    // Match the delivery clock even if database setup crosses a wall-clock second.
+    const clock = vi.spyOn(Date, "now").mockReturnValue(now)
+    try {
+      return verificationEmail(
+        to,
+        `${env.APP_ORIGIN}/api/auth/verify-email?token=${await signJWT({ email: to }, env.AUTH_SECRET, 3600)}&callbackURL=%2Faccount`,
+        "ru"
+      )
+    } finally {
+      clock.mockRestore()
+    }
+  }
   const reset = async () => {
     const token = crypto.randomUUID()
     await env.DB.prepare(
