@@ -734,6 +734,44 @@ describe("event and campaign transitions on D1", () => {
     ).toBe(1)
   })
 
+  it("withholds campaign codes when management access is revoked during the read", async () => {
+    const created = await published()
+    await createCampaign(
+      context(),
+      created.eventId,
+      createCampaignRequestSchema.parse({
+        ...revision(2),
+        eventId: created.eventId,
+        name: "Restricted campaign",
+        applicableTicketTypeIds: [created.ticketTypeId],
+      })
+    )
+    await db
+      .prepare(
+        "INSERT INTO event_permissions(event_id,user_id,permission,granted_at) VALUES (?,'manager','event:manage',?)"
+      )
+      .bind(created.eventId, now)
+      .run()
+    await expect(
+      readCampaigns(
+        db,
+        created.eventId,
+        "manager",
+        env.APP_ORIGIN,
+        undefined,
+        { limit: 20 },
+        async () => {
+          await db
+            .prepare(
+              "UPDATE event_permissions SET revoked_at=? WHERE event_id=? AND user_id='manager' AND permission='event:manage'"
+            )
+            .bind(now, created.eventId)
+            .run()
+        }
+      )
+    ).rejects.toMatchObject({ status: 403 })
+  })
+
   it("protects sold seat allocations and ticket snapshots during subsequent organizer edits", async () => {
     const created = await event({
       seatingMode: "assigned",

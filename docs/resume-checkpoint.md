@@ -7,62 +7,51 @@ checkpoint, not a completed academic release.
 
 ## Current continuation state
 
-Updated on 2026-09-13 after event image integration. The historical sections
-below preserve the original offline checkpoint. The academic release remains
-in progress.
+Updated on 2026-09-13 after campaign integration. The historical sections below
+preserve the original offline checkpoint. The academic release remains in progress.
 
-The branch is `feat/academic-release`. Its committed baseline includes
-`9de6914` (durable authentication mail and retention) and `cd28130` (private SQL
-backups and recovery rehearsal). The commit containing this checkpoint adds migration 0029,
-shared gallery contracts, immutable validated R2 uploads, authorized downloads,
-revision-guarded gallery edits, shared-asset duplication and reference-aware
-retention. The web editor has localized uploads, alternative text, ordering,
-removal and reliable retries. Draft/published organizer previews show galleries
-and read-only ticket/seat details with event analytics disabled.
+The branch is `feat/academic-release`. Committed baselines include `9de6914`
+(durable authentication mail and retention), `cd28130` (backup recovery) and
+`8360634` (event image galleries and organizer previews). The current campaign
+unit adds an organizer workspace, local Campaign QR generation/downloads and a
+server endpoint for attendee offer resolution. No migration is needed; persistent
+local D1 remains migrated through 0029.
 
-Migrations through 0029 are applied to persistent local D1. Full integration
-validation is complete; no test or build process remains running. No deployment
-or push was performed.
+Campaigns start disabled with 10%, 100 redemptions and the exact event window.
+Managers can create percentage or fixed-KZT offers, review and enable/disable
+them, and distribute separately labelled QR images. Sharing rereads manager
+access and permits only exact same-origin event links. Production requires HTTPS;
+local development HTTP is explicitly labelled. The attendee resolver uses token
+hash lookup and rechecks current event/access/window state. Checkout remains the
+authority for prices, inventory and redemption limits. Revoked managers cannot
+receive codes from an in-flight read.
 
-Validation completed for the image unit:
+Validation completed so far:
 
-- `vp test`: 1,137 tests across 73 files pass in 473.37 seconds.
-  Log: `.wrangler/event-images-tests.log`.
-- Full formatting, lint and type checks pass without warnings across 408 files.
-- The image suite verifies 25 cases. All 21 retention cases pass; the combined
-  first 44 cases took 121.60 seconds and two additional cases took 7.11 seconds.
-- Event/history integration passed 27 cases, including ordered image DTOs and
-  duplication that shares assets but creates fresh image associations.
-- Web/Worker/Astro builds pass. The web entry is 658.10 kB minified, with its
-  existing size warning. Build log: `.wrangler/event-images-build.log`.
-- `vp run verify:backup` passes 34 Node safety tests and one complete migrated
-  D1/R2 restore rehearsal with the new image tables.
-- `vp run verify:local-ticketing` passes against the real local Worker, including
-  issuance, protected PDFs, calendars, scanning, reversal and fixture cleanup.
-- `.wrangler/web-event-images-results.json` records a passing browser run with
-  no page errors. It covers PNG/JPEG uploads, lost-acknowledgement retry without
-  duplicates, gallery edits, KK/RU/EN phone previews, public covers and image
-  access revocation. All synthetic D1/R2/mail fixtures were removed.
+- Full checks pass across 421 files without warnings. Web/Worker/Astro builds
+  pass; the web entry is 662.25 kB minified, with its existing size warning.
+- All 29 resolver integration cases, 40 web campaign policy/QR cases and 15
+  event cases pass. Full regression passes 1,207 tests across 75 files in
+  505.91 seconds.
+- `.wrangler/web-campaigns-results.json` records passing browser creation,
+  uncertain-request retry, enabling, KK/RU/EN QR downloads and native QR decoding
+  at 390 pixels, a discounted reservation, a fully discounted completed order,
+  admission rejection and access revocation. The local activation fixture is
+  synthetic and no payment provider was called. All synthetic fixtures were removed.
+- Build/check/test logs use `.wrangler/campaigns-{build,check,tests}.log`.
 
-See [API evidence](./evidence/event-images-api.md) and
-[web evidence](./evidence/event-images-web.md). The API cleanup accounts for a
-first successful object sweep after more than 30 days by recording the asset's
-deleted state in the same guarded batch that removes its object job.
+See [campaign UI evidence](./evidence/campaigns-web.md) and
+[resolver evidence](./evidence/campaigns-api.md). The preceding image integration
+passed 1,137 tests, the local Worker ticketing regression and the backup restore
+rehearsal. The backup workflow remains disabled until reviewed configuration is
+available. Preserve the recovery gate and durable authentication/retention design.
 
-The preceding integration passed 1,111 tests across 72 files, full checks/build,
-local Worker auth/ticketing regressions, and localized durable-auth browser
-registration/reset. Authentication uses encrypted expiring D1 intents. Daily
-retention preserves financial and admission holds. `RECOVERY_MODE=paused` is
-outside D1 and gates APIs, background work and support connections. Backup CI
-is checked in but remains disabled until its target and credentials are set.
-See the [runbook](./backup-recovery.md) and [implementation plan](./implementation-plan.md).
-
-Next: implement organizer campaign management and Campaign QR generation.
-The APIs already exist; the organizer screen and QR renderer are missing. The
-acceptance flow is campaign QR -> event -> discount -> attributed order, with
-campaign QR rejection at admission. Further local gaps include event-scoped
-organizer registration/order views and editable organizer contact/payout
-profiles. Both agents have returned ownership and have no running processes.
+Next: commit this validated campaign unit, then implement
+event-scoped organizer registration/order views. Existing history is audit-only;
+purchaser order reads are account-scoped, and manager ticket reads require known
+IDs. Editable organizer contact/payout profiles also remain. Both campaign agents
+have returned source ownership; the read-only review has identified a minimal event-scoped records API and
+localized workspace. No deployment or push was performed.
 
 The completed Polar compensation fixture must be preserved: payment
 `49249daf-eefa-4817-8061-4cc493d898d5` succeeded; order

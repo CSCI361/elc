@@ -300,7 +300,8 @@ export async function readCampaigns(
   actorId: string,
   appOrigin: string,
   campaignId?: string,
-  query: PaginationQuery = { limit: 20 }
+  query: PaginationQuery = { limit: 20 },
+  beforeReturn?: () => Promise<void>
 ) {
   await requireEventPermission(db, actorId, eventId, "event:manage")
   const cursor = query.cursor ? decodeCursor(query.cursor) : null
@@ -347,6 +348,8 @@ export async function readCampaigns(
     })
   })
   const last = rows.at(-1)
+  await beforeReturn?.()
+  await requireEventPermission(db, actorId, eventId, "event:manage")
   return campaignListResponseSchema.parse({
     items,
     nextCursor:

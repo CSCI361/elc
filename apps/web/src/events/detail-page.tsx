@@ -40,6 +40,8 @@ import { useImageText } from "./image-messages"
 import { supportHref } from "@/support/policies"
 import { useSupportText } from "@/support/messages"
 import { usePublicEventAnalytics } from "@/analytics/collection"
+import { CampaignNotice } from "./campaign-notice"
+import { useCampaignNoticeText } from "./campaign-notice-messages"
 
 function ReservationForm({
   event,
@@ -58,6 +60,7 @@ function ReservationForm({
 }) {
   const { status, messages } = useAccount()
   const { locale, t } = useEventText()
+  const { t: campaignText } = useCampaignNoticeText()
   const [selected, setSelected] = useState<string[]>([])
   const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [names, setNames] = useState<Record<string, string>>({})
@@ -271,15 +274,24 @@ function ReservationForm({
           <Field
             label={t("campaign")}
             hint={t("campaignHint")}
-            maxLength={128}
+            maxLength={64}
             autoComplete="off"
             value={campaign}
             onChange={(change) => setCampaign(change.target.value)}
           />
           <div className="basket-total">
-            <span>{t("estimate")}</span>
+            <span>
+              {campaign.trim() ? campaignText("subtotal") : t("estimate")}
+            </span>
             <strong>{money(estimated, locale)}</strong>
           </div>
+          <CampaignNotice
+            eventId={event.id}
+            code={campaign}
+            timeZone={event.timeZone}
+            ticketTypes={inventory.ticketTypes}
+            onClear={() => setCampaign("")}
+          />
           {status === "active" ? (
             <Button
               className="auth-button"

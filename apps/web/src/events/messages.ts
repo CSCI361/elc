@@ -151,6 +151,7 @@ const text = {
     "Add an attendee name for each ticket. Reservations last 10 minutes.",
   ],
   attendee: ["Қатысушының аты", "Имя участника", "Attendee name"],
+  campaigns: ["Науқандар", "Кампании", "Campaigns"],
   campaign: ["Промокод", "Промокод", "Campaign code"],
   campaignHint: [
     "Жеңілдік броньдау кезінде есептеледі.",

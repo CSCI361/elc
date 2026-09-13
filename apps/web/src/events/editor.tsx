@@ -469,11 +469,18 @@ export function EventEditorPage({ eventId }: { eventId?: string }) {
 }
 
 function RetainedEventActions({ event }: { event: EventApi }) {
+  const { t } = useEventText()
   const { account } = useAccount()
   const { t: historyText } = useHistoryText()
   const { t: analyticsText } = useAnalyticsText()
   return (
     <>
+      <a
+        className="secondary-link"
+        href={`/organizer/events/${segment(event.id)}/campaigns`}
+      >
+        {t("campaigns")}
+      </a>
       {account?.user.id === event.organizerId ? (
         <>
           <a

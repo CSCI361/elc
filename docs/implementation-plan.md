@@ -7,12 +7,20 @@ Work resumed at the user's request from checkpoint `3edfe08`. The
 incomplete activation modules, credentials setup and ordered next steps. The
 release remains in progress.
 
-Latest integration adds [event image storage](./evidence/event-images-api.md) and
+Latest integration adds [organizer campaign management and QR distribution](./evidence/campaigns-web.md)
+and [attendee campaign resolution](./evidence/campaigns-api.md). Campaign creation
+preserves disabled defaults and exact event windows; managers review before
+explicitly enabling. Downloaded QR images contain only validated event links and
+promotional labels. The attendee page displays server-owned terms while checkout
+retains final pricing and redemption authority. The local browser flow verifies
+10% pricing and a fully discounted completed order, using synthetic activation.
+
+Commit `8360634` adds [event image storage](./evidence/event-images-api.md) and
 [the web gallery and organizer preview](./evidence/event-images-web.md). Events
 have up to five ordered JPEG/PNG images with required alternative text. Uploads
 use validated immutable objects and durable retry intents. Duplication retains
 shared assets; reference-aware retention removes them after their last use.
-Migrations through 0029 are applied locally.
+Migrations through 0029 are applied locally; campaigns need no new migration.
 
 The preceding commits add [durable authentication mail](./evidence/durable-authentication-mail.md),
 [retention cleanup](./evidence/retention.md) and
@@ -28,9 +36,10 @@ browser evidence. Suspension preserves signed offline snapshots and records a
 separate invalidation timestamp. Operational searches expose retention deadlines
 and unresolved-work holds.
 
-The image integration passes 1,137 tests across 73 files (473.37 seconds),
-full formatting, lint and type checks across 408 files, and web/Worker/Astro
-builds. Its web entry is 658.10 kB minified and retains the existing size warning. Backup verification also passes 34 safety
+The preceding image integration passed 1,137 tests across 73 files. Campaign
+checks pass across 421 files, along with 29 resolver cases, 40 web policy/QR
+cases and 15 event cases. Web/Worker/Astro builds pass; the web entry is 662.25 kB
+minified with the existing size warning. The full campaign regression passes 1,207 tests across 75 files in 505.91 seconds. Backup verification also passes 34 safety
 tests and one disposable restore rehearsal. Local Worker authentication and
 complete ticketing regressions pass. The new durable-auth browser flow passes
 in all three languages, including password reset. Administration and operational-record browser
@@ -47,12 +56,12 @@ with one confirmed KZT 9,000 refund, zero tickets and no held inventory; see
 
 The local image browser flow passes uploads, gallery edits, a lost-response
 retry, all three localized phone previews, public covers and access revocation.
-The local audit identified the next missing workflows: organizer campaign
-management and Campaign QR generation (SRS 4.14), event-scoped organizer
-registration/order views (SRS 4.4 and 4.16), and editable organizer contact/payout
-profiles (SRS 4.1). Campaign APIs already exist, but no organizer campaign screen
-or Campaign QR renderer is present. Implement and verify that workflow next,
-including an attributed discounted order and rejection of its QR at admission.
+The next missing local workflows are event-scoped organizer registration/order
+views (SRS 4.4 and 4.16) and editable organizer contact/payout profiles (SRS 4.1).
+The existing history API provides audit entries, and ticket reads permit managers
+with known IDs, but organizers have no event-wide order or attendee workspace.
+Keep purchaser-only order access distinct from the new authorized organizer view.
+
 The daily backup workflow is checked in but disabled until its reviewed target,
 credentials and environment are configured. External and device acceptance below
 remains required before release completion.

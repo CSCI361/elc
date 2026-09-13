@@ -25,6 +25,11 @@ const EventAccessPage = lazy(() =>
     default: module.EventAccessPage,
   }))
 )
+const CampaignPage = lazy(() =>
+  import("@/campaigns/page").then((module) => ({
+    default: module.CampaignPage,
+  }))
+)
 
 export function EventsRoute({ path }: { path: string }) {
   return (
@@ -70,9 +75,16 @@ function MatchedEventRoute({ path }: { path: string }) {
     parts[0] === "organizer" &&
     parts[1] === "events" &&
     parts[3] === "access"
+  const campaignPath =
+    parts.length === 4 &&
+    parts[0] === "organizer" &&
+    parts[1] === "events" &&
+    parts[3] === "campaigns"
   let id: string
   try {
-    id = decodeURIComponent((accessPath ? parts[2] : parts.at(-1)) ?? "")
+    id = decodeURIComponent(
+      (accessPath || campaignPath ? parts[2] : parts.at(-1)) ?? ""
+    )
   } catch {
     return <EventError error={new EventApiError("NOT_FOUND", 404)} />
   }
@@ -80,6 +92,12 @@ function MatchedEventRoute({ path }: { path: string }) {
     return (
       <Protected>
         <EventAccessPage eventId={id} />
+      </Protected>
+    )
+  if (campaignPath)
+    return (
+      <Protected>
+        <CampaignPage eventId={id} />
       </Protected>
     )
   if (parts.length === 2 && parts[0] === "events")
