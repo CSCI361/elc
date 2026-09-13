@@ -12,6 +12,7 @@ import { EventApiError, segment, useCommand, useResource } from "./api"
 import { useEventText } from "./messages"
 import { money } from "./policies"
 import { EventError, Field, Loading, SelectField } from "./ui"
+import { SavedOrganizerProfileButton } from "@/organizer-profile/saved-profile-button"
 
 type Activation = ActivationResponse["activation"]
 
@@ -25,6 +26,15 @@ function ActivationForm({
   const { t, locale } = useEventText()
   const { account } = useAccount()
   const command = useCommand()
+  const [prefillPending, setPrefillPending] = useState(false)
+  const [profile, setProfile] = useState(() => ({
+    displayName: activation.profile?.displayName ?? account?.user.name ?? "",
+    legalName: activation.profile?.legalName ?? "",
+    contact: activation.profile?.contact ?? account?.user.email ?? "",
+    dummyPayoutReference: activation.profile?.dummyPayoutReference ?? "",
+  }))
+  const changeProfile = (key: keyof typeof profile, value: string) =>
+    setProfile((previous) => ({ ...previous, [key]: value }))
   const [identity, setIdentity] = useState(activation.identityCheck.state)
   const [payout, setPayout] = useState(activation.payoutCheck.state)
   const [accepted, setAccepted] = useState(
@@ -109,15 +119,21 @@ function ActivationForm({
         <EventError error={command.error} retry={onSaved} />
       ) : null}
       <form onSubmit={save}>
-        <fieldset disabled={command.pending}>
+        <fieldset disabled={command.pending || prefillPending}>
+          <SavedOrganizerProfileButton
+            disabled={command.pending}
+            onUse={setProfile}
+            onPendingChange={setPrefillPending}
+          />
           <div className="event-form-grid">
             <Field
               label={t("organizerName")}
               name="displayName"
               required
               maxLength={120}
-              defaultValue={
-                activation.profile?.displayName ?? account?.user.name ?? ""
+              value={profile.displayName}
+              onChange={(event) =>
+                changeProfile("displayName", event.currentTarget.value)
               }
             />
             <Field
@@ -125,7 +141,10 @@ function ActivationForm({
               name="legalName"
               required
               maxLength={200}
-              defaultValue={activation.profile?.legalName ?? ""}
+              value={profile.legalName}
+              onChange={(event) =>
+                changeProfile("legalName", event.currentTarget.value)
+              }
             />
             <Field
               label={t("organizerContact")}
@@ -133,8 +152,9 @@ function ActivationForm({
               required
               minLength={3}
               maxLength={200}
-              defaultValue={
-                activation.profile?.contact ?? account?.user.email ?? ""
+              value={profile.contact}
+              onChange={(event) =>
+                changeProfile("contact", event.currentTarget.value)
               }
             />
             <Field
@@ -144,7 +164,10 @@ function ActivationForm({
               required
               pattern="DEMO-[A-Za-z0-9_-]{3,60}"
               maxLength={65}
-              defaultValue={activation.profile?.dummyPayoutReference ?? ""}
+              value={profile.dummyPayoutReference}
+              onChange={(event) =>
+                changeProfile("dummyPayoutReference", event.currentTarget.value)
+              }
             />
           </div>
           <div className="event-form-grid">
@@ -235,7 +258,7 @@ function ActivationForm({
       {!feePaid ? (
         <Button
           className="auth-button"
-          disabled={command.pending || !canPay}
+          disabled={command.pending || prefillPending || !canPay}
           onClick={() => {
             void command
               .send(

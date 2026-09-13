@@ -211,6 +211,13 @@
       "when": 1789295684647,
       "tag": "0029_event_images",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "6",
+      "when": 1789300586175,
+      "tag": "0030_organizer_profiles",
+      "breakpoints": true
     }
   ]
 }

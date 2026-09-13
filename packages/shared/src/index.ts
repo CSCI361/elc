@@ -33,3 +33,4 @@ export * from "./administration-api"
 export * from "./operations-api"
 
 export * from "./organizer-records-api"
+export * from "./organizer-profile-api"

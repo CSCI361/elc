@@ -414,14 +414,22 @@ describe("academic retention on D1 and R2", () => {
   it("keeps recently signed in accounts and every retained business relationship", async () => {
     await db
       .prepare(
+        "INSERT INTO organizer_profiles(user_id,display_name,legal_name,contact,dummy_payout_reference,revision,created_at,updated_at) VALUES ('other','Retained organizer','Demo organizer','demo@example.test','DEMO-RETAINED',1,?,?)"
+      )
+      .bind(fixture.now, fixture.now)
+      .run()
+    await db
+      .prepare(
         "INSERT INTO account_activity(user_id,last_sign_in_at) VALUES ('other',?)"
       )
       .bind(now)
       .run()
     expect(await cleanupInactiveProfiles(db, now)).toBe(0)
+    expect(await count("organizer_profiles")).toBe(1)
     expect(await count("user")).toBe(5)
     now += HISTORY_MS
     expect(await cleanupInactiveProfiles(db, now)).toBe(1)
+    expect(await count("organizer_profiles")).toBe(0)
     expect(
       await db.prepare("SELECT id FROM user WHERE id='other'").first()
     ).toBeNull()

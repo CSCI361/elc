@@ -6,13 +6,19 @@ import {
   SignOutIcon,
   UserCircleIcon,
 } from "@phosphor-icons/react"
-import { useState } from "react"
+import { lazy, Suspense, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { authClient } from "./client"
 import { useAccount } from "./context"
 import { authErrorMessage, type AuthErrorKey } from "./errors"
 import { LocaleSelect } from "./locale-select"
 import { AuthNotice } from "./notice"
+
+const OrganizerProfilePanel = lazy(() =>
+  import("@/organizer-profile").then((module) => ({
+    default: module.OrganizerProfilePanel,
+  }))
+)
 
 export function AccountPage() {
   const {
@@ -217,6 +223,9 @@ export function AccountPage() {
           </div>
         </section>
       </div>
+      <Suspense fallback={<p role="status">{t.loadingAccount}</p>}>
+        <OrganizerProfilePanel key={account.user.id} />
+      </Suspense>
     </div>
   )
 }

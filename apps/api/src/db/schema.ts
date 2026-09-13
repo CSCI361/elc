@@ -19,6 +19,28 @@ export const accountActivity = sqliteTable("account_activity", {
   lastSignInAt: integer("last_sign_in_at").notNull(),
 })
 
+export const organizerProfiles = sqliteTable(
+  "organizer_profiles",
+  {
+    userId: text("user_id")
+      .primaryKey()
+      .references(() => user.id, { onDelete: "cascade" }),
+    displayName: text("display_name").notNull(),
+    legalName: text("legal_name").notNull(),
+    contact: text("contact").notNull(),
+    dummyPayoutReference: text("dummy_payout_reference").notNull(),
+    revision: integer("revision").notNull(),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (t) => [
+    check(
+      "organizer_profile_values",
+      sql`length(trim(${t.displayName})) BETWEEN 1 AND 120 AND length(trim(${t.legalName})) BETWEEN 1 AND 200 AND length(trim(${t.contact})) BETWEEN 3 AND 200 AND length(${t.dummyPayoutReference}) BETWEEN 8 AND 65 AND substr(${t.dummyPayoutReference},1,5)='DEMO-' AND substr(${t.dummyPayoutReference},6) NOT GLOB '*[^A-Za-z0-9_-]*' AND ${t.revision}>0 AND ${t.updatedAt}>=${t.createdAt}`
+    ),
+  ]
+)
+
 export const profiles = sqliteTable("profiles", {
   userId: text("user_id")
     .primaryKey()
