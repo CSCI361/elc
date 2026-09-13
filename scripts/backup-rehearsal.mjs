@@ -11,10 +11,21 @@ import {
   verifyBackup,
 } from "./lib/backup-core.mjs"
 
+/**
+ * @param {{
+ *   retentionCleanup?: typeof import('../apps/api/src/retention/index').runRetentionCleanup,
+ *   retentionBacklog?: typeof import('../apps/api/src/retention/backlog').getRetentionBacklog,
+ *   authCleanup?: typeof import('../apps/api/src/auth/delivery').cleanupAuthEmailIntents,
+ *   domains?: ReturnType<typeof import('./fixtures/backup-domains').createBackupDomains>,
+ *   expectBlocked?: boolean
+ * }} options
+ */
 export async function runBackupRehearsal({
   retentionCleanup,
   retentionBacklog,
   authCleanup,
+  domains,
+  expectBlocked = false,
 } = {}) {
   // Every resource is ephemeral. No persist path, development secrets, remote
   // credentials, external delivery or live local database is used by this rehearsal.
@@ -30,6 +41,7 @@ export async function runBackupRehearsal({
   )
   const now = Date.now()
   const day = 86400000
+  /** @type {Record<string, unknown>} */
   const output = {
     localOnly: true,
     providerTimeTravel: "pending",
@@ -109,6 +121,7 @@ export async function runBackupRehearsal({
       )
       .bind(immutableManifest)
       .run()
+    await domains?.seed({ source, files, now })
     await source
       .prepare(
         "INSERT INTO outbox(id,kind,entity_id,payload_json,created_at,next_attempt_at,completed_at) VALUES('completed-job','synthetic','retained-event','{}',?,?,?)"
@@ -163,6 +176,7 @@ export async function runBackupRehearsal({
     const bytes = await backupAdapter.get(manifest.sqlKey)
     verifyBackup(manifest, bytes, "disposable-source", now)
     output.checksumVerified = digest(bytes) === manifest.sha256
+    await domains?.afterExport()
     // Prove restore obtains the export contents rather than the current source.
     await source
       .prepare(
@@ -317,25 +331,36 @@ export async function runBackupRehearsal({
           .prepare("PRAGMA foreign_key_check")
           .all()
         assert.deepEqual(integrity.results, [])
-        assert.equal(
+        assert.ok(
           (
             await restored
               .prepare("SELECT count(*) AS n FROM offline_devices")
               .first()
-          ).n,
-          1
+          ).n >= 1
         )
-        assert.equal(
-          (await restored.prepare("SELECT count(*) AS n FROM outbox").first())
-            .n,
-          0
-        )
+        if (!domains)
+          assert.equal(
+            (await restored.prepare("SELECT count(*) AS n FROM outbox").first())
+              .n,
+            0
+          )
         assert.equal(
           await (
             await files.get("private/support-files/retained-attachment")
           ).text(),
           "retained image"
         )
+        if (domains) {
+          const reconciled = await domains.reconcile({ restored, files, now })
+          output.domainReconciliation = reconciled.evidence
+          output.providerReconciliation =
+            "production-helpers-synthetic-provider"
+          assert.deepEqual(
+            (await restored.prepare("PRAGMA foreign_key_check").all()).results,
+            []
+          )
+          return reconciled
+        }
         return {
           ...Object.fromEntries(
             ["payments", "refunds", "admissions", "deliveries", "files"].map(
@@ -350,7 +375,7 @@ export async function runBackupRehearsal({
         paused = false
       },
     }
-    const recovered = await restoreBackup({
+    const recovering = restoreBackup({
       adapter: control,
       manifest,
       bytes,
@@ -359,6 +384,22 @@ export async function runBackupRehearsal({
       now: () => now + 2,
       resume: true,
     })
+    if (expectBlocked) {
+      assert.ok(domains, "A blocked domain rehearsal requires domain fixtures")
+      await assert.rejects(
+        recovering,
+        /Recovery reconciliation or data-loss review is incomplete/
+      )
+      assert.equal(paused, true)
+      assert.equal(stages.includes("ready-for-resume"), false)
+      assert.equal(stages.includes("resumed"), false)
+      output.stages = stages
+      output.recoveryBlocked = true
+      output.maintenanceStillPaused = true
+      output.passed = true
+      return output
+    }
+    const recovered = await recovering
     assert.equal(recovered.state, "resumed")
     assert.equal(paused, false)
     assert.equal(
