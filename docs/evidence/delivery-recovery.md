@@ -34,6 +34,6 @@ The integration tests use isolated D1 databases with all repository migrations. 
 
 The tests exercise bounded pagination and privacy, current permissions, suspension and grant revocation during a mutation, original retry-window boundaries, active and competing leases, stale and terminal state changes, concurrent exact replay, audit failure rollback, preserved frozen requests, known-provider lookup failure, recipient revocation before consumption, and unchanged existing financial records.
 
-`vp test apps/api/src/delivery/recovery.integration.test.ts --maxWorkers=1 --hookTimeout=30000` passed the original 14 tests. The financial-canary case also runs with the default production database clock. The new query-plan case awaits the integrated run. Scoped checks cover the implementation, shared schema, tests, and this evidence file.
+`vp test apps/api/src/delivery/recovery.integration.test.ts --maxWorkers=1` passed all 15 tests on 2026-09-13. The financial-canary case runs with the default production database clock. The query-plan case checks all four filter cursor indexes against the SQL issued by the service. Scoped checks cover the implementation, shared schema, tests, and this evidence file.
 
 This evidence does not claim live provider delivery or browser acceptance of the separate operator UI.

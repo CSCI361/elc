@@ -1,0 +1,51 @@
+.organizer-overview {
+  min-width: 0;
+}
+.organizer-overview > section {
+  min-width: 0;
+}
+.organizer-overview header > div {
+  min-width: 0;
+}
+.overview-scope {
+  padding: 0.75rem 1rem;
+  border-inline-start: 3px solid var(--primary);
+  background: var(--muted);
+}
+.overview-events-table {
+  margin-block: 1rem;
+}
+.overview-events-table table {
+  min-width: 110rem;
+}
+.overview-events-table th:first-child {
+  min-width: 13rem;
+  max-width: 22rem;
+}
+.overview-events-table small {
+  display: block;
+  margin-top: 0.5rem;
+  font-weight: 400;
+  color: var(--muted-foreground);
+}
+.overview-events-table a {
+  display: inline-block;
+  padding-block: 0.4rem;
+}
+.analytics-discovery {
+  border-top: 1px solid var(--border);
+  padding-top: 2rem;
+}
+.organizer-overview :is(h1, h2):focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
+}
+@media (max-width: 600px) {
+  .organizer-overview .event-page-heading {
+    flex-direction: column;
+    align-items: start;
+  }
+  .organizer-overview .event-page-heading button {
+    min-height: 44px;
+  }
+}

@@ -84,8 +84,17 @@ the queued delivery implementation. Its first attempt hit the default 10-second
 database setup timeout under four workers. An isolated review suite passed;
 the test runner now uses two workers and a 30-second setup timeout. That bounded
 run passed 926 of 927 tests across 61 files without setup timeouts. Its one
-failure found an organizer overview query plan that scans tickets/offline
-operations before restricting event scope; that report is being corrected.
+failure found an organizer overview query plan that scanned tickets/offline
+operations before restricting event scope. The corrected query and stronger
+regression passed all eleven overview API tests and six frontend tests. Account
+email localization has 47 passing pure tests and nine real Better Auth/D1
+callback tests. Delivery recovery now passes all 15 tests, including cursor
+index checks.
+The organizer overview also passes browser acceptance for totals across 22
+authorized events, date/search changes, refunds, stale responses, permission
+revocation and all three locales at 390 px. The GA4 adapter passes 89 injected
+transport tests; its server cache, dashboard integration and consent-controlled
+collection remain pending.
 The saved checkpoint is historical; use the current evidence documents for work
 completed since resuming.
 

@@ -21,11 +21,7 @@ import { useSupportText } from "@/support/messages"
 import { usePayoutText } from "@/payouts/messages"
 import { useHistoryText } from "@/history/messages"
 import { useAnalyticsText } from "@/analytics/messages"
-import {
-  duplicateEligible,
-  duplicateHref,
-  eventHistoryHref,
-} from "@/history/policies"
+import { duplicateHref, eventHistoryHref } from "@/history/policies"
 import { supportHref } from "@/support/policies"
 import { CancellationPanel } from "@/support/cancellation-panel"
 import { CalendarActions } from "./exports"
@@ -470,7 +466,6 @@ export function EventEditorPage({ eventId }: { eventId?: string }) {
 }
 
 function RetainedEventActions({ event }: { event: EventApi }) {
-  const [openedAt] = useState(Date.now)
   const { account } = useAccount()
   const { t: historyText } = useHistoryText()
   const { t: analyticsText } = useAnalyticsText()
@@ -489,7 +484,8 @@ function RetainedEventActions({ event }: { event: EventApi }) {
           </a>
         </>
       ) : null}
-      {duplicateEligible(event, openedAt) ? (
+      {event.suspendedAt === null &&
+      (event.cancelledAt !== null || event.phase === "completed") ? (
         <a className="secondary-link" href={duplicateHref(event.id)}>
           {historyText("duplicate")}
         </a>

@@ -5,6 +5,7 @@ import { Button } from "../components/ui/button"
 import { useResource } from "../events/api"
 import { EventError, Field, Loading, Protected } from "../events/ui"
 import { useAnalyticsText } from "./messages"
+import { OrganizerOverview } from "./overview-page"
 import "./analytics.css"
 
 function AvailableReports() {
@@ -36,11 +37,14 @@ function AvailableReports() {
     setQuery({ ...query, after })
   }
   return (
-    <div className="events-page analytics-page">
+    <section
+      className="analytics-page analytics-discovery"
+      aria-label={t("availableEvents")}
+    >
       <header>
-        <h1 tabIndex={-1} ref={heading}>
+        <h2 tabIndex={-1} ref={heading}>
           {t("availableEvents")}
-        </h1>
+        </h2>
         <p>{t("reportsIntro")}</p>
       </header>
       <form className="event-panel analytics-filters" onSubmit={search}>
@@ -62,13 +66,13 @@ function AvailableReports() {
             <ul className="analytics-report-list">
               {result.data.items.map((event) => (
                 <li className="event-panel" key={event.id}>
-                  <h2>
+                  <h3>
                     <a
                       href={`/events/${encodeURIComponent(event.id)}/analytics`}
                     >
                       {event.title}
                     </a>
-                  </h2>
+                  </h3>
                   <p>
                     <time dateTime={event.startsAt}>
                       {new Intl.DateTimeFormat(locale, {
@@ -112,14 +116,17 @@ function AvailableReports() {
           </div>
         </>
       ) : null}
-    </div>
+    </section>
   )
 }
 export function AnalyticsIndexPage() {
   const { account } = useAccount()
   return (
     <Protected>
-      <AvailableReports key={account?.user.id} />
+      <div className="events-page analytics-page" key={account?.user.id}>
+        <OrganizerOverview />
+        <AvailableReports />
+      </div>
     </Protected>
   )
 }
