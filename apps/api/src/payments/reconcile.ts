@@ -19,6 +19,7 @@ import { applyRefundStatus, ensureCompensation, processRefund } from "./refunds"
 import {
   checkoutRequest,
   claimPaymentDispatch,
+  failedPaymentNotification,
   loadPayment,
   paymentAudit,
   paymentBinding,
@@ -103,6 +104,9 @@ export async function recordPaymentStatus(
           payment.id
         ),
       paymentAudit(db, payment, `payment.${status.state}`, now),
+      ...(status.state === "failed"
+        ? [failedPaymentNotification(db, payment.id, now)]
+        : []),
       ...(status.refundedAmountMinor === 0 || payment.purpose !== "ticket_order"
         ? []
         : [
@@ -183,6 +187,7 @@ export async function processPayment(
           definite ? "payment.dispatch_failed" : "payment.dispatch_uncertain",
           now()
         ),
+        ...(definite ? [failedPaymentNotification(db, payment.id, now())] : []),
       ])
       return definite
     }

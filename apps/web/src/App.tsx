@@ -14,6 +14,7 @@ import { payoutEventId } from "@/payouts/policies"
 import { HistoryRoute } from "@/history"
 import { isHistoryPath } from "@/history/policies"
 import { analyticsEventId } from "@/analytics/policies"
+import { deliveryRoute } from "@/delivery/route"
 import {
   createInvitationMemory,
   readInvitationToken,
@@ -37,6 +38,9 @@ const AnalyticsIndexPage = lazy(() =>
   import("@/analytics/index-page").then((module) => ({
     default: module.AnalyticsIndexPage,
   }))
+)
+const DeliveryPage = lazy(() =>
+  import("@/delivery/page").then((module) => ({ default: module.DeliveryPage }))
 )
 
 const initialURL = new URL(window.location.href)
@@ -64,6 +68,15 @@ if (
 
 function AppRoutes() {
   const { messages: t } = useAccount()
+  const delivery = deliveryRoute(window.location.pathname)
+  if (delivery)
+    return (
+      <AppShell>
+        <Suspense fallback={<Loading />}>
+          <DeliveryPage id={delivery.id} />
+        </Suspense>
+      </AppShell>
+    )
   if (window.location.pathname === "/organizer/analytics")
     return (
       <AppShell>

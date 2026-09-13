@@ -23,7 +23,7 @@ Reviewed on 2026-09-13. This plan records read-only account and repository check
 | Dead-letter queue               | `elc-preview-delivery-dlq` | Consumer failure retention                                 |
 | SQLite Durable Object namespace | Created for this Worker    | `SUPPORT`, existing `SupportCase` class and `v1` migration |
 
-Keep both buckets private, without an `r2.dev` endpoint or public custom domain. Preserve the existing queue batch size of five, one-second batch timeout and three retries; configure the dead-letter queue explicitly. Preserve the minute cron, whose current handler dispatches payment outbox work only.
+Keep both buckets private, without an `r2.dev` endpoint or public custom domain. Preserve the existing queue batch size of five, one-second batch timeout and three retries. Replace the local dead-letter queue name with `elc-preview-delivery-dlq`. Preserve the minute cron, which dispatches financial, support-live and email outbox work, simulates due payouts and cleans abandoned private uploads and email payloads.
 
 Use a stable named deployment at `https://elc-preview.<account-subdomain>.workers.dev`, with `workers_dev: true` and `preview_urls: false`. Workers implementing Durable Objects do not receive version Preview URLs. A custom domain is unnecessary for this acceptance pass. Do not require interactive Cloudflare Access authentication on the provider webhook path. [Worker URLs](https://developers.cloudflare.com/workers/configuration/routing/workers-dev/), [Preview URL limitations](https://developers.cloudflare.com/workers/versions-and-deployments/preview-urls/)
 

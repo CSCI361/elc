@@ -13,6 +13,7 @@ import { useEventText } from "@/events/messages"
 import { useSupportText } from "@/support/messages"
 import { useHistoryText } from "@/history/messages"
 import { useAnalyticsText } from "@/analytics/messages"
+import { DeliveryNavigation } from "@/delivery/navigation"
 
 export function AppShell({
   children,
@@ -21,7 +22,7 @@ export function AppShell({
   children: ReactNode
   authLayout?: boolean
 }) {
-  const { messages: t, status } = useAccount()
+  const { messages: t, status, account } = useAccount()
   const { theme, setTheme } = useTheme()
   const { t: eventLabel } = useEventText()
   const { t: supportLabel } = useSupportText()
@@ -73,6 +74,9 @@ export function AppShell({
         </nav>
       </header>
       <nav className="event-navigation" aria-label={eventLabel("discover")}>
+        {status === "active" && account ? (
+          <DeliveryNavigation key={account.user.id} />
+        ) : null}
         {status === "active" ? (
           <a
             href="/support"

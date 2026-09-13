@@ -141,6 +141,34 @@
       "when": 1789259427865,
       "tag": "0019_reporting_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1789261872599,
+      "tag": "0020_email-delivery",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "6",
+      "when": 1789262712114,
+      "tag": "0021_delivery-fanout-indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "6",
+      "when": 1789263072220,
+      "tag": "0022_delivery-payload-cleanup",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "6",
+      "when": 1789285317737,
+      "tag": "0023_delivery-inspection-indexes",
+      "breakpoints": true
     }
   ]
 }

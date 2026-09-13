@@ -35,7 +35,10 @@ export const platformGrants = sqliteTable(
     permission: text("permission").notNull(),
     grantedAt: integer("granted_at").notNull(),
   },
-  (t) => [primaryKey({ columns: [t.userId, t.permission] })]
+  (t) => [
+    primaryKey({ columns: [t.userId, t.permission] }),
+    index("platform_grants_delivery").on(t.permission, t.userId),
+  ]
 )
 
 export const events = sqliteTable(
@@ -116,6 +119,7 @@ export const eventPermissions = sqliteTable(
   (t) => [
     primaryKey({ columns: [t.eventId, t.userId, t.permission] }),
     index("event_permissions_user").on(t.userId, t.eventId),
+    index("event_permissions_delivery").on(t.eventId, t.permission, t.userId),
   ]
 )
 
@@ -252,6 +256,7 @@ export const orders = sqliteTable(
   (t) => [
     index("orders_account").on(t.accountId, t.createdAt),
     index("orders_reporting").on(t.eventId, t.completedAt),
+    index("orders_delivery_recipients").on(t.eventId, t.completedAt, t.id),
     check(
       "order_amounts",
       sql`${t.currency} = 'KZT' AND ${t.subtotalMinor} >= 0 AND ${t.discountMinor} BETWEEN 0 AND ${t.subtotalMinor} AND ${t.totalMinor} = ${t.subtotalMinor} - ${t.discountMinor} AND ${t.processingFeeMinor} BETWEEN 0 AND ${t.totalMinor}`
@@ -693,6 +698,7 @@ export const tickets = sqliteTable(
   },
   (t) => [
     index("tickets_event_order").on(t.eventId, t.orderId),
+    index("tickets_delivery_parts").on(t.eventId, t.orderId, t.id),
     uniqueIndex("ticket_inventory_per_order").on(t.inventoryId, t.orderId),
   ]
 )
@@ -903,7 +909,94 @@ export const outbox = sqliteTable(
     attempts: integer("attempts").notNull().default(0),
     nextAttemptAt: integer("next_attempt_at").notNull(),
   },
-  (t) => [index("outbox_pending").on(t.completedAt, t.nextAttemptAt)]
+  (t) => [
+    index("outbox_pending").on(t.completedAt, t.nextAttemptAt),
+    index("outbox_delivery_source").on(t.kind, t.entityId, t.createdAt, t.id),
+    index("outbox_kind_pending").on(
+      t.kind,
+      t.completedAt,
+      t.nextAttemptAt,
+      t.id
+    ),
+  ]
+)
+
+export const emailDeliveries = sqliteTable(
+  "email_deliveries",
+  {
+    id: text("id").primaryKey(),
+    sourceId: text("source_id").notNull(),
+    kind: text("kind").notNull(),
+    entityId: text("entity_id").notNull(),
+    eventId: text("event_id").references(() => events.id),
+    recipientId: text("recipient_id")
+      .notNull()
+      .references(() => user.id),
+    partKey: text("part_key").notNull().default(""),
+    metadataJson: text("metadata_json").notNull(),
+    pdfState: text("pdf_state").notNull().default("not_required"),
+    emailState: text("email_state").notNull().default("pending"),
+    payloadKey: text("payload_key"),
+    payloadHash: text("payload_hash"),
+    providerId: text("provider_id"),
+    providerStatus: text("provider_status"),
+    firstAttemptAt: integer("first_attempt_at"),
+    lastAttemptAt: integer("last_attempt_at"),
+    attempts: integer("attempts").notNull().default(0),
+    failures: integer("failures").notNull().default(0),
+    lastError: text("last_error"),
+    nextAttemptAt: integer("next_attempt_at").notNull(),
+    leaseToken: text("lease_token"),
+    leaseUntil: integer("lease_until"),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+    completedAt: integer("completed_at"),
+  },
+  (t) => [
+    uniqueIndex("email_delivery_source_part").on(
+      t.sourceId,
+      t.recipientId,
+      t.partKey
+    ),
+    index("email_delivery_pending").on(t.emailState, t.nextAttemptAt),
+    index("email_delivery_event").on(t.eventId, t.createdAt),
+    index("email_delivery_state_cursor").on(t.emailState, t.id),
+    index("email_delivery_event_cursor").on(t.eventId, t.id),
+    index("email_delivery_pdf_cursor").on(t.pdfState, t.id),
+    index("email_delivery_kind_cursor").on(t.kind, t.id),
+    check(
+      "email_delivery_states",
+      sql`${t.pdfState} IN ('not_required', 'pending', 'ready', 'failed') AND ${t.emailState} IN ('pending', 'accepted', 'delivered', 'bounced', 'failed', 'suppressed', 'review_needed') AND ${t.attempts} >= 0 AND ${t.failures} >= 0 AND (${t.payloadKey} IS NULL) = (${t.payloadHash} IS NULL) AND (${t.firstAttemptAt} IS NULL OR (${t.payloadKey} IS NOT NULL AND ${t.lastAttemptAt} >= ${t.firstAttemptAt})) AND (${t.providerId} IS NULL OR ${t.firstAttemptAt} IS NOT NULL) AND json_valid(${t.metadataJson})`
+    ),
+  ]
+)
+
+export const deliveryFanout = sqliteTable("delivery_fanout", {
+  sourceId: text("source_id").primaryKey(),
+  cursor: text("cursor").notNull().default(""),
+  completedAt: integer("completed_at"),
+  createdAt: integer("created_at").notNull(),
+})
+
+export const deliveryPayloadObjects = sqliteTable(
+  "delivery_payload_objects",
+  {
+    key: text("key").primaryKey(),
+    deliveryId: text("delivery_id").notNull(),
+    hash: text("hash").notNull(),
+    state: text("state").notNull().default("staged"),
+    deleteAfter: integer("delete_after").notNull(),
+    lastSweptAt: integer("last_swept_at"),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [
+    index("delivery_payload_cleanup").on(t.deleteAfter, t.lastSweptAt),
+    index("delivery_payload_owner").on(t.deliveryId),
+    check(
+      "delivery_payload_state",
+      sql`${t.state} IN ('staged','deleting','deleted') AND ${t.deleteAfter} > ${t.createdAt} AND length(${t.hash})=64`
+    ),
+  ]
 )
 
 export const requestReceipts = sqliteTable(

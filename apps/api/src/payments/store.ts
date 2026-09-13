@@ -127,6 +127,18 @@ export function paymentAudit(
 }
 
 /** A durable claim precedes the only financial POST; a lost response never releases it. */
+/** The business fact and its notification source belong to the same D1 transaction. */
+export function failedPaymentNotification(
+  db: D1Database,
+  paymentId: string,
+  now: number
+) {
+  return db
+    .prepare(`INSERT OR IGNORE INTO outbox (id,kind,entity_id,payload_json,created_at,next_attempt_at)
+    SELECT ?,'payment.failed',id,json_object('paymentAttemptId',id),?,? FROM payment_attempts WHERE id=? AND state='failed'`)
+    .bind(`payment-failed:${paymentId}`, now, now, paymentId)
+}
+
 export async function claimPaymentDispatch(
   db: D1Database,
   row: PaymentRow,

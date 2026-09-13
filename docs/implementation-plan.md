@@ -63,6 +63,16 @@ acceptance remains pending. Event reporting and retained history now have API
 and browser evidence, including exact reporting totals and duplication recovery
 after a lost response.
 
+Queued notifications now cover ticket PDFs, payment failures, activation,
+event updates/cancellation, refunds, payouts, support and free-registration
+cancellation. The coordinator freezes each attempted message, preserves provider
+receipts, separates PDF and delivery failures, and cleans up abandoned private
+payloads. Operator recovery has 14 D1 tests and browser evidence for exact replay
+after response loss, stale requests, expired send windows and revoked access.
+The delivery adapter, localized templates, coordinator, canonical sources,
+fanout, review and workflow suites have passed their focused checks. Real
+Resend and deployed queue acceptance remain pending.
+
 This is partial release coverage. Actual refunds and signed webhooks, remaining
 web workflows, delivery, reporting, Expo/offline, external OAuth/email/analytics,
 deployment and physical-device checks remain open. The last full integration
@@ -70,7 +80,12 @@ baseline passed 424 tests across 32 files. The subsequent 633-test run passed
 632 tests; its remaining test expected an older audit-trigger error name. The
 updated assertion passed separately. Scoped formatting/lint/type checks and
 the complete web/Worker/Astro build also pass. The next complete run will include
-the queued delivery implementation.
+the queued delivery implementation. Its first attempt hit the default 10-second
+database setup timeout under four workers. An isolated review suite passed;
+the test runner now uses two workers and a 30-second setup timeout. That bounded
+run passed 926 of 927 tests across 61 files without setup timeouts. Its one
+failure found an organizer overview query plan that scans tickets/offline
+operations before restricting event scope; that report is being corrected.
 The saved checkpoint is historical; use the current evidence documents for work
 completed since resuming.
 
@@ -231,7 +246,11 @@ Current evidence: [PDF/calendar verification](./evidence/ticket-exports.md) cove
 real Worker downloads, three languages, private R2 access, canonical QR recovery,
 grayscale raster decoding, calendar identifiers/time zones and cancellation
 metadata. Physical paper scanning, supported calendar clients, frontend export
-controls and external/background delivery remain pending.
+controls and external delivery remain pending. Background notification processing
+and operator recovery now have [coordinator](./evidence/queued-email.md),
+[fanout](./evidence/notification-fanout.md), [source](./evidence/notification-sources.md)
+and [web recovery](./evidence/web-delivery.md) evidence. Account email localization
+and durable account delivery are being completed separately.
 
 ### M5: mobile and offline
 

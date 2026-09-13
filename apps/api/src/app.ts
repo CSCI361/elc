@@ -1,6 +1,9 @@
 import { Hono } from "hono"
 import type { ApiErrorCode } from "@elc/shared"
-import { updatePreferencesSchema } from "@elc/shared"
+import {
+  platformAccessResponseSchema,
+  updatePreferencesSchema,
+} from "@elc/shared"
 import { HTTPException } from "hono/http-exception"
 import { secureHeaders } from "hono/secure-headers"
 import { createAuth, getAuthCapabilities, type AuthDependencies } from "./auth"
@@ -21,6 +24,7 @@ import { payoutRoutes } from "./payments/payout-routes"
 import { offlineRoutes } from "./offline"
 import { reportingRoutes } from "./reporting"
 import { historyRoutes } from "./history"
+import { deliveryRoutes } from "./delivery/routes"
 
 function authenticationDependencies(env: Bindings): AuthDependencies {
   if (env.ENVIRONMENT !== "local") return {}
@@ -97,6 +101,22 @@ export const app = new Hono<{
       profile: { locale: profile?.locale ?? "kk", hasSavedLocale: !!profile },
     })
   })
+  .get("/api/admin/access", async (c) => {
+    const session = await requireVerifiedSession(c)
+    const rows =
+      await c.env.DB.prepare(`SELECT g.permission FROM platform_grants g
+      JOIN user u ON u.id=g.user_id LEFT JOIN profiles p ON p.user_id=u.id
+      WHERE g.user_id=? AND u.email_verified=1 AND p.suspended_at IS NULL
+      AND g.permission IN ('platform:moderate','platform:support','platform:configure','platform:recover')
+      ORDER BY g.permission LIMIT 4`)
+        .bind(session.user.id)
+        .all<{ permission: string }>()
+    return c.json(
+      platformAccessResponseSchema.parse({
+        permissions: rows.results.map((row) => row.permission),
+      })
+    )
+  })
   .patch("/api/me/preferences", async (c) => {
     const session = await requireVerifiedSession(c)
     const body = await c.req.json<unknown>().catch(() => null)
@@ -132,6 +152,7 @@ export const app = new Hono<{
   .route("/api", offlineRoutes)
   .route("/api", reportingRoutes)
   .route("/api", historyRoutes)
+  .route("/api", deliveryRoutes)
   .all("/api/*", (c) =>
     c.json(
       {

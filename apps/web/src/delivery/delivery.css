@@ -1,0 +1,76 @@
+.delivery-page {
+  max-width: 76rem;
+}
+.delivery-data {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 2rem;
+}
+.delivery-data div {
+  min-width: 0;
+}
+.delivery-data dt {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+.delivery-data dd {
+  margin: 0.3rem 0 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.delivery-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: 1rem;
+}
+.delivery-recovery form {
+  display: grid;
+  gap: 1rem;
+  max-width: 45rem;
+}
+.delivery-recovery textarea {
+  min-height: 7rem;
+}
+.delivery-table-scroll {
+  max-width: 100%;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+.delivery-table-scroll:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+.delivery-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 52rem;
+}
+.delivery-table th,
+.delivery-table td {
+  text-align: left;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.delivery-table tbody th {
+  max-width: 24rem;
+  overflow-wrap: anywhere;
+  font-weight: 500;
+}
+.delivery-table thead {
+  background: var(--muted);
+}
+.delivery-pagination {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+@media (max-width: 600px) {
+  .delivery-data,
+  .delivery-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

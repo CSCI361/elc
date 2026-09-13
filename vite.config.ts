@@ -5,8 +5,9 @@ export default defineConfig({
   test: {
     include: ["packages/**/*.test.ts", "apps/**/*.test.ts"],
     testTimeout: 30000,
+    hookTimeout: 30000,
     // Each integration file starts workerd; bound host processes and loopback sockets.
-    maxWorkers: 4,
+    maxWorkers: 2,
   },
   staged: {
     "*": "vp check --fix",

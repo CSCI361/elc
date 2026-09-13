@@ -403,6 +403,47 @@ describe("D1 payment orchestration and compensation", () => {
     expect(provider.creates).toHaveLength(1)
     expect(provider.recoveries).toHaveLength(0)
     expect(await scalar("SELECT count(*) AS n FROM tickets")).toBe(0)
+    expect(
+      await db
+        .prepare("SELECT kind,entity_id,payload_json FROM outbox WHERE id=?")
+        .bind(`payment-failed:${paymentId}`)
+        .first()
+    ).toEqual({
+      kind: "payment.failed",
+      entity_id: paymentId,
+      payload_json: JSON.stringify({ paymentAttemptId: paymentId }),
+    })
+  })
+
+  it("commits a provider failure and its one notification source atomically", async () => {
+    const { paymentId } = await start()
+    provider.state = "failed"
+    const failed = provider.status(binding())
+    await db
+      .prepare(
+        "CREATE TRIGGER fail_notification BEFORE INSERT ON outbox WHEN NEW.kind='payment.failed' BEGIN SELECT RAISE(ABORT,'synthetic notification failure'); END"
+      )
+      .run()
+    await expect(recordPaymentStatus(db, failed, now)).rejects.toThrow(
+      "synthetic notification failure"
+    )
+    expect((await loadPayment(db, paymentId)).state).toBe("pending")
+    expect(
+      await scalar(
+        "SELECT count(*) AS n FROM outbox WHERE kind='payment.failed'"
+      )
+    ).toBe(0)
+    await db.prepare("DROP TRIGGER fail_notification").run()
+    await Promise.all([
+      recordPaymentStatus(db, failed, now),
+      recordPaymentStatus(db, failed, now),
+    ])
+    expect((await loadPayment(db, paymentId)).state).toBe("failed")
+    expect(
+      await scalar(
+        "SELECT count(*) AS n FROM outbox WHERE kind='payment.failed'"
+      )
+    ).toBe(1)
   })
 
   it.each(["expired", "abandoned", "cancelled"])(
@@ -487,6 +528,11 @@ describe("D1 payment orchestration and compensation", () => {
     expect(provider.refunds).toHaveLength(1)
     expect(provider.refundLookups).toHaveLength(2)
     expect((await loadPayment(db, paymentId)).state).toBe("succeeded")
+    expect(
+      await scalar(
+        "SELECT count(*) AS n FROM outbox WHERE kind='payment.failed'"
+      )
+    ).toBe(0)
     expect(await scalar("SELECT count(*) AS n FROM tickets")).toBe(0)
   })
 
