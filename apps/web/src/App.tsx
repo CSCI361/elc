@@ -73,16 +73,21 @@ if (
 
 function AppRoutes() {
   const { messages: t } = useAccount()
-  const administrationSection = /^\/admin\/(accounts|events|settings)$/.exec(
-    window.location.pathname
-  )?.[1]
+  const administrationSection =
+    /^\/admin\/(accounts|events|settings|operations)$/.exec(
+      window.location.pathname
+    )?.[1]
   if (administrationSection)
     return (
       <AppShell>
         <Suspense fallback={<Loading />}>
           <AdministrationPage
             section={
-              administrationSection as "accounts" | "events" | "settings"
+              administrationSection as
+                | "accounts"
+                | "events"
+                | "settings"
+                | "operations"
             }
           />
         </Suspense>

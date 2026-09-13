@@ -7,26 +7,31 @@ Work resumed at the user's request from checkpoint `3edfe08`. The
 incomplete activation modules, credentials setup and ordered next steps. The
 release remains in progress.
 
-Latest completed units: authorized GA4 report caching, the localized event
-traffic panel, and consent-based public collection in the React and Astro apps.
-Migration 0024 is applied locally. The full suite passes 1,044 tests across
-68 files; full checks and web/Worker/Astro builds pass. Browser acceptance covers
-reporting failure, date changes, revocation, explicit opt-in, cross-tab
-withdrawal, a real local checkout and all three locales at 390 pixels. See
+Latest completed units: [platform administration](./evidence/administration.md)
+and [operational searches/CSV export](./evidence/operational-records.md).
+Account/event suspension, activation inspection, paid-sales controls, exact fee
+settings, order/payment/audit search and audited page exports have real local
+browser evidence. Suspension preserves signed offline snapshots and records a
+separate invalidation timestamp. Operational searches expose retention deadlines
+and unresolved-work holds. Migrations through 0026 are applied locally.
+
+The full suite passes 1,073 tests across 70 files. Full formatting, lint and type
+checks and web/Worker/Astro builds pass. The web entry is 647.22 kB minified and
+retains the existing size warning. Administration and operational-record browser
+checks pass in all three languages at 390 pixels, including stale updates,
+session removal, revoked access and CSV downloads.
+
+The earlier resumed work includes authorized GA4 caching, localized traffic
+reports and consent-based public collection in React and Astro. See
 [GA4 reporting](./evidence/ga4-reporting.md) and
 [collection evidence](./evidence/ga4-collection.md). Live GA4 configuration and
-Google-side receipt remain pending. The saved Polar late-payment test also now
-passes with one confirmed KZT 9,000 refund, zero tickets and no held inventory;
-see [compensation evidence](./evidence/polar-compensation.md).
+Google-side receipt remain pending. The saved Polar late-payment test passes
+with one confirmed KZT 9,000 refund, zero tickets and no held inventory; see
+[compensation evidence](./evidence/polar-compensation.md).
 
-Administration now provides account/event search and suspension, activation
-inspection, paid-sales moderation and activation-fee settings, with real local
-browser evidence in all three languages. Suspension preserves signed offline
-snapshots and records a separate invalidation timestamp. Migrations 0025 and
-0026 are applied locally. Focused administration, activation and offline tests
-pass, as do full checks and builds. The full regression run is in progress.
-See [administration evidence](./evidence/administration.md). Broader operational
-order/payment/audit search and exports remain next in this workstream.
+Durable authentication mail, daily retention deletion and backup/restore remain
+local implementation work. The external and device acceptance below remains
+required before release completion.
 
 ## Scope and evidence rules
 
@@ -257,7 +262,8 @@ current eligibility, administrative fee/moderation APIs and compensation races.
 Staff/invitation management, cancellation, refunds and simulated payouts have
 subsequent evidence in their dedicated records. Account/event administration,
 activation inspection and settings now have [browser evidence](./evidence/administration.md).
-Operational searches/exports and the remaining external acceptance are pending.
+Operational searches/exports now have [separate evidence](./evidence/operational-records.md).
+The remaining external acceptance is pending.
 
 ### M4: tickets, delivery, campaigns and calendars
 

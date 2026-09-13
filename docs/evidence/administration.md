@@ -62,6 +62,7 @@ revocation. Fixtures and private local mailbox records are removed afterward.
 The ignored browser script and results are `.wrangler/web-admin-acceptance.mjs`
 and `.wrangler/web-admin-results.json`.
 
-Broader operational order/payment/audit search, retention holds, backup recovery
-and deployed acceptance remain part of the release work. This evidence covers
-these administration controls and does not establish release completion.
+Operational order/payment/audit search and CSV export now have
+[separate evidence](./operational-records.md). Daily retention cleanup, backup
+recovery and deployed acceptance remain part of the release work. This evidence
+does not establish release completion.

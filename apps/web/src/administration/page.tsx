@@ -23,6 +23,7 @@ import {
 } from "./forms"
 import "../analytics/analytics.css"
 import "./administration.css"
+import { OperationsRecords } from "./operations"
 
 function Records({
   kind,
@@ -205,7 +206,7 @@ function Workspace({
   section,
 }: {
   accountId: string
-  section: "accounts" | "events" | "settings"
+  section: "accounts" | "events" | "settings" | "operations"
 }) {
   const { t } = useAdministrationText(),
     access = useResource("/admin/access", platformAccessResponseSchema, 15000)
@@ -215,7 +216,7 @@ function Workspace({
   const canModerate = access.data.permissions.includes("platform:moderate"),
     canConfigure = access.data.permissions.includes("platform:configure")
   return (
-    <div className="events-page">
+    <div className="events-page administration-page">
       <h1>{t("title")}</h1>
       <nav className="analytics-actions" aria-label={t("title")}>
         {canModerate ? (
@@ -232,6 +233,12 @@ function Workspace({
             >
               {t("events")}
             </a>
+            <a
+              href="/admin/operations"
+              aria-current={section === "operations" ? "page" : undefined}
+            >
+              {t("operations")}
+            </a>
           </>
         ) : null}
         {canConfigure ? (
@@ -246,6 +253,8 @@ function Workspace({
       {(section === "settings" ? canConfigure : canModerate) ? (
         section === "settings" ? (
           <ActivationFeeSettings />
+        ) : section === "operations" ? (
+          <OperationsRecords />
         ) : (
           <Records key={section} kind={section} accountId={accountId} />
         )
@@ -258,7 +267,7 @@ function Workspace({
 export function AdministrationPage({
   section,
 }: {
-  section: "accounts" | "events" | "settings"
+  section: "accounts" | "events" | "settings" | "operations"
 }) {
   const { account } = useAccount()
   return (

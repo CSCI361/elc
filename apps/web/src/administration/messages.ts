@@ -5,6 +5,11 @@ const copy = {
     "Управление платформой",
     "Platform administration",
   ],
+  operations: [
+    "Операциялық жазбалар",
+    "Операционные записи",
+    "Operational records",
+  ],
   accounts: ["Тіркелгілер", "Аккаунты", "Accounts"],
   events: ["Іс-шаралар", "События", "Events"],
   settings: ["Белсендіру алымы", "Сбор за активацию", "Activation fee"],

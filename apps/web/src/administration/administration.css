@@ -1,6 +1,23 @@
 .administration-table table {
   min-width: 32rem;
 }
+.administration-page button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.administration-page > nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.administration-page > nav a[aria-current="page"] {
+  text-decoration: underline;
+  font-weight: 700;
+}
+.administration-page h2:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
+}
 .administration-table th,
 .administration-table td {
   text-align: left;
