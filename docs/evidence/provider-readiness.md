@@ -1,13 +1,14 @@
 # Provider readiness
 
 Reviewed on 2026-09-13 (Asia/Almaty). This records provider documentation, access
-checks, and completed sandbox activation and ticket payments. Refund, signed
-webhook delivery and Cloudflare deployment acceptance remain pending.
+checks, completed sandbox activation and ticket payments, and a confirmed full
+refund for a paid abandoned reservation. See [compensation evidence](./polar-compensation.md).
+Signed webhook delivery and Cloudflare deployment acceptance remain pending.
 
 Polar documents KZT pricing, quantity pricing, discounts, refunds and signed
 webhooks. Its checkout buys one product; a list of products offers a choice.
-The remaining acceptance work includes the representation of a basket containing
-different ticket types. Business eligibility would require a provider decision
+A completed mixed-ticket basket and a late-payment compensation refund now
+establish those sandbox paths. Business eligibility would require a provider decision
 before a production launch, which is outside this academic release. Missing
 credentials are an access limitation, not evidence that Polar cannot support ELC.
 No alternative provider has been selected by this investigation.
@@ -273,5 +274,6 @@ Local Workers startup, migrated D1 queries through Hono, browser authentication,
 free-ticket transactions, and the web/Worker/marketing build now pass. See
 [checkout evidence](./checkout.md) and [web authentication](./web-authentication.md).
 Actual sandbox activation and mixed-ticket transactions now pass as recorded
-above. Signed provider webhook delivery, refunds and deployed runtime acceptance
-remain pending. Node-only mocks cannot establish these results.
+above. A full late-payment refund also passes as recorded in
+[compensation evidence](./polar-compensation.md). Signed provider webhook delivery,
+remaining fulfilled-order refund scenarios and deployed runtime acceptance remain pending. Node-only mocks cannot establish these results.

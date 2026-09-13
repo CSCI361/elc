@@ -92,8 +92,10 @@ mismatches, provider ambiguity, recovery, runtime payload validation, both
 signature encodings, and zero-I/O webhook verification. Scoped lint passes.
 
 These tests use injected transport responses and signed local fixtures. This
-document does not claim a completed provider checkout, real webhook delivery, or
-provider refund. Those sandbox acceptance results must be recorded separately.
+adapter unit does not establish external acceptance by itself. Actual sandbox
+activation and mixed-basket payments are recorded in [provider readiness](./provider-readiness.md),
+and the confirmed late-payment full refund is recorded in
+[compensation evidence](./polar-compensation.md). Signed webhook delivery remains pending.
 Provider expiry does not replace elc's reservation deadline; the API must still
 handle a late successful payment through its compensation workflow.
 

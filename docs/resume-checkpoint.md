@@ -5,6 +5,47 @@ explicitly resumed from this checkpoint. This file preserves the saved state;
 current progress is tracked in the implementation plan. This is a development
 checkpoint, not a completed academic release.
 
+## Current continuation state
+
+Updated on 2026-09-13 after the resumed work. The sections below this update
+preserve the original offline checkpoint and are historical.
+
+The branch remains `feat/academic-release`. Recent commits include `5d90c8f`
+(organizer overview), `677e080` (authorized GA4 cache and dashboard), and
+`f4fc144` (consent and public collection on web and marketing). The commit
+containing this update records the actual Polar compensation probe.
+
+The full suite passes 1,044 tests across 68 files. Full format, lint and type
+checks and web/Worker/Astro builds pass. The web entry is 644.04 kB minified and
+retains the existing size warning. Browser acceptance covers organizer reports,
+delivery recovery, traffic reporting and consent in Kazakh, Russian and English.
+GA4 tests intercept transport responses; actual Google receipt remains pending.
+Migration 0024 is applied to local D1. No new deployment or push was performed.
+
+The pending Polar checkout has now been submitted and fully refunded. Payment
+`49249daf-eefa-4817-8061-4cc493d898d5` is succeeded; order
+`99fc69b5-1a2f-4a25-925c-84aef1b9d522` remains abandoned. Exactly one confirmed
+KZT 9,000 refund exists after repeated reconciliation. Tickets, sold slots, held
+slots and active promo allocations are all zero. Do not submit that checkout
+again. Use `node scripts/verify-polar-sandbox.mjs verify-compensated` to repeat
+these assertions. The saved browser now shows its local return/sign-in page.
+
+Preserve `.wrangler/polar-acceptance.json`, the local D1/R2 state, and ignored
+`apps/api/.dev.vars` with mode 0600. The local web/Worker server is available on
+port 5173. Astro's development daemon is available on `127.0.0.1:4321`.
+The GA4 browser fixtures were removed. The local build copies `.dev.vars` into
+its Worker output, so do not use that build directory for a remote deployment.
+
+Remaining work includes broader platform administration, durable authentication
+mail, retention cleanup and backup/restore, followed by the external and device
+acceptance in the implementation plan. Cloudflare R2 enrollment and a reachable
+webhook endpoint remain unavailable. Google OAuth, Resend and live GA4 are not
+configured. Physical iOS/Android and calendar-client acceptance remain pending.
+The academic release is still in progress; the latest successful units do not
+establish completion of the remaining scope.
+
+## Historical offline checkpoint
+
 ## Start here
 
 Repository: `/Users/yerassyl/dev/elc`, branch `feat/academic-release`.

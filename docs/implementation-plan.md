@@ -15,7 +15,9 @@ reporting failure, date changes, revocation, explicit opt-in, cross-tab
 withdrawal, a real local checkout and all three locales at 390 pixels. See
 [GA4 reporting](./evidence/ga4-reporting.md) and
 [collection evidence](./evidence/ga4-collection.md). Live GA4 configuration and
-Google-side receipt remain pending.
+Google-side receipt remain pending. The saved Polar late-payment test also now
+passes with one confirmed KZT 9,000 refund, zero tickets and no held inventory;
+see [compensation evidence](./evidence/polar-compensation.md).
 
 ## Scope and evidence rules
 
@@ -210,8 +212,8 @@ retry/duplicate handling, reversal and rescan. Private fixture grants stand in
 for the unfinished staff-assignment endpoint. This proves the local free flow;
 external delivery, deployed load and native-device acceptance remain pending.
 Activation and mixed discounted payments now pass against Polar; synthetic D1
-tests cover compensation and queue replay. Actual refunds and signed webhook
-delivery still need acceptance. Polar sandbox access
+tests cover compensation and queue replay. An actual late-payment compensation
+refund now passes; signed webhook delivery and other refund scenarios remain pending. Polar sandbox access
 and KZT product creation are recorded in
 [provider readiness](./evidence/provider-readiness.md); transaction and webhook
 compatibility are not yet proven.
@@ -350,15 +352,16 @@ screens and partial activation code still need the acceptance work recorded in
 ## External checks awaiting access or execution
 
 Cloudflare account grants and Polar sandbox browser access/KZT product creation
-are established. Cloudflare deployment, refund/webhook delivery, Google OAuth, Resend delivery,
+are established. Actual late-payment full compensation is now verified. Cloudflare
+deployment, signed webhook delivery, other refund scenarios, Google OAuth, Resend delivery,
 GA4 reports, supported
 calendar clients and physical iOS/Android tests have no acceptance evidence yet.
 Missing credentials do not establish provider incompatibility. Continue local
 implementation and integration while these checks remain pending.
 
-Recent external constraints: the Mac locked before submitting the prepared
-late-payment test. The user has been asked to unlock it. Both UDP and TCP tunnel
-connections on port 7844 failed; no webhook endpoint was created. Cloudflare R2
+The saved browser session became available and the prepared late-payment test
+completed with a confirmed full refund. Both UDP and TCP tunnel connections on
+port 7844 previously failed; no webhook endpoint was created. Cloudflare R2
 is not enabled in the account. The local server and private sandbox run state
 remain available, and no unrelated remote database was changed.
 

@@ -515,6 +515,60 @@ try {
         ...counts,
       })
     )
+  } else if (command === "verify-compensated") {
+    step = "verify late-paid abandonment and repeat reconciliation"
+    assert.ok(state.orderId && state.paymentId)
+    for (let index = 0; index < 2; index++) {
+      const payment = (
+        await request(`/api/payments/${state.paymentId}/reconcile`, {
+          method: "POST",
+          actor: buyer,
+        })
+      ).data.payment
+      assert.equal(payment.state, "succeeded")
+      assert.equal(payment.refundState, "succeeded")
+    }
+    const order = (
+      await request(`/api/orders/${state.orderId}`, { actor: buyer })
+    ).data.order
+    assert.equal(order.state, "abandoned")
+    const refunds = (
+      await query(
+        `SELECT id,amount_minor,state,provider_refund_id,confirmed_at FROM refunds WHERE payment_attempt_id=${literal(state.paymentId)}`
+      )
+    )[0].results
+    assert.equal(refunds.length, 1)
+    const refund = refunds[0]
+    assert.equal(refund.state, "succeeded")
+    assert.equal(refund.amount_minor, order.totalMinor)
+    assert.ok(refund.provider_refund_id && refund.confirmed_at)
+    const counts = (
+      await query(`SELECT
+      (SELECT count(*) FROM tickets WHERE order_id=${literal(state.orderId)}) AS tickets,
+      (SELECT count(*) FROM inventory WHERE order_id=${literal(state.orderId)}) AS soldSlots,
+      (SELECT count(*) FROM inventory WHERE reservation_id IN (SELECT id FROM reservations WHERE order_id=${literal(state.orderId)})) AS heldSlots,
+      (SELECT count(*) FROM promo_allocations WHERE order_id=${literal(state.orderId)} AND released_at IS NULL) AS activePromo`)
+    )[0].results[0]
+    assert.deepEqual(counts, {
+      tickets: 0,
+      soldSlots: 0,
+      heldSlots: 0,
+      activePromo: 0,
+    })
+    state.verifiedCompensatedOrderId = state.orderId
+    await save()
+    console.log(
+      JSON.stringify({
+        paymentId: state.paymentId,
+        orderState: order.state,
+        refundState: refund.state,
+        refundAmountMinor: refund.amount_minor,
+        refundCount: refunds.length,
+        providerRefundConfirmed: true,
+        repeatedReconciliation: true,
+        ...counts,
+      })
+    )
   } else if (command === "abandon") {
     step = "abandon reserved order"
     const order = (
@@ -566,7 +620,7 @@ try {
     )
   } else
     throw new Error(
-      "Use prepare, activate, checkout, verify-paid, abandon or status"
+      "Use prepare, activate, checkout, verify-paid, verify-compensated, abandon or status"
     )
 } catch (error) {
   console.error(`Sandbox acceptance stopped at ${step}.${diagnostic}`)
