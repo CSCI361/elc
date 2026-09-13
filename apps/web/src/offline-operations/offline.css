@@ -1,0 +1,111 @@
+.offline-page {
+  max-width: 1200px;
+}
+.offline-event-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+.offline-event-list h2 {
+  margin-block: 0 0.5rem;
+  font-size: 1.15rem;
+}
+.offline-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+  gap: 1.5rem;
+  align-items: start;
+  margin-top: 2rem;
+}
+.offline-section {
+  min-width: 0;
+  display: grid;
+  gap: 1rem;
+}
+.offline-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.offline-section-heading h2 {
+  margin: 0;
+}
+.offline-record {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.offline-record h3 {
+  margin-top: 0;
+  font-size: 1.05rem;
+}
+.offline-state {
+  font-weight: 600;
+}
+.offline-facts {
+  display: grid;
+  gap: 0.6rem;
+  margin-block: 1rem;
+}
+.offline-facts > div {
+  display: grid;
+  grid-template-columns: minmax(100px, 0.75fr) minmax(0, 1.25fr);
+  gap: 0.75rem;
+}
+.offline-facts dt {
+  opacity: 0.75;
+}
+.offline-facts dd {
+  margin: 0;
+  white-space: pre-wrap;
+}
+.offline-record summary {
+  cursor: pointer;
+  padding-block: 0.6rem;
+  font-weight: 600;
+}
+.offline-form,
+.offline-form fieldset {
+  display: grid;
+  gap: 0.9rem;
+}
+.offline-form fieldset {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  min-width: 0;
+}
+.offline-form textarea {
+  width: 100%;
+}
+.offline-check {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+.offline-check input {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.offline-form > button {
+  justify-self: start;
+}
+.offline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+.offline-notice {
+  border-inline-start: 3px solid currentColor;
+  padding-inline-start: 1rem;
+  line-height: 1.6;
+}
+@media (max-width: 480px) {
+  .offline-facts > div {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+}

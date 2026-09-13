@@ -1,5 +1,9 @@
 import type { Language } from "../copy"
 const en = {
+  snapshotState: "Status at snapshot download",
+  seat: "Assigned seat",
+  accessibleSeat: "Accessible seat",
+  generalAdmission: "No assigned seat",
   pendingLocal:
     "A provisional admission is pending on this device. Synchronize it before scanning this ticket online.",
   duplicate:
@@ -56,11 +60,15 @@ const en = {
   cancelled: "This event cannot admit attendees.",
   lastSync: "Last sync",
   offlineAttendees:
-    "Cached attendee names. Admission status must be checked by scanning the ticket.",
+    "Names, seats and status at snapshot download. Later changes and local pending scans may differ. Scan the ticket to check admission.",
   noMatches: "No matching attendee in this snapshot.",
 }
 type OfflineCopy = typeof en
 const ru: OfflineCopy = {
+  snapshotState: "Статус при загрузке снимка",
+  seat: "Назначенное место",
+  accessibleSeat: "Доступное место",
+  generalAdmission: "Без назначенного места",
   pendingLocal:
     "На устройстве есть предварительный проход. Синхронизируйте его перед онлайн-сканированием этого билета.",
   duplicate:
@@ -117,10 +125,14 @@ const ru: OfflineCopy = {
   cancelled: "На это мероприятие нельзя допускать посетителей.",
   lastSync: "Последняя отправка",
   offlineAttendees:
-    "Сохранённые имена посетителей. Проверяйте право прохода сканированием билета.",
+    "Имена, места и статусы при загрузке снимка. Поздние изменения и локальные неотправленные сканы могут отличаться. Проверяйте проход сканированием билета.",
   noMatches: "В этом снимке нет подходящего посетителя.",
 }
 const kk: OfflineCopy = {
+  snapshotState: "Көшірме жүктелгендегі күйі",
+  seat: "Тағайындалған орын",
+  accessibleSeat: "Қолжетімді орын",
+  generalAdmission: "Тағайындалған орын жоқ",
   pendingLocal:
     "Бұл құрылғыда алдын ала кіру бар. Билетті онлайн сканерлемес бұрын оны синхрондаңыз.",
   duplicate:
@@ -177,7 +189,7 @@ const kk: OfflineCopy = {
   cancelled: "Бұл іс-шараға келушілерді кіргізуге болмайды.",
   lastSync: "Соңғы жіберу",
   offlineAttendees:
-    "Сақталған келушілер аттары. Кіру құқығын билетті сканерлеп тексеріңіз.",
+    "Көшірме жүктелгендегі аттар, орындар және күйлер. Кейінгі өзгерістер мен жергілікті жіберілмеген скандар өзгеше болуы мүмкін. Кіруді билетті сканерлеп тексеріңіз.",
   noMatches: "Бұл көшірмеде сәйкес келуші жоқ.",
 }
 export const offlineCopies: Record<Language, OfflineCopy> = { en, ru, kk }

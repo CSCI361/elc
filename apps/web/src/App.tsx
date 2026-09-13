@@ -1,3 +1,4 @@
+import { offlineRoute } from "@/offline-operations/policies"
 import { AuthPage } from "@/auth/auth-page"
 import { AccountPage } from "@/auth/account-page"
 import { useAccount } from "@/auth/context"
@@ -20,6 +21,12 @@ import {
   readInvitationToken,
   withoutInvitationSecrets,
 } from "@/access/invitation-memory"
+
+const OfflineOperationsPage = lazy(() =>
+  import("@/offline-operations/page").then((module) => ({
+    default: module.OfflineOperationsPage,
+  }))
+)
 
 const InvitationPage = lazy(() =>
   import("@/access/invitation-page").then((module) => ({
@@ -73,6 +80,15 @@ if (
 
 function AppRoutes() {
   const { messages: t } = useAccount()
+  const offline = offlineRoute(window.location.pathname)
+  if (offline)
+    return (
+      <AppShell>
+        <Suspense fallback={<Loading />}>
+          <OfflineOperationsPage eventId={offline.eventId} />
+        </Suspense>
+      </AppShell>
+    )
   const administrationSection =
     /^\/admin\/(accounts|events|settings|operations)$/.exec(
       window.location.pathname

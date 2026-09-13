@@ -39,6 +39,7 @@ import { listOfflineAdmissions, reviewOfflineAdmission } from "./review"
 import { unresolvedOrderOfflineAdmissionSql } from "./guards"
 import { createOfflineRoutes } from "./index"
 import { setSuspension } from "../administration/service"
+import { listOfflineEvents, readOfflineAccess } from "./access"
 
 describe("offline snapshots, synchronization and review on D1", () => {
   let fixture: Awaited<ReturnType<typeof createAuthTestDatabase>>
@@ -225,6 +226,202 @@ describe("offline snapshots, synchronization and review on D1", () => {
       .bind(...guard.bindings)
       .first<number>("n")
   }
+
+  it.each([
+    ["owner", true, true, true, true],
+    ["lead", false, true, false, true],
+    ["scanner", false, false, false, true],
+    ["admin", true, false, false, false],
+  ] as const)(
+    "separates offline capabilities and discovery for %s",
+    async (
+      actor,
+      manageDevices,
+      reviewAdmissions,
+      openIncident,
+      discoverable
+    ) => {
+      expect(await readOfflineAccess(db, actor, "event")).toEqual({
+        event: { id: "event", title: "Offline demo" },
+        capabilities: { manageDevices, reviewAdmissions, openIncident },
+      })
+      expect((await listOfflineEvents(db, actor)).items).toHaveLength(
+        discoverable ? 1 : 0
+      )
+    }
+  )
+
+  it.each(["buyer", "other", "reverse"])(
+    "does not infer offline access from unrelated authority for %s",
+    async (actor) => {
+      await expect(readOfflineAccess(db, actor, "event")).rejects.toMatchObject(
+        { status: 403 }
+      )
+      expect((await listOfflineEvents(db, actor)).items).toEqual([])
+    }
+  )
+
+  it("paginates reviewer discovery without exposing other events or reusing another actor's cursor", async () => {
+    await db
+      .prepare(`INSERT INTO events (id,organizer_id,title,description,category,venue_name,venue_address,starts_at,ends_at,registration_opens_at,registration_closes_at,capacity,calendar_uid,reporting_id,created_at,updated_at)
+      SELECT 'event-2',organizer_id,'Second',description,category,venue_name,venue_address,starts_at,ends_at,registration_opens_at,registration_closes_at,capacity,'calendar-2','report-2',created_at,updated_at FROM events WHERE id='event'`)
+      .run()
+    await db
+      .prepare(
+        "INSERT INTO event_permissions(event_id,user_id,permission,granted_at) VALUES('event-2','lead','checkin:review',?)"
+      )
+      .bind(now)
+      .run()
+    const first = await listOfflineEvents(db, "lead", { limit: 1 })
+    expect(first.items.map((item) => item.event.id)).toEqual(["event"])
+    expect(first.nextCursor).toBeTruthy()
+    expect(
+      (
+        await listOfflineEvents(db, "lead", {
+          limit: 1,
+          cursor: first.nextCursor,
+        })
+      ).items.map((item) => item.event.id)
+    ).toEqual(["event-2"])
+    await expect(
+      listOfflineEvents(db, "scanner", { cursor: first.nextCursor })
+    ).rejects.toMatchObject({ status: 400 })
+    expect(
+      (await listOfflineEvents(db, "scanner")).items.map(
+        (item) => item.event.id
+      )
+    ).toEqual(["event"])
+  })
+
+  it.each(["unverify", "suspend", "delete"])(
+    "guards empty device/discovery lists after account %s",
+    async (change) => {
+      const beforeReturn = async () => {
+        if (change === "unverify")
+          await db
+            .prepare("UPDATE user SET email_verified=0 WHERE id='other'")
+            .run()
+        else if (change === "delete")
+          await db.prepare("DELETE FROM user WHERE id='other'").run()
+        else
+          await db
+            .prepare(
+              "INSERT INTO profiles(user_id,suspended_at,updated_at) VALUES('other',?,0)"
+            )
+            .bind(now)
+            .run()
+      }
+      await expect(
+        listOfflineDevices(db, "other", "event", {}, { beforeReturn })
+      ).rejects.toMatchObject({ status: 403 })
+      await expect(listOfflineEvents(db, "other")).rejects.toThrow()
+    }
+  )
+
+  it.each(["owner", "admin"])(
+    "guards device details after %s loses management access",
+    async (actor) => {
+      await snapshot()
+      await expect(
+        listOfflineDevices(
+          db,
+          actor,
+          "event",
+          {},
+          {
+            beforeReturn: async () => {
+              if (actor === "owner")
+                await db
+                  .prepare(
+                    "UPDATE events SET organizer_id='other' WHERE id='event'"
+                  )
+                  .run()
+              else
+                await db
+                  .prepare("DELETE FROM platform_grants WHERE user_id='admin'")
+                  .run()
+            },
+          }
+        )
+      ).rejects.toMatchObject({ status: 403 })
+      expect((await listOfflineDevices(db, actor, "event")).items).toEqual([])
+    }
+  )
+
+  it("returns current capability reductions after a permission changes", async () => {
+    await expect(
+      readOfflineAccess(db, "lead", "event", {
+        beforeReturn: async () => {
+          await db
+            .prepare(
+              "UPDATE event_permissions SET revoked_at=? WHERE user_id='lead'"
+            )
+            .bind(now)
+            .run()
+        },
+      })
+    ).rejects.toMatchObject({ status: 403 })
+    expect((await listOfflineEvents(db, "lead")).items).toEqual([])
+  })
+
+  it("guards discovery after a current account is suspended at its final snapshot", async () => {
+    await expect(
+      listOfflineEvents(
+        db,
+        "lead",
+        {},
+        {
+          beforeReturn: async () => {
+            await db
+              .prepare(
+                "INSERT INTO profiles(user_id,suspended_at,updated_at) VALUES('lead',?,0)"
+              )
+              .bind(now)
+              .run()
+          },
+        }
+      )
+    ).rejects.toMatchObject({ status: 403 })
+  })
+
+  it.each([false, true])(
+    "guards admission authority even for an empty page (%s)",
+    async (empty) => {
+      if (!empty) {
+        const { ticketId } = await issue()
+        const { device, manifest } = await snapshot()
+        const unit = await scanUnit(manifest, ticketId)
+        await syncOfflineScans(
+          db,
+          "scanner",
+          "event",
+          batch("scanner", device.id, [unit]),
+          { now: clock }
+        )
+      }
+      await expect(
+        listOfflineAdmissions(
+          db,
+          "lead",
+          "event",
+          {},
+          {
+            beforeReturn: async () => {
+              await db
+                .prepare(
+                  "UPDATE event_permissions SET revoked_at=? WHERE user_id='lead'"
+                )
+                .bind(now)
+                .run()
+            },
+          }
+        )
+      ).rejects.toMatchObject({ status: 403 })
+      await expect(
+        listOfflineAdmissions(db, "admin", "event")
+      ).rejects.toMatchObject({ status: 403 })
+    }
+  )
 
   it.each(["account", "event"] as const)(
     "keeps pre-suspension scans reconcilable but rejects later captures after %s resumes",

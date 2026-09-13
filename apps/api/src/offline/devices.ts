@@ -17,6 +17,7 @@ import {
 } from "../db/transitions"
 import { activeAccountSql } from "../events/store"
 import { staffAuthorizationSql } from "../tickets/scan"
+import type { OfflineReadDependencies } from "./access"
 import {
   deviceDto,
   loadDevice,
@@ -129,7 +130,8 @@ export async function listOfflineDevices(
   db: D1Database,
   actorId: string,
   eventId: string,
-  raw: unknown = {}
+  raw: unknown = {},
+  dependencies: OfflineReadDependencies = {}
 ) {
   await requireActiveAccount(db, actorId)
   const input = parseOffline(offlineListQuerySchema, raw)
@@ -140,17 +142,37 @@ export async function listOfflineDevices(
     .first<number>("valid"))
   const scope = `devices:${eventId}:${actorId}:${canManage}`
   const cursor = offlineCursor(input.cursor, scope)
-  const rows = await db
-    .prepare(
-      `SELECT * FROM offline_devices WHERE event_id = ? AND id > ? ${canManage ? "" : "AND account_id = ?"} ORDER BY id LIMIT ?`
+  await dependencies.beforeReturn?.()
+  const authority = canManage
+    ? manage
+    : { predicate: activeAccountSql, bindings: [actorId] }
+  const [access, rows] = await db.batch([
+    db
+      .prepare(`SELECT (${authority.predicate}) AS valid`)
+      .bind(...authority.bindings),
+    db
+      .prepare(
+        `SELECT * FROM offline_devices WHERE (${authority.predicate}) AND event_id=? AND id>? ${canManage ? "" : "AND account_id=?"} ORDER BY id LIMIT ?`
+      )
+      .bind(
+        ...authority.bindings,
+        eventId,
+        cursor,
+        ...(canManage ? [] : [actorId]),
+        input.limit + 1
+      ),
+  ])
+  if (!(access!.results[0] as { valid: number } | undefined)?.valid)
+    throw new ApiFailure(
+      "FORBIDDEN",
+      403,
+      "Your device-list authorization changed. Refresh this list."
     )
-    .bind(eventId, cursor, ...(canManage ? [] : [actorId]), input.limit + 1)
-    .all<DeviceRow>()
-  const page = rows.results.slice(0, input.limit)
+  const page = (rows!.results as DeviceRow[]).slice(0, input.limit)
   return offlineDevicesSchema.parse({
     items: page.map(deviceDto),
     nextCursor:
-      rows.results.length > input.limit
+      rows!.results.length > input.limit
         ? nextOfflineCursor(scope, page.at(-1)!.id)
         : null,
   })

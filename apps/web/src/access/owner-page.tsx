@@ -1,3 +1,4 @@
+import { OfflineOperationsLink } from "@/offline-operations/navigation"
 import {
   createEventInvitationSchema,
   eventDetailResponseSchema,
@@ -460,6 +461,7 @@ export function EventAccessPage({ eventId }: { eventId: string }) {
           {t(notice)}
         </p>
       ) : null}
+      <OfflineOperationsLink eventId={eventId} />
       <div className="access-grid">
         <StaffPanel
           key={`staff:${version}`}

@@ -10,11 +10,11 @@ import { styles } from "../theme"
 import { offlineController, offlineVault } from "./runtime"
 import { offlineCopies } from "./copy"
 import {
-  OfflineFailure,
-  offlinePolicy,
-  type OfflineStatus,
-  type SnapshotTicket,
-} from "./model"
+  cachedAttendeeDisplay,
+  currentCachedAttendees,
+  type CachedAttendeePage,
+} from "./attendee-display"
+import { OfflineFailure, offlinePolicy, type OfflineStatus } from "./model"
 
 export function OfflineWorkspace({
   onlineAccountId,
@@ -38,7 +38,13 @@ export function OfflineWorkspace({
   const [message, setMessage] = useState<keyof typeof text | null>(null)
   const [busy, setBusy] = useState(false)
   const [query, setQuery] = useState("")
-  const [attendees, setAttendees] = useState<SnapshotTicket[]>([])
+  const [attendeePage, setAttendees] = useState<CachedAttendeePage | null>(null)
+  const attendees = currentCachedAttendees(attendeePage, {
+    accountId: accountId ?? "",
+    eventId: selected?.id ?? "",
+    snapshotId: status?.snapshot?.snapshotId ?? "",
+    query,
+  })
   const cycleBusy = useRef(false)
   const refreshStatus = useCallback(async () => {
     if (!accountId || !selected) return
@@ -190,10 +196,17 @@ export function OfflineWorkspace({
     void offlineController
       .attendees(accountId, selected.id, query)
       .then((items) => {
-        if (active) setAttendees(items)
+        if (active)
+          setAttendees({
+            accountId,
+            eventId: selected.id,
+            snapshotId: status.snapshot!.snapshotId,
+            query,
+            items,
+          })
       })
       .catch(() => {
-        if (active) setAttendees([])
+        if (active) setAttendees(null)
       })
     return () => {
       active = false
@@ -273,7 +286,7 @@ export function OfflineWorkspace({
             onPress={() => {
               setSelected(null)
               setStatus(null)
-              setAttendees([])
+              setAttendees(null)
             }}
           />
           <View style={styles.card}>
@@ -353,11 +366,22 @@ export function OfflineWorkspace({
                 maxLength={100}
                 style={styles.input}
               />
-              {attendees.map((ticket) => (
-                <Text key={ticket.ticketId} style={styles.body}>
-                  {ticket.attendeeName}
-                </Text>
-              ))}
+              {attendees.map((ticket) => {
+                const display = cachedAttendeeDisplay(ticket)
+                return (
+                  <View key={ticket.ticketId} style={styles.card}>
+                    <Text style={styles.heading}>{ticket.attendeeName}</Text>
+                    <Text style={styles.body}>
+                      {text.snapshotState}: {copy[display.state]}
+                    </Text>
+                    <Text style={styles.muted}>
+                      {display.seat
+                        ? `${text.seat}: ${display.seat.section} · ${display.seat.row} · ${display.seat.number}${display.seat.accessible ? ` · ${text.accessibleSeat}` : ""}`
+                        : text.generalAdmission}
+                    </Text>
+                  </View>
+                )
+              })}
               {!attendees.length ? (
                 <Text style={styles.muted}>{text.noMatches}</Text>
               ) : null}

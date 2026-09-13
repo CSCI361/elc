@@ -13,6 +13,7 @@ import {
 } from "../db/transitions"
 import { admissionOutcomeSql } from "../tickets/scan"
 import { nextOfflineCursor, offlineCursor } from "./devices"
+import type { OfflineReadDependencies } from "./access"
 import {
   iso,
   offlineAudit,
@@ -56,23 +57,35 @@ export async function listOfflineAdmissions(
   db: D1Database,
   actorId: string,
   eventId: string,
-  raw: unknown = {}
+  raw: unknown = {},
+  dependencies: OfflineReadDependencies = {}
 ) {
-  await requireOfflineReview(db, actorId, eventId)
+  const authorization = await requireOfflineReview(db, actorId, eventId)
   const input = parseOffline(offlineListQuerySchema, raw)
   const scope = `admissions:${eventId}:${actorId}`
   const cursor = offlineCursor(input.cursor, scope)
-  const rows = await db
-    .prepare(
-      `${reportSelection} WHERE op.event_id = ? AND op.operation_id > ? ORDER BY op.operation_id LIMIT ?`
+  await dependencies.beforeReturn?.()
+  const [access, rows] = await db.batch([
+    db
+      .prepare(`SELECT (${authorization.predicate}) AS valid`)
+      .bind(...authorization.bindings),
+    db
+      .prepare(
+        `${reportSelection} WHERE (${authorization.predicate}) AND op.event_id=? AND op.operation_id>? ORDER BY op.operation_id LIMIT ?`
+      )
+      .bind(...authorization.bindings, eventId, cursor, input.limit + 1),
+  ])
+  if (!(access!.results[0] as { valid: number } | undefined)?.valid)
+    throw new ApiFailure(
+      "FORBIDDEN",
+      403,
+      "Your admission-review authorization changed. Refresh this list."
     )
-    .bind(eventId, cursor, input.limit + 1)
-    .all<ReportRow>()
-  const page = rows.results.slice(0, input.limit)
+  const page = (rows!.results as ReportRow[]).slice(0, input.limit)
   return reportedOfflineAdmissionsSchema.parse({
     items: page.map(reportDto),
     nextCursor:
-      rows.results.length > input.limit
+      rows!.results.length > input.limit
         ? nextOfflineCursor(scope, page.at(-1)!.operation_id)
         : null,
   })

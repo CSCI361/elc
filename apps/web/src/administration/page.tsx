@@ -1,3 +1,4 @@
+import { OfflineOperationsLink } from "@/offline-operations/navigation"
 import { useRef, useState, type FormEvent } from "react"
 import {
   accountAdministrationListSchema,
@@ -132,6 +133,9 @@ function Records({
                     {"email" in item ? <td>{item.email}</td> : null}
                     <td>{t(item.suspendedAt ? "suspended" : "active")}</td>
                     <td>
+                      {kind === "events" ? (
+                        <OfflineOperationsLink eventId={item.id} />
+                      ) : null}
                       <button
                         type="button"
                         className="text-action"

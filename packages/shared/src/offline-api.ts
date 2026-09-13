@@ -9,6 +9,18 @@ import { offlineSnapshotSchema, scanResultSchema } from "./operations"
 
 const digestSchema = z.string().regex(/^[a-f0-9]{64}$/)
 const revisionSchema = z.int().nonnegative()
+export const offlineAccessSchema = z.strictObject({
+  event: z.strictObject({ id: entityIdSchema, title: z.string() }),
+  capabilities: z.strictObject({
+    manageDevices: z.boolean(),
+    reviewAdmissions: z.boolean(),
+    openIncident: z.boolean(),
+  }),
+})
+export const offlineEventsSchema = z.strictObject({
+  items: z.array(offlineAccessSchema).max(100),
+  nextCursor: z.string().nullable(),
+})
 export const registerOfflineDeviceSchema = z.strictObject({
   requestId: requestIdSchema,
   label: z.string().trim().min(1).max(100),

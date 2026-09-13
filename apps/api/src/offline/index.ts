@@ -19,6 +19,7 @@ import {
   searchScannerAttendees,
 } from "./scanner"
 import type { OfflineDependencies } from "./store"
+import { listOfflineEvents, readOfflineAccess } from "./access"
 
 type Environment = { Bindings: Bindings }
 export function createOfflineRoutes(
@@ -32,6 +33,18 @@ export function createOfflineRoutes(
       (await requireSession(context)).user.id)
   const clock = dependencies.now ?? Date.now
   return new Hono<Environment>()
+    .get("/offline/events", async (c) =>
+      c.json(await listOfflineEvents(c.env.DB, await actor(c), c.req.query()))
+    )
+    .get("/events/:eventId/offline/access", async (c) =>
+      c.json(
+        await readOfflineAccess(
+          c.env.DB,
+          await actor(c),
+          c.req.param("eventId")
+        )
+      )
+    )
     .get("/scanner/events", async (c) =>
       c.json(await listScannerEvents(c.env.DB, await actor(c), c.req.query()))
     )

@@ -14,6 +14,7 @@ import { useSupportText } from "@/support/messages"
 import { useHistoryText } from "@/history/messages"
 import { useAnalyticsText } from "@/analytics/messages"
 import { DeliveryNavigation } from "@/delivery/navigation"
+import { OfflineOperationsLink } from "@/offline-operations/navigation"
 import { AnalyticsConsent } from "@/analytics/consent"
 
 export function AppShell({
@@ -75,6 +76,7 @@ export function AppShell({
         </nav>
       </header>
       <nav className="event-navigation" aria-label={eventLabel("discover")}>
+        {status === "active" ? <OfflineOperationsLink /> : null}
         {status === "active" && account ? (
           <DeliveryNavigation key={account.user.id} />
         ) : null}

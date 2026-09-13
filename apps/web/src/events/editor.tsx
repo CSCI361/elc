@@ -1,3 +1,4 @@
+import { OfflineOperationsLink } from "@/offline-operations/navigation"
 import {
   createEventRequestSchema,
   createTicketTypeRequestSchema,
@@ -547,6 +548,9 @@ function ExistingEventEditor({ eventId }: { eventId: string }) {
         </a>
         <h1>{event.title}</h1>
         <RetainedEventActions event={event} />
+        {account?.user.id === event.organizerId ? (
+          <OfflineOperationsLink eventId={event.id} />
+        ) : null}
         <CancellationPanel event={event} onChanged={reload} />
         <a
           className="secondary-link"
@@ -578,6 +582,9 @@ function ExistingEventEditor({ eventId }: { eventId: string }) {
         </div>
         <div className="event-actions">
           <RetainedEventActions event={event} />
+          {account?.user.id === event.organizerId ? (
+            <OfflineOperationsLink eventId={event.id} />
+          ) : null}
           <a
             className="secondary-link"
             href={`/organizer/events/${segment(event.id)}/payouts`}

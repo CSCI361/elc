@@ -1,3 +1,5 @@
+import { useAccount } from "@/auth/context"
+import { OfflineOperationsLink } from "@/offline-operations/navigation"
 import { eventListResponseSchema, type EventApi } from "@elc/shared"
 import {
   ArrowRightIcon,
@@ -23,6 +25,7 @@ export function EventCard({
   organizer?: boolean
 }) {
   const { locale, t } = useEventText()
+  const { account } = useAccount()
   return (
     <article className="event-card">
       {event.images.length ? (
@@ -68,6 +71,9 @@ export function EventCard({
           {t(organizer ? "editEvent" : "details")}
           <ArrowRightIcon size={18} aria-hidden />
         </a>
+        {organizer && account?.user.id === event.organizerId ? (
+          <OfflineOperationsLink eventId={event.id} />
+        ) : null}
         {organizer ? (
           <a
             className="text-action"
