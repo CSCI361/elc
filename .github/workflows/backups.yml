@@ -1,0 +1,44 @@
+name: academic database backup
+
+on:
+  schedule:
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+    inputs:
+      reason:
+        type: choice
+        default: daily
+        options: [daily, pre-migration, pre-demonstration, pre-restore]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: academic-database-backup
+  cancel-in-progress: false
+
+jobs:
+  export:
+    if: vars.ELC_BACKUPS_ENABLED == 'true'
+    environment: academic-backups
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.ELC_BACKUP_API_TOKEN }}
+      ELC_BACKUP_TARGET_JSON: ${{ secrets.ELC_BACKUP_TARGET_JSON }}
+      ELC_BACKUP_DATABASE_ID: ${{ vars.ELC_BACKUP_DATABASE_ID }}
+      BACKUP_REASON: ${{ inputs.reason || 'daily' }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: voidzero-dev/setup-vp@56918a6d0c629c55ae8b88826a7d47fda85769ee # v1.9.0
+        with:
+          node-version: "24.21.0"
+          cache: true
+      - run: vp install --frozen-lockfile
+      - name: Prepare private target configuration
+        run: node --input-type=module -e 'import {writeFile} from "node:fs/promises"; import {join} from "node:path"; if (!process.env.ELC_BACKUP_TARGET_JSON || !process.env.CLOUDFLARE_API_TOKEN || !process.env.ELC_BACKUP_DATABASE_ID) throw new Error("Backup environment is not configured"); await writeFile(join(process.env.RUNNER_TEMP,"elc-backup-target.json"),process.env.ELC_BACKUP_TARGET_JSON,{mode:0o600});'
+      - name: Export and verify private backup
+        run: vp run backup:database --remote --target "$RUNNER_TEMP/elc-backup-target.json" --confirm-database "$ELC_BACKUP_DATABASE_ID" --reason "$BACKUP_REASON"
+      - name: Remove private target configuration
+        if: always()
+        run: rm -f -- "$RUNNER_TEMP/elc-backup-target.json"

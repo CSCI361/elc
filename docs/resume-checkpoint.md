@@ -7,55 +7,80 @@ checkpoint, not a completed academic release.
 
 ## Current continuation state
 
-Updated on 2026-09-13 after the resumed work. The sections below this update
-preserve the original offline checkpoint and are historical.
+Updated on 2026-09-13 after durable authentication mail, retention and backup
+recovery integration. The sections below this update preserve the original
+offline checkpoint and are historical. The academic release remains in progress.
 
-The branch remains `feat/academic-release`. Recent commits include `5d90c8f`
-(organizer overview), `677e080` (authorized GA4 cache and dashboard), `f4fc144`
-(consent/public collection), `66371ee` (actual Polar compensation), and `186836e`
-(audited administration controls). The commit containing this update adds
-operational order/payment/audit searches and audited CSV exports.
+The branch is `feat/academic-release`. Commit `9de6914` adds durable authentication
+mail, retention cleanup and the recovery gate. The commit containing this update
+adds backup/restore tooling, CI checks and a disabled daily backup workflow.
+Earlier completed units include `8ca0c4f` (operational search/CSV), `186836e`
+(administration), `66371ee` (actual Polar compensation), `f4fc144` (analytics
+consent), `677e080` (GA4 reporting) and `5d90c8f` (organizer overview).
 
-The full suite passes 1,073 tests across 70 files. Full format, lint and type
-checks and web/Worker/Astro builds pass. The web entry is 647.22 kB minified and
-retains the existing size warning. Migrations through 0026 are applied to local
-D1; the next migration is 0027. No deployment or push was performed.
+Validation for this integration:
 
-Administration now has account/event search, suspension/resume, activation
-inspection, paid-sales controls and exact fee settings. Browser acceptance passes
-in all three languages, including revocation, stale updates and session removal.
-Snapshot invalidation uses a separate `invalidated_at` column and preserves
-signed manifests. Operational order/payment/audit search and CSV export also
-have real local browser evidence, including retention holds and audited
-downloads. See [administration](./evidence/administration.md) and
-[operational records](./evidence/operational-records.md).
+- `vp test`: 1,111 tests across 72 files pass in 452.65 seconds.
+- `vp run verify:backup`: 34 Node safety tests and one complete migrated-schema
+  D1/R2 restore rehearsal pass. The rehearsal uses production auth cleanup,
+  retention and backlog checks; provider outcomes remain synthetic.
+- Full formatting, lint and type checks pass without warnings across 397 files.
+  Web/Worker/Astro builds pass. The web entry remains 647.22 kB minified with its
+  existing size warning. The build log is `.wrangler/recovery-build.log`.
+- `vp run verify:local-auth` and `vp run verify:local-ticketing` pass against the
+  local Worker. The latter covers PDFs, calendars, scanning and reversal as well
+  as ticket issuance. Both remove their synthetic D1/R2 fixtures.
+- `.wrangler/web-auth-durable-results.json` records passing registration,
+  verification and sign-in in all three languages at 390 pixels, plus browser
+  password reset. There are no page errors. Private fixtures were removed.
 
-Browser acceptance also covers organizer reports, delivery recovery, traffic
-reporting and consent. GA4 tests intercept transport responses; actual Google
-receipt remains pending. Synthetic administration and operational fixtures have
-been removed. No validation process remains running for these completed units.
+Migrations through 0028 are applied to persistent local D1. The next migration is 0029. No deployment or push was performed. No validation process remains running
+for these completed units.
 
-The pending Polar checkout has now been submitted and fully refunded. Payment
-`49249daf-eefa-4817-8061-4cc493d898d5` is succeeded; order
+Authentication callbacks now commit encrypted one-hour intents and durable email
+jobs. Token expiry, consumption, account changes and suspension stop sends.
+Accepted provider IDs are reconciled by lookup. Local mail still uses the private
+mailbox. A separate account-activity record supports retention without changing
+saved-locale behavior. See [authentication evidence](./evidence/durable-authentication-mail.md).
+
+Daily retention is declared at 00:00 UTC. Atomic D1 retirement preserves current
+payment/refund/admission holds and captures R2 deletion jobs before deleting
+records. Jobs retry and repeat sweeps for late writes. The recovery API exposes
+deadlines and holds. See [retention evidence](./evidence/retention.md).
+
+`RECOVERY_MODE=paused` is a deployment setting outside D1. It blocks all API reads
+and writes, skips scheduled work, retries queue batches and restricts support
+Durable Objects. Deployment draining and provider reconciliation remain required.
+The SQL importer restores tables/data before transition triggers and verifies
+foreign keys. The daily GitHub backup workflow remains disabled until its target,
+credentials and environment are configured. See the [runbook](./backup-recovery.md)
+and [local recovery evidence](./evidence/backup-recovery.md).
+
+Next local implementation: event images. SRS section 4.2 requires them, but the
+current event schema has no image records. The SRS gives no image type/count/size
+limits. A read-only design review recommends validated JPEG/PNG uploads, an ordered
+gallery with alt text, immutable shared assets for event duplication, access checks
+through the event API, and reference-aware retention. Reuse the complete image
+validator in `support/attachments/images.ts`; support-specific limits are not SRS
+requirements for event images. Coordinate shared contracts/schema before API/web
+work. Both focused agents have finished and hold no writable files.
+
+The completed Polar compensation fixture must be preserved: payment
+`49249daf-eefa-4817-8061-4cc493d898d5` succeeded; order
 `99fc69b5-1a2f-4a25-925c-84aef1b9d522` remains abandoned. Exactly one confirmed
-KZT 9,000 refund exists after repeated reconciliation. Tickets, sold slots, held
-slots and active promo allocations are all zero. Do not submit that checkout
-again. Use `node scripts/verify-polar-sandbox.mjs verify-compensated` to repeat
-these assertions. The saved browser now shows its local return/sign-in page.
+KZT 9,000 refund exists, with zero tickets or held inventory. Do not submit that
+checkout again. Repeat assertions with
+`node scripts/verify-polar-sandbox.mjs verify-compensated`.
 
-Preserve `.wrangler/polar-acceptance.json`, the local D1/R2 state, and ignored
-`apps/api/.dev.vars` with mode 0600. The local web/Worker server is available on
-port 5173. Astro's development daemon is available on `127.0.0.1:4321`.
-The GA4 browser fixtures were removed. The local build copies `.dev.vars` into
-its Worker output, so do not use that build directory for a remote deployment.
+Preserve `.wrangler/polar-acceptance.json`, local D1/R2 state and ignored
+`apps/api/.dev.vars` with mode 0600. The web/Worker server is available on port
+5173; Astro's development daemon is on `127.0.0.1:4321`. Local builds copy
+`.dev.vars` into Worker output, so never deploy that local build directory.
 
-Remaining work includes durable authentication
-mail, retention cleanup and backup/restore, followed by the external and device
-acceptance in the implementation plan. Cloudflare R2 enrollment and a reachable
-webhook endpoint remain unavailable. Google OAuth, Resend and live GA4 are not
-configured. Physical iOS/Android and calendar-client acceptance remain pending.
-The academic release is still in progress; the latest successful units do not
-establish completion of the remaining scope.
+Remaining acceptance includes Cloudflare R2 enrollment and preview provisioning,
+signed Polar webhooks and other actual refund scenarios, Google OAuth, Resend,
+live GA4, remote retention/recovery and workload testing, supported calendar
+clients and physical iOS/Android devices. None is established by local tests.
 
 ## Historical offline checkpoint
 

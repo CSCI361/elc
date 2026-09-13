@@ -7,17 +7,31 @@ Work resumed at the user's request from checkpoint `3edfe08`. The
 incomplete activation modules, credentials setup and ordered next steps. The
 release remains in progress.
 
-Latest completed units: [platform administration](./evidence/administration.md)
+Latest integration adds [durable authentication mail](./evidence/durable-authentication-mail.md),
+[retention cleanup](./evidence/retention.md) and
+[backup recovery](./evidence/backup-recovery.md). Registration and reset messages
+use encrypted, expiring D1 intents and the existing delivery coordinator.
+Daily cleanup retains current financial/admission holds and commits retryable
+private-file deletion jobs. Recovery pauses API access and background work;
+the disposable SQL/R2 rehearsal runs retention before resumption. Migrations
+through 0028 are applied locally. Commit `9de6914` saves authentication,
+retention and the recovery gate; the following backup tooling commit includes
+this plan update.
+
+Earlier completed units include [platform administration](./evidence/administration.md)
 and [operational searches/CSV export](./evidence/operational-records.md).
 Account/event suspension, activation inspection, paid-sales controls, exact fee
 settings, order/payment/audit search and audited page exports have real local
 browser evidence. Suspension preserves signed offline snapshots and records a
 separate invalidation timestamp. Operational searches expose retention deadlines
-and unresolved-work holds. Migrations through 0026 are applied locally.
+and unresolved-work holds.
 
-The full suite passes 1,073 tests across 70 files. Full formatting, lint and type
+The full suite passes 1,111 tests across 72 files (452.65 seconds). Full formatting, lint and type
 checks and web/Worker/Astro builds pass. The web entry is 647.22 kB minified and
-retains the existing size warning. Administration and operational-record browser
+retains the existing size warning. Backup verification also passes 34 safety
+tests and one disposable restore rehearsal. Local Worker authentication and
+complete ticketing regressions pass. The new durable-auth browser flow passes
+in all three languages, including password reset. Administration and operational-record browser
 checks pass in all three languages at 390 pixels, including stale updates,
 session removal, revoked access and CSV downloads.
 
@@ -29,9 +43,11 @@ Google-side receipt remain pending. The saved Polar late-payment test passes
 with one confirmed KZT 9,000 refund, zero tickets and no held inventory; see
 [compensation evidence](./evidence/polar-compensation.md).
 
-Durable authentication mail, daily retention deletion and backup/restore remain
-local implementation work. The external and device acceptance below remains
-required before release completion.
+The remaining local implementation audit includes event-image upload/storage,
+which the architecture requires but the current event schema does not represent.
+The daily backup workflow is checked in but disabled until its reviewed target,
+credentials and environment are configured. External and device acceptance below
+remains required before release completion.
 
 ## Scope and evidence rules
 
@@ -135,7 +151,7 @@ completed since resuming.
 | M4  | Tickets, delivery, campaigns and calendar exports                 | M2, M3                                  | API + web implementation                   | In progress |
 | M5  | Expo online/offline check-in and reconciliation                   | M1, M2, M4                              | Mobile implementation                      | In progress |
 | M6  | Support, attachments, live updates, analytics and history         | M2, M3                                  | API + web implementation                   | In progress |
-| M7  | Marketing, localization, accessibility and operational safeguards | M1; integrated workflows for acceptance | Integration                                | Pending     |
+| M7  | Marketing, localization, accessibility and operational safeguards | M1; integrated workflows for acceptance | Integration                                | In progress |
 | M8  | Deployed integration, physical devices and release rehearsal      | M0-M7                                   | Integration + user-provided access/devices | Pending     |
 
 Owners above describe work areas, not an invented assignment to human team
@@ -288,7 +304,8 @@ controls and external delivery remain pending. Background notification processin
 and operator recovery now have [coordinator](./evidence/queued-email.md),
 [fanout](./evidence/notification-fanout.md), [source](./evidence/notification-sources.md)
 and [web recovery](./evidence/web-delivery.md) evidence. Account email localization
-and durable account delivery are being completed separately.
+and durable delivery now have [D1/R2 and browser evidence](./evidence/durable-authentication-mail.md).
+Actual Resend acceptance remains pending.
 
 ### M5: mobile and offline
 
@@ -339,6 +356,8 @@ device acceptance remain separate required checks.
       with physical models, OS/build IDs and minimum-version simulator coverage.
 - [ ] Isolated local/preview/demo bindings, reviewed deployment configuration,
       server-only secrets, protected assets, HTTPS and redacted operational logs.
+- [ ] Event images use validated immutable object keys, authorized organizer
+      changes, public event delivery and deletion under the event's retention policy.
 - [ ] Daily retryable retention cleanup, 180-day history, documented expiry/holds,
       30-day logs/outbox payloads/SQL exports and private backup access.
 - [ ] D1 recovery window recorded; pre-migration exports/bookmarks; disposable
@@ -349,6 +368,13 @@ device acceptance remain separate required checks.
 - [ ] Every acceptance item links to source/tests/run evidence; no required pending
       checks remain before claiming release completion.
 
+Local operational evidence now covers encrypted authentication intents,
+daily cleanup declarations, current retention holds, atomic aggregate deletion,
+retryable private-file cleanup and a full migrated-schema SQL/R2 restore.
+See [retention](./evidence/retention.md), [recovery](./evidence/backup-recovery.md)
+and the [runbook](./backup-recovery.md). Deployed pause/drain/resume, real provider
+reconciliation, IAM, lifecycle expiry and scheduled exports remain open.
+
 ## Evidence log
 
 The offline checkpoint additionally passes 219 tests across 19 files, full
@@ -356,15 +382,19 @@ format/lint/type checks, and the web/Worker/marketing build. Its newer event
 screens and partial activation code still need the acceptance work recorded in
 [resume checkpoint](./resume-checkpoint.md).
 
-| Date       | Evidence                                                    | Result                                                                                                                      |
-| ---------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| 2026-09-13 | Repository inspection at `762c289`, dependency installation | Clean baseline; install passes; starter validation issues recorded above                                                    |
-| 2026-09-13 | [Foundation validation](./evidence/foundation.md)           | 49 tests pass; local Worker/D1 authentication and browser/API integration pass                                              |
-| 2026-09-13 | [Provider readiness](./evidence/provider-readiness.md)      | Cloudflare access available; actual Polar compatibility proof remains pending                                               |
-| 2026-09-13 | [Events and campaigns](./evidence/events.md)                | Integrated event/campaign routes and D1 mutation/race tests; product screens and delivery pending                           |
-| 2026-09-13 | [Checkout and ticketing](./evidence/checkout.md)            | Atomic local D1 tests and complete free ticketing HTTP flow through workerd pass; paid/provider/deployed acceptance pending |
-| 2026-09-13 | [Web authentication](./evidence/web-authentication.md)      | Real browser account flows, preferences, reset and session revocation pass; external OAuth/email pending                    |
-| 2026-09-13 | Integrated automated suite                                  | 106 tests pass; `vp check` and the complete web/Worker/marketing build pass                                                 |
+| Date       | Evidence                                                                 | Result                                                                                                                      |
+| ---------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-13 | Repository inspection at `762c289`, dependency installation              | Clean baseline; install passes; starter validation issues recorded above                                                    |
+| 2026-09-13 | [Foundation validation](./evidence/foundation.md)                        | 49 tests pass; local Worker/D1 authentication and browser/API integration pass                                              |
+| 2026-09-13 | [Provider readiness](./evidence/provider-readiness.md)                   | Cloudflare access available; actual Polar compatibility proof remains pending                                               |
+| 2026-09-13 | [Events and campaigns](./evidence/events.md)                             | Integrated event/campaign routes and D1 mutation/race tests; product screens and delivery pending                           |
+| 2026-09-13 | [Checkout and ticketing](./evidence/checkout.md)                         | Atomic local D1 tests and complete free ticketing HTTP flow through workerd pass; paid/provider/deployed acceptance pending |
+| 2026-09-13 | [Web authentication](./evidence/web-authentication.md)                   | Real browser account flows, preferences, reset and session revocation pass; external OAuth/email pending                    |
+| 2026-09-13 | Integrated automated suite                                               | 106 tests pass; `vp check` and the complete web/Worker/marketing build pass                                                 |
+| 2026-09-13 | [Durable authentication mail](./evidence/durable-authentication-mail.md) | Encrypted one-hour intents, eleven D1/R2 cases and real browser flows in three languages pass                               |
+| 2026-09-13 | [Retention cleanup](./evidence/retention.md)                             | 21 D1/R2 cases cover holds, atomic deletion, retries, account expiry and restore backlog                                    |
+| 2026-09-13 | [Backup recovery](./evidence/backup-recovery.md)                         | 34 safety tests and a disposable full-schema restore with production cleanup pass; remote acceptance pending                |
+| 2026-09-13 | Current integrated validation                                            | 1,111 tests in 72 files, full checks/builds, local Worker authentication and ticketing regressions pass                     |
 
 ## External checks awaiting access or execution
 
