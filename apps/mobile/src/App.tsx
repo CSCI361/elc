@@ -28,8 +28,12 @@ import { SignIn } from "./sign-in"
 import { useClock } from "./use-clock"
 import { Action, Notice } from "./ui"
 import { colors, styles } from "./theme"
+import { OfflineWorkspace } from "./offline/workspace"
+import { offlineCopies } from "./offline/copy"
+import { offlineVault } from "./offline/runtime"
+import { useOfflineLifecycle } from "./offline/lifecycle"
 
-type Tab = "events" | "scan" | "attendees" | "settings"
+type Tab = "events" | "scan" | "attendees" | "settings" | "offline"
 function EventAdmin({
   sessionState,
 }: {
@@ -134,6 +138,7 @@ function EventAdmin({
     setSelected(null)
     setTab("settings")
     try {
+      await offlineVault.signOut()
       const result = await authClient.signOut()
       if (result.error) throw new Error("Sign out failed")
       setEvents([])
@@ -182,7 +187,22 @@ function EventAdmin({
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.content}
         >
-          {isPending ? (
+          <Action
+            label={
+              tab === "offline"
+                ? offlineCopies[language].close
+                : offlineCopies[language].workspace
+            }
+            secondary
+            onPress={() => setTab(tab === "offline" ? "events" : "offline")}
+          />
+          {tab === "offline" ? (
+            <OfflineWorkspace
+              onlineAccountId={verified ? (accountId ?? null) : null}
+              language={language}
+              copy={copy}
+            />
+          ) : isPending ? (
             <>
               <ActivityIndicator color={colors.green} />
               <Text style={styles.body}>{copy.sessionLoading}</Text>
@@ -327,6 +347,8 @@ function EventAdmin({
                     <ScanScreen
                       key={selected.id}
                       event={selected}
+                      accountId={accountId!}
+                      language={language}
                       copy={copy}
                       onResult={() => {
                         void refreshEvent()
@@ -380,7 +402,7 @@ function EventAdmin({
                     </Text>
                     <Text style={styles.muted}>{configuration.apiOrigin}</Text>
                   </View>
-                  <Notice>{copy.offlinePending}</Notice>
+                  <Notice>{offlineCopies[language].retention}</Notice>
                 </>
               ) : null}
             </>
@@ -426,6 +448,7 @@ function EventAdmin({
 }
 export default function App() {
   const sessionState = authClient.useSession()
+  useOfflineLifecycle()
   return (
     <SafeAreaProvider>
       <EventAdmin

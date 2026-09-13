@@ -2,6 +2,7 @@ packages:
   - apps/*
   - packages/*
 allowBuilds:
+  "@journeyapps/sqlcipher": true
   esbuild: true
   workerd: true
 minimumReleaseAgeExclude:

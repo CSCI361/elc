@@ -79,6 +79,7 @@ const config: ExpoConfig = {
       },
     ],
     "expo-secure-store",
+    ["expo-sqlite", { useSQLCipher: true }],
     [
       "expo-build-properties",
       {
