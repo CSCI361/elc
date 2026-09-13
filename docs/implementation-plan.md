@@ -7,7 +7,15 @@ Work resumed at the user's request from checkpoint `3edfe08`. The
 incomplete activation modules, credentials setup and ordered next steps. The
 release remains in progress.
 
-Latest integration adds [organizer campaign management and QR distribution](./evidence/campaigns-web.md)
+The current integration adds [organizer attendee, order and check-in records](./evidence/organizer-records-web.md)
+and a [retained event records API](./evidence/organizer-records-api.md). The
+workspace supports localized search, pagination and linked records, preserves
+historical ticket and refund snapshots, and separates reported offline admission
+from canonical check-ins. Its browser flow passes in all three locales at phone
+width, including cancellation, reversal and permission revocation. Full checks
+pass across 430 files and all builds pass. Full regression passes 1,264 tests across 77 files in 574.34 seconds.
+
+Commit `a109124` adds [organizer campaign management and QR distribution](./evidence/campaigns-web.md)
 and [attendee campaign resolution](./evidence/campaigns-api.md). Campaign creation
 preserves disabled defaults and exact event windows; managers review before
 explicitly enabling. Downloaded QR images contain only validated event links and
@@ -56,11 +64,10 @@ with one confirmed KZT 9,000 refund, zero tickets and no held inventory; see
 
 The local image browser flow passes uploads, gallery edits, a lost-response
 retry, all three localized phone previews, public covers and access revocation.
-The next missing local workflows are event-scoped organizer registration/order
-views (SRS 4.4 and 4.16) and editable organizer contact/payout profiles (SRS 4.1).
-The existing history API provides audit entries, and ticket reads permit managers
-with known IDs, but organizers have no event-wide order or attendee workspace.
-Keep purchaser-only order access distinct from the new authorized organizer view.
+Event-scoped organizer registration/order views (SRS 4.4 and 4.16) are integrated
+and verified by the full regression. Editable organizer contact/payout profiles
+(SRS 4.1) remain next. The new workspace keeps purchaser order access separate
+from authorized organizer records.
 
 The daily backup workflow is checked in but disabled until its reviewed target,
 credentials and environment are configured. External and device acceptance below
@@ -413,7 +420,8 @@ screens and partial activation code still need the acceptance work recorded in
 | 2026-09-13 | [Durable authentication mail](./evidence/durable-authentication-mail.md) | Encrypted one-hour intents, eleven D1/R2 cases and real browser flows in three languages pass                               |
 | 2026-09-13 | [Retention cleanup](./evidence/retention.md)                             | 21 D1/R2 cases cover holds, atomic deletion, retries, account expiry and restore backlog                                    |
 | 2026-09-13 | [Backup recovery](./evidence/backup-recovery.md)                         | 34 safety tests and a disposable full-schema restore with production cleanup pass; remote acceptance pending                |
-| 2026-09-13 | Current integrated validation                                            | 1,111 tests in 72 files, full checks/builds, local Worker authentication and ticketing regressions pass                     |
+| 2026-09-13 | Campaign integration                                                     | 1,207 tests in 75 files, full checks/builds and campaign QR browser acceptance pass                                         |
+| 2026-09-13 | [Organizer records](./evidence/organizer-records-web.md)                 | Local browser, 57 focused cases, full checks/builds and all 1,264 regression tests pass                                     |
 
 ## External checks awaiting access or execution
 

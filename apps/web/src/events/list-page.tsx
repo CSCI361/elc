@@ -68,6 +68,14 @@ export function EventCard({
           {t(organizer ? "editEvent" : "details")}
           <ArrowRightIcon size={18} aria-hidden />
         </a>
+        {organizer ? (
+          <a
+            className="text-action"
+            href={`/organizer/events/${segment(event.id)}/registrations`}
+          >
+            {t("registrations")}
+          </a>
+        ) : null}
       </div>
     </article>
   )

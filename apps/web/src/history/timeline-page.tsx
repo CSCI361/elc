@@ -117,6 +117,12 @@ function CurrentTimeline({
           </a>
         ) : null}
       </div>
+      <a
+        className="text-action"
+        href={`/organizer/events/${segment(eventId)}/registrations`}
+      >
+        {et("registrations")}
+      </a>
       <p>{t("periodHint")}</p>
       <p className="history-period">
         {data.period.start} – {data.period.end} · {data.timeZone}

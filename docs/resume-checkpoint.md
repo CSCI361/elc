@@ -7,13 +7,13 @@ checkpoint, not a completed academic release.
 
 ## Current continuation state
 
-Updated on 2026-09-13 after campaign integration. The historical sections below
+Updated on 2026-09-13 after campaign commit `a109124`. The historical sections below
 preserve the original offline checkpoint. The academic release remains in progress.
 
 The branch is `feat/academic-release`. Committed baselines include `9de6914`
 (durable authentication mail and retention), `cd28130` (backup recovery) and
-`8360634` (event image galleries and organizer previews). The current campaign
-unit adds an organizer workspace, local Campaign QR generation/downloads and a
+`8360634` (event image galleries and organizer previews). Campaign commit `a109124`
+adds an organizer workspace, local Campaign QR generation/downloads and a
 server endpoint for attendee offer resolution. No migration is needed; persistent
 local D1 remains migrated through 0029.
 
@@ -46,12 +46,26 @@ passed 1,137 tests, the local Worker ticketing regression and the backup restore
 rehearsal. The backup workflow remains disabled until reviewed configuration is
 available. Preserve the recovery gate and durable authentication/retention design.
 
-Next: commit this validated campaign unit, then implement
-event-scoped organizer registration/order views. Existing history is audit-only;
-purchaser order reads are account-scoped, and manager ticket reads require known
-IDs. Editable organizer contact/payout profiles also remain. Both campaign agents
-have returned source ownership; the read-only review has identified a minimal event-scoped records API and
-localized workspace. No deployment or push was performed.
+Current work adds the event-scoped organizer registrations workspace and records
+API. The full regression passes
+1,264 tests across 77 files in 574.34 seconds (`.wrangler/records-tests.log`). The API's 33 current cases and
+24 web policy cases are verified. The local browser flow passes 23 free-ticket
+records, cancellation, check-in reversal, search/drilldown, 20/3 pagination,
+KK/RU/EN phone layouts, history-only access and revoked/failed reads. Fixtures
+are cleaned; see `.wrangler/web-organizer-records-results.json`. Full checks pass
+430 files and all builds pass, with a 664.24 kB web entry and the existing size
+warning. Implementation needs no migration beyond 0029.
+
+The commit containing this checkpoint saves the validated organizer records unit.
+Next: add
+editable organizer contact/payout profiles. The read-only review recommends a
+separate `organizer_profiles` table with user deletion cascading, four fields
+validated like the activation profile, and an independent revision. Creating an
+existing `profiles` row would incorrectly mark a locale as saved. Use private
+GET/PATCH `/me/organizer-profile`, actor-derived identity, atomic revision/receipt/
+audit writes and stable retry acknowledgements. Profile edits must leave every
+event activation/checklist/attempt and its eligibility unchanged; any activation
+prefill should be an explicit user action. No profile code has been written yet. No deployment or push was performed.
 
 The completed Polar compensation fixture must be preserved: payment
 `49249daf-eefa-4817-8061-4cc493d898d5` succeeded; order

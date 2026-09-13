@@ -1,0 +1,119 @@
+.registrations-page {
+  display: grid;
+  gap: 1.2rem;
+  min-width: 0;
+}
+.registrations-page h1:focus {
+  outline: none;
+}
+.records-title {
+  margin: 0;
+}
+.records-tabs,
+.records-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.1rem;
+}
+.records-tabs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  border-bottom: 3px solid transparent;
+  padding: 0.5rem 0.8rem;
+}
+.records-tabs a[aria-current="page"] {
+  border-color: var(--primary);
+  font-weight: 650;
+}
+.records-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+.records-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.records-card h2 {
+  font-size: 1.2rem;
+  margin-block: 0 0.6rem;
+}
+.records-card h3 {
+  font-size: 1rem;
+  margin-block: 1.1rem 0.5rem;
+}
+.records-state {
+  font-weight: 600;
+}
+.records-facts {
+  display: grid;
+  gap: 0.6rem;
+  margin-block: 1rem;
+}
+.records-facts > div {
+  display: grid;
+  grid-template-columns: minmax(7rem, 1fr) minmax(0, 1.6fr);
+  gap: 0.3rem 0.8rem;
+}
+.records-facts dt {
+  color: var(--muted-foreground);
+}
+.records-facts dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.records-facts a {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.records-filters {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.records-filters input {
+  min-width: 0;
+  width: 100%;
+}
+.records-summary p,
+.records-summary .history-retention p {
+  margin-block: 0.55rem;
+}
+.records-notice {
+  border-inline-start: 3px solid var(--primary);
+  padding-inline-start: 0.7rem;
+}
+.registrations-page .text-action {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  white-space: normal;
+  text-align: start;
+}
+.registrations-page .records-links button {
+  min-height: 2.75rem;
+  white-space: normal;
+  height: auto;
+}
+@media (max-width: 760px) {
+  .records-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .records-facts > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .records-facts dd {
+    margin-bottom: 0.3rem;
+  }
+  .records-tabs {
+    gap: 0.3rem;
+  }
+  .records-tabs a {
+    padding-inline: 0.5rem;
+  }
+}

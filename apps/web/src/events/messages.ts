@@ -152,6 +152,11 @@ const text = {
   ],
   attendee: ["Қатысушының аты", "Имя участника", "Attendee name"],
   campaigns: ["Науқандар", "Кампании", "Campaigns"],
+  registrations: [
+    "Қатысушылар мен тапсырыстар",
+    "Участники и заказы",
+    "Attendees and orders",
+  ],
   campaign: ["Промокод", "Промокод", "Campaign code"],
   campaignHint: [
     "Жеңілдік броньдау кезінде есептеледі.",

@@ -58,7 +58,9 @@ export function isEventPath(path: string) {
     path === "/events" ||
     path === "/orders" ||
     /^\/(events|orders|tickets|payments)\/[^/]+$/.test(path) ||
-    /^\/organizer\/events(?:\/[^/]+(?:\/(access|campaigns))?)?$/.test(path)
+    /^\/organizer\/events(?:\/[^/]+(?:\/(access|campaigns|registrations))?)?$/.test(
+      path
+    )
   )
 }
 export function safePaymentUrl(

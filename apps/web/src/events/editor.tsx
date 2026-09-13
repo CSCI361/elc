@@ -477,6 +477,12 @@ function RetainedEventActions({ event }: { event: EventApi }) {
     <>
       <a
         className="secondary-link"
+        href={`/organizer/events/${segment(event.id)}/registrations`}
+      >
+        {t("registrations")}
+      </a>
+      <a
+        className="secondary-link"
         href={`/organizer/events/${segment(event.id)}/campaigns`}
       >
         {t("campaigns")}

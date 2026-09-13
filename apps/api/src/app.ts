@@ -25,6 +25,7 @@ import { payoutRoutes } from "./payments/payout-routes"
 import { offlineRoutes } from "./offline"
 import { reportingRoutes } from "./reporting"
 import { historyRoutes } from "./history"
+import { organizerRecordsRoutes } from "./organizer-records"
 import { deliveryRoutes } from "./delivery/routes"
 import { administrationRoutes } from "./administration"
 import { recoveryPaused } from "./recovery/gate"
@@ -148,6 +149,7 @@ export const app = new Hono<{
   .route("/api", payoutRoutes)
   .route("/api", offlineRoutes)
   .route("/api", reportingRoutes)
+  .route("/api", organizerRecordsRoutes)
   .route("/api", historyRoutes)
   .route("/api", deliveryRoutes)
   .route("/api", administrationRoutes)

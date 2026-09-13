@@ -1,6 +1,6 @@
 import { organizerHistoryResponseSchema } from "@elc/shared"
 import { Button } from "@/components/ui/button"
-import { useResource } from "@/events/api"
+import { segment, useResource } from "@/events/api"
 import { useEventText } from "@/events/messages"
 import { Field, Loading, SelectField } from "@/events/ui"
 import { useHistoryText } from "./messages"
@@ -52,6 +52,12 @@ function CurrentList({ query }: { query: string }) {
             <p>{event.venueName}</p>
             <Retention value={retention} timeZone={data.timeZone} />
             <div className="history-links">
+              <a
+                className="text-action"
+                href={`/organizer/events/${segment(event.id)}/registrations`}
+              >
+                {et("registrations")}
+              </a>
               <a className="text-action" href={eventHistoryHref(event.id)}>
                 {t("timeline")}
               </a>
