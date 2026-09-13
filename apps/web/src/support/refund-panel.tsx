@@ -8,6 +8,8 @@ import {
 } from "@elc/shared"
 import { useState, type FormEvent } from "react"
 import { Button } from "@/components/ui/button"
+import { useAccount } from "@/auth/context"
+import { RefundRecoveryPanel } from "./refund-recovery-panel"
 import { AuthNotice } from "@/auth/notice"
 import { EventApiError, segment, useCommand, useResource } from "@/events/api"
 import { useEventText } from "@/events/messages"
@@ -29,6 +31,7 @@ export function RefundPanel({
   supportCase?: SupportCase
   onChanged?: () => void
 }) {
+  const { account } = useAccount()
   const { locale, t } = useSupportText(),
     { t: eventText } = useEventText()
   const resource = useResource(
@@ -129,6 +132,17 @@ export function RefundPanel({
             <p>{t("reconciliation")}</p>
           ) : null}
         </>
+      ) : null}
+      {view.canApprove && view.refund ? (
+        <RefundRecoveryPanel
+          key={`${view.refund.id}:${account?.user.id}`}
+          refundId={view.refund.id}
+          onQueued={() => {
+            setNotice("recoveryQueued")
+            resource.reload()
+            onChanged?.()
+          }}
+        />
       ) : null}
       {view.payoutHeld ? (
         <p className="support-notice">{t("payoutHeld")}</p>

@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "types": ["react", "node", "@cloudflare/workers-types"],
+    "allowSyntheticDefaultImports": true
+  },
+  "include": [
+    "index.ts",
+    "app.config.ts",
+    "src",
+    "../api/src/exports/assets.d.ts"
+  ]
+}

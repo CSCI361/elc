@@ -10,6 +10,7 @@ import { lazy, Suspense } from "react"
 import { Loading } from "@/events/ui"
 import { SupportRoute } from "@/support"
 import { isSupportPath } from "@/support/policies"
+import { payoutEventId } from "@/payouts/policies"
 import {
   createInvitationMemory,
   readInvitationToken,
@@ -20,6 +21,9 @@ const InvitationPage = lazy(() =>
   import("@/access/invitation-page").then((module) => ({
     default: module.InvitationPage,
   }))
+)
+const PayoutPage = lazy(() =>
+  import("@/payouts/page").then((module) => ({ default: module.PayoutPage }))
 )
 
 const initialURL = new URL(window.location.href)
@@ -47,6 +51,15 @@ if (
 
 function AppRoutes() {
   const { messages: t } = useAccount()
+  const payoutId = payoutEventId(window.location.pathname)
+  if (payoutId)
+    return (
+      <AppShell>
+        <Suspense fallback={<Loading />}>
+          <PayoutPage eventId={payoutId} />
+        </Suspense>
+      </AppShell>
+    )
   if (isSupportPath(window.location.pathname))
     return (
       <AppShell>

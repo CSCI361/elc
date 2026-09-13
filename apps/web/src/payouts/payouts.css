@@ -1,0 +1,121 @@
+.payout-summary {
+  width: 100%;
+  border-collapse: collapse;
+}
+.payout-summary caption {
+  text-align: left;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+.payout-summary th,
+.payout-summary td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.85rem 0.25rem;
+  vertical-align: top;
+}
+.payout-summary th {
+  text-align: left;
+  font-weight: 500;
+}
+.payout-summary td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.payout-summary tr:last-child {
+  color: var(--primary);
+}
+.payout-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(15rem, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+.payout-info p {
+  line-height: 1.7;
+}
+.payout-records {
+  display: grid;
+  gap: 1rem;
+  margin-block: 1rem;
+}
+.payout-record {
+  min-width: 0;
+}
+.payout-record h3 {
+  margin: 0;
+}
+.payout-record summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding-block: 0.75rem;
+  font-weight: 600;
+}
+.payout-record .order-totals {
+  max-width: 34rem;
+}
+.payout-reference {
+  font-size: 0.8rem;
+  font-family: monospace;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+.payout-table-region {
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+}
+.payout-table-region:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+.payout-items {
+  width: 100%;
+  min-width: 780px;
+  border-collapse: collapse;
+}
+.payout-items th,
+.payout-items td {
+  padding: 0.85rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.payout-items th {
+  text-align: left;
+  font-weight: 600;
+}
+.payout-items td {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.payout-items th[scope="row"] {
+  font-family: monospace;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+  min-width: 12rem;
+  font-weight: 400;
+}
+.payout-items th:last-child,
+.payout-items td:last-child {
+  text-align: left;
+}
+.payout-records + .event-pagination {
+  margin-bottom: 2rem;
+}
+@media (max-width: 700px) {
+  .payout-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .payout-summary th {
+    font-size: 0.9rem;
+  }
+  .payout-summary td {
+    font-size: 0.9rem;
+  }
+  .payout-record .event-panel {
+    padding: 1rem;
+  }
+}

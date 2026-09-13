@@ -173,14 +173,80 @@ const copy = {
     "Refund confirmed",
   ],
   refund_failed: [
-    "Қайтаруды тексеру қажет",
-    "Возврат требует проверки",
-    "Refund needs review",
+    "Қайтару сәтсіз аяқталды. Тексеру қажет.",
+    "Возврат не выполнен. Нужна проверка.",
+    "Refund failed. Review is required.",
   ],
   reconciliation: [
     "Төлем провайдерінің жауабы тексерілуде. Қайта қайтаруды бастамаңыз.",
     "Ответ платежного провайдера проверяется. Не создавайте повторный возврат.",
     "The payment provider response is being checked. Do not start another refund.",
+  ],
+  recoveryTitle: [
+    "Қайтаруды қалпына келтіру",
+    "Восстановление возврата",
+    "Refund recovery",
+  ],
+  recoveryAuthority: [
+    "Қалпына келтіру үшін іс-шара иесінің немесе қайтаруға жауапты қызметкердің құқығы қажет. Бұл құқық қолдау хат алмасуына қолжетімділіктен бөлек.",
+    "Восстановление доступно владельцу события или сотруднику с правом возврата. Это право не зависит от доступа к переписке поддержки.",
+    "Recovery requires event ownership or refund permission. This permission is separate from support conversation access.",
+  ],
+  recoveryDenied: [
+    "Қалпына келтіру қолжетімсіз. Ағымдағы қайтару құқығы қажет.",
+    "Восстановление недоступно. Нужны действующие права на возврат.",
+    "Recovery is unavailable. Current refund permission is required.",
+  ],
+  recoveryPending: [
+    "Қалпына келтіру кезекте немесе өңделуде.",
+    "Восстановление в очереди или обрабатывается.",
+    "Recovery is queued or processing.",
+  ],
+  recoveryQueued: [
+    "Қалпына келтіру сұрауы кезекке қойылды. Бұл қайтаруды растамайды. Ағымдағы күйді төменнен тексеріңіз.",
+    "Запрос восстановления поставлен в очередь. Это не подтверждение возврата. Проверьте текущий статус ниже.",
+    "The recovery request was queued. This does not confirm a refund. Check its current status below.",
+  ],
+  recoveryUpdatedAt: ["Соңғы өзгеріс", "Последнее изменение", "Last updated"],
+  recoveryBlocks: [
+    "Қалпына келтіру кезінде кіруге және ұйымдастырушы төлеміне қойылған шектеулер сақталады.",
+    "Во время восстановления ограничения на проход и выплату организатору сохраняются.",
+    "Existing admission and organizer payout blocks remain in place while recovery runs.",
+  ],
+  recoveryConflict: [
+    "Қайтару күйі өзгерді немесе басқа қалпына келтіру сұрауы кезекте тұр. Күйді жаңартыңыз.",
+    "Статус возврата изменился или другой запрос восстановления уже в очереди. Обновите статус.",
+    "The refund changed or another recovery is already queued. Refresh its status.",
+  ],
+  recoveryRequestUnconfirmed: [
+    "Қалпына келтіру сұрауын растау мүмкін болмады. Келесі әрекетті таңдамас бұрын оның күйін жаңартыңыз.",
+    "Не удалось подтвердить запрос восстановления. Обновите его статус перед следующим действием.",
+    "The recovery request could not be confirmed. Refresh its status before choosing another action.",
+  ],
+  recoveryReconcile: [
+    "Провайдердегі күйді тексеру",
+    "Проверить статус у провайдера",
+    "Reconcile provider status",
+  ],
+  recoveryReconcileHint: [
+    "Провайдердегі күйді тексереді. Жаңа қайтару жасамайды.",
+    "Проверяет статус у провайдера, не создавая новый возврат.",
+    "Checks the provider's status without creating another refund.",
+  ],
+  recoveryRetry: [
+    "Қабылданбаған сұрауды қайталау",
+    "Повторить отклоненный запрос",
+    "Retry rejected request",
+  ],
+  recoveryRetryHint: [
+    "Провайдер алдыңғы сұрауды анық қабылдамай, қайтару жасамаған жағдайда ғана қолжетімді. Қайталау алдында провайдердегі күй қайта тексеріледі.",
+    "Доступно только после однозначного отказа провайдера, если возврат не был создан. Перед повтором статус у провайдера проверяется заново.",
+    "Available only after a definite provider rejection that created no refund. A fresh provider check runs before the retry.",
+  ],
+  recoveryUncertain: [
+    "Алдыңғы сұраудың нәтижесі белгісіз болса, күйді тексеруді пайдаланыңыз. Қайтаруды қайталауға болмайды.",
+    "Если исход предыдущего запроса неизвестен, используйте проверку статуса. Повторять возврат нельзя.",
+    "If the earlier outcome is uncertain, use reconciliation. The refund cannot be retried.",
   ],
   total: ["Тапсырыс сомасы", "Сумма заказа", "Order total"],
   refundAmount: ["Қайтару сомасы", "Сумма возврата", "Refund amount"],

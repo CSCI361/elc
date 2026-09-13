@@ -32,6 +32,7 @@ competing runs, immutable history, post-payout cancellation/refund adjustments,
 current authorization and cursor pagination. The integrated financial run passed
 58 tests across payouts, voluntary refunds, cancellation and payment orchestration.
 
-Payout browser verification, deployed Cron execution and notification delivery
-remain pending. These local tests do not establish external-provider refund
-compatibility.
+[Payout browser verification](./web-payouts.md) now covers all displayed amounts,
+linked adjustments, access revocation, pagination and the three languages.
+Deployed Cron execution and notification delivery remain pending. These local
+tests do not establish external-provider refund compatibility.

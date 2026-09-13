@@ -1,5 +1,6 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter"
 import { betterAuth } from "better-auth"
+import { expo } from "@better-auth/expo"
 import { APIError, createAuthMiddleware } from "better-auth/api"
 import { drizzle } from "drizzle-orm/d1"
 import * as schema from "../db/auth-schema"
@@ -55,6 +56,7 @@ export function createAuth(
   return betterAuth({
     ...authSchemaOptions,
     appName: "elc",
+    plugins: [expo()],
     baseURL,
     basePath: "/api/auth",
     secret: env.AUTH_SECRET,

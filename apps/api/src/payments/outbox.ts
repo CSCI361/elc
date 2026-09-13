@@ -2,10 +2,12 @@ import { verifiedProviderEventSchema, type PaymentAdapter } from "@elc/shared"
 import type { Bindings } from "../env"
 import { applyRefundStatus, processPayment } from "./reconcile"
 import { prepareEventCancellationRefunds, processRefund } from "./refunds"
+import { consumeRefundRecovery } from "./refund-recovery"
 
 const paymentKinds = [
   "payment.reconcile",
   "refund.reconcile",
+  "refund.recovery",
   "provider.event",
   "event.cancellation",
 ]
@@ -15,7 +17,7 @@ export async function dispatchPaymentOutbox(
   now = Date.now()
 ) {
   const pending =
-    await env.DB.prepare(`SELECT id FROM outbox WHERE kind IN ('payment.reconcile', 'refund.reconcile', 'provider.event', 'event.cancellation')
+    await env.DB.prepare(`SELECT id FROM outbox WHERE kind IN ('payment.reconcile', 'refund.reconcile', 'refund.recovery', 'provider.event', 'event.cancellation')
     AND completed_at IS NULL AND next_attempt_at <= ? ORDER BY next_attempt_at, id LIMIT 20`)
       .bind(now)
       .all<{ id: string }>()
@@ -57,6 +59,8 @@ export async function consumePaymentOutbox(
       complete = await prepareEventCancellationRefunds(env.DB, row.entity_id)
     if (row.kind === "payment.reconcile")
       complete = await processPayment(env, provider(), row.entity_id)
+    if (row.kind === "refund.recovery")
+      complete = await consumeRefundRecovery(env.DB, provider(), row.id)
     if (row.kind === "refund.reconcile") {
       await processRefund(env.DB, provider(), row.entity_id)
       const refund = await env.DB.prepare(

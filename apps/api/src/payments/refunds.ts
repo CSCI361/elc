@@ -16,7 +16,7 @@ import {
   type PaymentRow,
 } from "./store"
 
-type RefundRow = {
+export type RefundRow = {
   id: string
   payment_attempt_id: string
   reason: string
@@ -25,6 +25,8 @@ type RefundRow = {
   provider_refund_id: string | null
   dispatch_state: "prepared" | "dispatched" | "uncertain" | "reconciled"
   request_json: string | null
+  last_error_code: string | null
+  updated_at: number
 }
 
 export async function ensureCompensation(
@@ -142,7 +144,7 @@ export async function ensureCompensation(
   return id
 }
 
-async function loadRefund(db: D1Database, id: string) {
+export async function loadRefund(db: D1Database, id: string) {
   const refund = await db
     .prepare("SELECT * FROM refunds WHERE id = ?")
     .bind(id)
@@ -377,25 +379,13 @@ export async function processRefund(
   now = Date.now(),
   options: { lookupOnly?: boolean } = {}
 ) {
-  let refund = await loadRefund(db, refundId)
+  const refund = await loadRefund(db, refundId)
   if (
     refund.state === "succeeded" ||
     (refund.state === "failed" && refund.dispatch_state === "reconciled")
   )
     return
-  const request = providerRefundRequestSchema.parse(
-    JSON.parse(refund.request_json ?? "null")
-  )
-  if (
-    request.refundId !== refund.id ||
-    request.expected.paymentAttemptId !== refund.payment_attempt_id ||
-    request.amountMinor !== refund.amount_minor
-  )
-    throw new ApiFailure(
-      "PAYMENT_MISMATCH",
-      409,
-      "The refund request does not match its frozen record."
-    )
+  frozenRefundRequest(refund)
   let claimed = false
   if (refund.dispatch_state === "prepared" && !options.lookupOnly) {
     const payment = await loadPayment(db, refund.payment_attempt_id)
@@ -422,39 +412,123 @@ export async function processRefund(
       if (!isTransitionConflict(error)) throw error
     }
   }
+  return executeRefundOperation(db, adapter, refundId, claimed, now)
+}
+
+export function frozenRefundRequest(refund: RefundRow) {
+  const request = providerRefundRequestSchema.parse(
+    JSON.parse(refund.request_json ?? "null")
+  )
+  if (
+    request.refundId !== refund.id ||
+    request.expected.paymentAttemptId !== refund.payment_attempt_id ||
+    request.amountMinor !== refund.amount_minor ||
+    request.reason !== refund.reason
+  )
+    throw new ApiFailure(
+      "PAYMENT_MISMATCH",
+      409,
+      "The refund request does not match its frozen record."
+    )
+  return request
+}
+
+export async function validatedRefundRequest(
+  db: D1Database,
+  refund: RefundRow
+) {
+  const request = frozenRefundRequest(refund)
+  const payment = await loadPayment(db, refund.payment_attempt_id)
+  const binding = paymentBinding(payment)
+  if (
+    payment.state !== "succeeded" ||
+    request.providerPaymentId !== payment.provider_payment_id ||
+    request.providerOrderId !== payment.provider_order_id ||
+    Object.entries(binding).some(
+      ([key, value]) => request.expected[key as keyof typeof binding] !== value
+    )
+  )
+    throw new ApiFailure(
+      "PAYMENT_MISMATCH",
+      409,
+      "The refund request does not match its confirmed payment."
+    )
+  return request
+}
+
+/** A caller may dispatch only after its durable, single-use claim has committed. */
+export async function executeRefundOperation(
+  db: D1Database,
+  adapter: PaymentAdapter,
+  refundId: string,
+  dispatch: boolean,
+  now = Date.now(),
+  recoveryId: string | null = null
+) {
+  let refund = await loadRefund(db, refundId)
+  if (refund.state === "succeeded") return true
+  const request = await validatedRefundRequest(db, refund)
   try {
-    const status = claimed
+    const status = dispatch
       ? await adapter.refund(request)
       : await adapter.lookupRefund(request)
     if (status) await applyRefundStatus(db, status, now)
+    return true
   } catch (error) {
     refund = await loadRefund(db, refundId)
-    if (refund.state === "succeeded") return
+    if (refund.state === "succeeded") return true
     const definite =
-      claimed &&
+      dispatch &&
       error instanceof ProviderOperationError &&
       error.outcome === "definite_failure"
     const payment = await loadPayment(db, refund.payment_attempt_id)
+    const preserveRejected =
+      !dispatch &&
+      refund.state === "failed" &&
+      refund.dispatch_state === "reconciled"
     await db.batch([
       db
         .prepare(
-          `UPDATE refunds SET dispatch_state = ?, state = ?, last_error_code = ?, updated_at = ? WHERE id = ? AND state <> 'succeeded'`
+          `UPDATE refunds SET dispatch_state = ?, state = ?, last_error_code = ?, updated_at = ?
+          WHERE id = ? AND state <> 'succeeded' AND updated_at = ? AND state = ?
+            AND dispatch_state = ? AND last_error_code IS ?`
         )
         .bind(
-          definite ? "reconciled" : "uncertain",
+          definite || preserveRejected ? "reconciled" : "uncertain",
           definite ? "failed" : refund.state,
-          error instanceof ProviderOperationError
-            ? error.code
-            : "RECONCILIATION_REQUIRED",
+          preserveRejected
+            ? refund.last_error_code
+            : error instanceof ProviderOperationError
+              ? error.code
+              : "RECONCILIATION_REQUIRED",
           now,
-          refundId
+          refundId,
+          refund.updated_at,
+          refund.state,
+          refund.dispatch_state,
+          refund.last_error_code
         ),
       paymentAudit(
         db,
         payment,
-        definite ? "refund.dispatch_failed" : "refund.dispatch_uncertain",
-        now
+        !dispatch
+          ? "refund.lookup_failed"
+          : definite
+            ? "refund.dispatch_failed"
+            : "refund.dispatch_uncertain",
+        now,
+        "system:payments",
+        {
+          refundId,
+          recoveryId,
+          errorCode:
+            error instanceof ProviderOperationError
+              ? error.code
+              : "RECONCILIATION_REQUIRED",
+          outcome: definite ? "definite_failure" : "uncertain",
+        }
       ),
     ])
+    return false
   }
 }

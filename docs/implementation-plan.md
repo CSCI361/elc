@@ -50,7 +50,10 @@ PDF and calendar actions are verified in the browser. Current focused suites
 cover 29 access tests, 22 support tests, 8 cancellation tests, 21 voluntary refund
 tests, 33 offline backend tests and 12 simulated payout tests. Support live tests
 run through workerd with real authentication and Durable Objects. The mobile
-scanner and payout web view are in progress.
+scanner and payout web view have passed their scoped checks. Refund recovery
+adds ten D1 tests; the mobile online unit adds twenty-four tests across native
+transport, scanner access and Expo authentication. Native offline storage and
+support attachments are in progress.
 
 This is partial release coverage. Actual refunds and signed webhooks, remaining
 web workflows, delivery, reporting, Expo/offline, external OAuth/email/analytics,
@@ -84,7 +87,7 @@ are reviewed; the integration owner reviews changes and commits deliberately.
 ### M0: workspace and tooling
 
 - [x] Move the existing UI to `apps/web` without losing its design system.
-- [ ] Establish `apps/api`, `apps/mobile`, `apps/marketing`, and `packages/shared`.
+- [x] Establish `apps/api`, `apps/mobile`, `apps/marketing`, and `packages/shared`.
 - [x] Configure pnpm workspaces, Vite+ formatting/lint/type checks and tests.
 - [x] Fix existing validation failures; configure meaningful application builds.
 - [ ] Provide documented local setup, migrations, seed data and development commands.
@@ -92,7 +95,8 @@ are reviewed; the integration owner reviews changes and commits deliberately.
 
 Current evidence: the React and Hono Worker build together, local D1/R2/Queue/
 Durable Object bindings are configured, and CI checks and secret exclusions are
-authored. `apps/mobile`, seed commands and remote API resources remain pending.
+authored. The Expo online scanner now exports iOS and Android Hermes bundles;
+native installation, seed commands and remote API resources remain pending.
 Astro builds all four static routes. Root checks include Astro diagnostics and
 both application builds; local browser checks cover its three locales and
 narrow layout. Deployment and GA4 remain pending.

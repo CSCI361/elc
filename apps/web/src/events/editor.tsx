@@ -18,6 +18,7 @@ import { useState, type FormEvent } from "react"
 import { useAccount } from "@/auth/context"
 import { useAccessText } from "@/access/messages"
 import { useSupportText } from "@/support/messages"
+import { usePayoutText } from "@/payouts/messages"
 import { supportHref } from "@/support/policies"
 import { CancellationPanel } from "@/support/cancellation-panel"
 import { CalendarActions } from "./exports"
@@ -462,6 +463,7 @@ export function EventEditorPage({ eventId }: { eventId?: string }) {
 }
 
 function ExistingEventEditor({ eventId }: { eventId: string }) {
+  const { t: payoutText } = usePayoutText()
   const { t: supportText } = useSupportText()
   const { account } = useAccount()
   const { t: accessText } = useAccessText()
@@ -502,6 +504,12 @@ function ExistingEventEditor({ eventId }: { eventId: string }) {
           {supportText("title")}
         </a>
         <CalendarActions eventId={event.id} />
+        <a
+          className="secondary-link"
+          href={`/organizer/events/${segment(event.id)}/payouts`}
+        >
+          {payoutText("title")}
+        </a>
       </div>
     )
   return (
@@ -518,6 +526,12 @@ function ExistingEventEditor({ eventId }: { eventId: string }) {
           <h1>{event.title}</h1>
         </div>
         <div className="event-actions">
+          <a
+            className="secondary-link"
+            href={`/organizer/events/${segment(event.id)}/payouts`}
+          >
+            {payoutText("title")}
+          </a>
           <a
             className="secondary-link"
             href={`/support?view=staff&eventId=${segment(event.id)}`}

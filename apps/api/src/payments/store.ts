@@ -105,7 +105,8 @@ export function paymentAudit(
   row: PaymentRow,
   action: string,
   now: number,
-  actorId: string | null = "system:payments"
+  actorId: string | null = "system:payments",
+  details?: Record<string, string | number | boolean | null>
 ) {
   return db
     .prepare(`INSERT INTO audit_entries (id, event_id, actor_id, scope, action, entity_id, description, correlation_id, created_at)
@@ -119,7 +120,7 @@ export function paymentAudit(
       actorId,
       action,
       row.id,
-      action.replaceAll(".", " "),
+      details ? JSON.stringify(details) : action.replaceAll(".", " "),
       row.id,
       now
     )

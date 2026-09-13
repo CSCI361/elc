@@ -78,7 +78,7 @@ passes without payment-provider credentials.
 ## Remaining acceptance
 
 - Complete actual Polar refund and signed-webhook delivery checks.
-- Implement authorized resolution of failed refund attempts.
+- Verify actual provider recovery using the [authorized recovery workflow](./refund-recovery.md).
 - Verify the payout browser view and deployed scheduling.
 - Deliver queued notifications and verify physical scanner invalidation after
   synchronization or snapshot expiry.

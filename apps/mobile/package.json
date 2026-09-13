@@ -1,0 +1,39 @@
+{
+  "name": "@elc/mobile",
+  "version": "0.0.1",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start --dev-client",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "typecheck": "tsc --noEmit",
+    "bundle": "expo export --platform all --output-dir dist"
+  },
+  "dependencies": {
+    "@better-auth/expo": "1.7.4",
+    "@elc/api": "workspace:*",
+    "@elc/shared": "workspace:*",
+    "better-auth": "1.7.4",
+    "expo": "57.0.22",
+    "expo-build-properties": "57.0.17",
+    "expo-camera": "57.0.5",
+    "expo-constants": "57.0.18",
+    "expo-crypto": "57.0.3",
+    "expo-dev-client": "57.0.19",
+    "expo-linking": "57.0.10",
+    "expo-localization": "57.0.2",
+    "expo-network": "57.0.2",
+    "expo-secure-store": "57.0.4",
+    "expo-status-bar": "57.0.1",
+    "expo-web-browser": "57.0.3",
+    "hono": "4.13.7",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "5.7.0"
+  },
+  "devDependencies": {
+    "@babel/core": "7.29.7"
+  }
+}
