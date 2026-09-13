@@ -7,6 +7,28 @@ checkpoint, not a completed academic release.
 
 ## Current continuation state
 
+Commits `dbb6136` and `7b7e94c` save protected reads and reservation expiry.
+Commits `0456053` and `8a2d2c1` save offline operations web/API/mobile and the
+nonempty recovery rehearsal. Root API/mobile tests pass 75 cases across three files in
+94.37 seconds; 19 web cases and both Metro exports pass. Browser acceptance
+passes all 12 workflows in `.wrangler/web-offline-operations-results.json`, with
+no page errors and all synthetic fixtures removed. The main local application
+and Polar records remain preserved. Both agents returned ownership. Independent
+API/mobile review found no actionable issue. The two nonempty restore cases,
+34 safety cases and separate Node smoke pass; notification reconciliation now
+covers all six local jobs, including three ticket PDFs.
+
+Full checks pass 457 files. Web/Worker/Astro builds pass; the web entry is now
+388.10 kB and its shared UI chunk is 291.64 kB, without a chunk-size warning.
+This is a bundler split, not evidence of reduced total initial download. Build
+session 78303 completed. The full regression passes 1,408 tests across 84 files
+in 633.07 seconds. Session 55885 exited 0; its log is
+`.wrangler/offline-recovery-tests.log`. Check/build logs use
+`.wrangler/offline-recovery-{check,build}.log`. Source freeze is lifted after this
+result. Next implement platform promotional-code activity review using the
+outline in the implementation plan. The two agents
+have returned ownership; their next-unit preparation was read-only.
+
 The latest validated integration closes protected-read authorization races and
 adds scheduled reservation expiry. See the two evidence documents linked from
 the implementation plan. All 124 focused cases pass, including 42 new tests.
@@ -32,7 +54,8 @@ Its log is `.wrangler/authority-expiry-tests.log`. Build session 2973 and backup
 session 45060 completed successfully. Both agents returned ownership, and the
 independent expiry review found no actionable issue. The source freeze is lifted.
 Next: offline operator/admin screens, cached mobile seat/status labels and the
-nonempty recovery rehearsal. Agent preparation for those units was read-only.
+nonempty recovery rehearsal. Preparation for those units was read-only; implementation has since begun as
+recorded above.
 
 Updated on 2026-09-13 after organizer profiles and actual Polar refund/webhook
 acceptance. The historical sections below preserve the original offline

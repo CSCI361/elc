@@ -100,7 +100,12 @@ another project and was not modified. No elc remote resource has been deployed.
 
 ## Documented Polar capabilities
 
-| Requirement                | Evidence                                                                                                                                                                                                                                                                                                                                     | Still unproven for ELC                                                                                                                                                                                  |
+The table preserves the questions from the initial documentation review. The
+actual evidence above resolves KZT checkout, aggregate basket amounts, reference
+matching, compensation, a fulfilled-order refund and genuine signed delivery.
+Remaining variants in the acceptance matrix still need their stated evidence.
+
+| Requirement                | Evidence                                                                                                                                                                                                                                                                                                                                     | Original acceptance question                                                                                                                                                                            |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | KZT                        | KZT is explicitly listed among product pricing currencies. Server-created sessions should forward the actual customer IP if relying on automatic currency selection. [Products](https://polar.sh/docs/features/products)                                                                                                                     | KZT checkout, payment, receipt and refund in the intended sandbox organization.                                                                                                                         |
 | Currency and price control | Checkout schema accepts `currency`, and `prices` maps a product ID to ad-hoc prices. Fixed prices use `price_amount` and `price_currency`. Top-level `amount` applies to custom pricing, not fixed-price overrides. [Create checkout](https://polar.sh/docs/api-reference/2026-04/checkouts/create-checkout-session)                         | Exact currency/amount returned by the chosen API version, including tax and discounts.                                                                                                                  |
@@ -277,5 +282,8 @@ free-ticket transactions, and the web/Worker/marketing build now pass. See
 [checkout evidence](./checkout.md) and [web authentication](./web-authentication.md).
 Actual sandbox activation and mixed-ticket transactions now pass as recorded
 above. A full late-payment refund also passes as recorded in
-[compensation evidence](./polar-compensation.md). Signed provider webhook delivery,
-remaining fulfilled-order refund scenarios and deployed runtime acceptance remain pending. Node-only mocks cannot establish these results.
+[compensation evidence](./polar-compensation.md). A fulfilled-order voluntary
+refund and genuine signed delivery also pass, as recorded in
+[signed delivery and refund evidence](./polar-webhooks-refund.md). Paid event
+cancellation, operator recovery variants and deployed runtime acceptance remain
+pending. Node-only mocks cannot establish those results.

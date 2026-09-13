@@ -28,7 +28,9 @@ read outages, provider-assigned failed refunds, independent/revoked permission,
 stale state and changed idempotency input. The expanded financial run passed
 70 tests across recovery, orchestration, voluntary refunds, payouts and webhooks.
 
-The provider is a recorded test adapter in these tests. Actual Polar recovery,
-signed webhook delivery and deployed queue execution remain pending.
+The provider is a recorded test adapter in these tests. Actual Polar recovery
+through these operator controls and deployed queue execution remain pending.
+[Signed webhook delivery and a fulfilled-order refund](./polar-webhooks-refund.md)
+have since passed through the local Worker.
 [Browser recovery controls](./web-refund-recovery.md) passed contract checks in
 all three languages using intercepted responses, without sending provider requests.

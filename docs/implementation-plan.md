@@ -7,8 +7,19 @@ Work resumed at the user's request from checkpoint `3edfe08`. The
 incomplete activation modules, credentials setup and ordered next steps. The
 release remains in progress.
 
-The current integration closes [protected-read authorization races](./evidence/protected-read-authority.md)
-and adds [scheduled reservation expiry](./evidence/reservation-expiry.md). Final
+Commit `0456053` adds [offline access and cached mobile attendee details](./evidence/offline-operations-api-mobile.md)
+and the [web operations workspace](./evidence/offline-operations-web.md). The 75
+API/mobile cases, 19 web cases and both mobile exports pass. Browser acceptance passes owner loss reporting, exact retry after a lost
+response, both admission-review outcomes, review-only discovery, platform role
+separation, revoked access, pagination and KK/RU/EN layouts at 390 pixels. All
+synthetic browser fixtures were removed. Commit `8a2d2c1` extends the [nonempty restore rehearsal](./evidence/backup-recovery.md),
+which passes both resume and unresolved-admission cases, including all six notification
+jobs and three ticket PDFs. All 34 backup safety cases also pass. Full checks
+pass 457 files, and web/Worker/Astro builds pass without a chunk-size warning.
+The combined full regression passes 1,408 tests across 84 files in 633.07 seconds.
+
+Commits `dbb6136` and `7b7e94c` close [protected-read authorization races](./evidence/protected-read-authority.md)
+and add [scheduled reservation expiry](./evidence/reservation-expiry.md). Final
 authorized snapshots cover tickets, orders, account lists, payments and activation.
 Cron processes at most 50 reservations per invocation; lazy event cleanup uses
 bounded transactions. Migration 0031 adds indexed selection and inventory release.
@@ -97,18 +108,19 @@ remains required before release completion.
 
 ## Remaining local work from the requirements review
 
-The profile integration review identified the following local gaps. Protected
-reads and scheduled expiry now pass the combined full regression. The remaining units each need implementation and evidence.
+Protected reads and scheduled expiry pass the full regression. Offline
+operations, cached mobile seat/status labels and nonempty recovery reconciliation
+now pass their focused/runtime acceptance and the combined full regression.
 
-- Add offline device revocation, incident handling and conflict-review screens
-  using the existing authorized APIs. Show assigned-seat snapshots in cached
-  attendee search (SRS 4.3.1 and architecture offline operations).
-- Add a bounded platform-admin view of campaigns and committed promotional-code
-  activity, without granting organizer mutations (SRS 4.12).
-- Exercise restored-state reconciliation with nonempty payment, refund, delivery
-  and offline-admission domains. The existing disposable restore proves schema
-  integrity and an empty-domain recovery gate only.
-
+The remaining feature identified by the review is a bounded platform campaign
+catalog and promotional-code activity view (SRS 4.12). Implement
+`GET /admin/campaigns` with current `platform:moderate` authority, independent
+active-hold and committed-redemption counts, and retained event metadata. Omit
+redeemable codes, token hashes and sharing URLs. Add a `campaignId` filter to
+order operations and use existing audit search for campaign lifecycle history.
+The localized administration view should link to those records without exposing
+organizer mutations. Count usage only after selecting a bounded campaign page;
+verify current authority, retention, attribution and cursor scope in D1 tests.
 Actual [Polar signed delivery and a fulfilled-order refund](./evidence/polar-webhooks-refund.md)
 now pass through the local Worker. Five genuine events, exact replay, tampered
 body rejection and provider redelivery preserve one event/outbox row per event.
