@@ -53,21 +53,25 @@ export type OrderItemRow = {
 export async function loadOrderRows(
   db: D1Database,
   actorId: string,
-  orderId: string
+  orderId: string,
+  dependencies: { beforeRead?: () => Promise<void> } = {}
 ) {
   await requireActiveAccount(db, actorId)
+  await dependencies.beforeRead?.()
+  const context = `WITH authorized_order AS (SELECT o.* FROM orders o JOIN user u ON u.id=o.account_id LEFT JOIN profiles p ON p.user_id=u.id
+    WHERE o.id=? AND u.id=? AND u.email_verified=1 AND p.suspended_at IS NULL)`
   const [orders, reservations, items] = await db.batch([
     db
-      .prepare("SELECT * FROM orders WHERE id = ? AND account_id = ?")
+      .prepare(`${context} SELECT * FROM authorized_order`)
       .bind(orderId, actorId),
     db
       .prepare(
-        "SELECT r.* FROM reservations r JOIN orders o ON o.id = r.order_id WHERE o.id = ? AND o.account_id = ?"
+        `${context} SELECT r.* FROM reservations r JOIN authorized_order o ON o.id=r.order_id`
       )
       .bind(orderId, actorId),
     db
       .prepare(
-        "SELECT i.* FROM order_items i JOIN orders o ON o.id = i.order_id WHERE o.id = ? AND o.account_id = ? ORDER BY i.id"
+        `${context} SELECT i.* FROM order_items i JOIN authorized_order o ON o.id=i.order_id ORDER BY i.id`
       )
       .bind(orderId, actorId),
   ])
@@ -133,7 +137,10 @@ export function checkoutResponse(
 export async function loadOrder(
   db: D1Database,
   actorId: string,
-  orderId: string
+  orderId: string,
+  dependencies: { beforeRead?: () => Promise<void> } = {}
 ) {
-  return checkoutResponse(await loadOrderRows(db, actorId, orderId))
+  return checkoutResponse(
+    await loadOrderRows(db, actorId, orderId, dependencies)
+  )
 }

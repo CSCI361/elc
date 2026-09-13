@@ -5,7 +5,8 @@ import { ApiFailure } from "../db/transitions"
 export async function readAccountOrders(
   db: D1Database,
   actorId: string,
-  query: Record<string, string>
+  query: Record<string, string>,
+  dependencies: { beforeRead?: () => Promise<void> } = {}
 ) {
   await requireActiveAccount(db, actorId)
   const parsed = paginationQuerySchema.safeParse(query)
@@ -31,22 +32,33 @@ export async function readAccountOrders(
       throw new ApiFailure("INVALID_INPUT", 400, "Invalid order cursor.")
     }
   }
-  const result = await db
-    .prepare(`SELECT o.id, o.event_id, e.title, e.starts_at, o.state, o.total_minor, o.currency, o.created_at
-    FROM orders o JOIN events e ON e.id = o.event_id WHERE o.account_id = ? AND (o.created_at < ? OR (o.created_at = ? AND o.id > ?))
+  await dependencies.beforeRead?.()
+  const context = `WITH authorized_account AS (SELECT u.id FROM user u LEFT JOIN profiles p ON p.user_id=u.id WHERE u.id=? AND u.email_verified=1 AND p.suspended_at IS NULL)`
+  const [access, result] = await db.batch([
+    db.prepare(`${context} SELECT id FROM authorized_account`).bind(actorId),
+    db
+      .prepare(`${context} SELECT o.id, o.event_id, e.title, e.starts_at, o.state, o.total_minor, o.currency, o.created_at
+    FROM authorized_account a JOIN orders o ON o.account_id=a.id JOIN events e ON e.id = o.event_id WHERE (o.created_at < ? OR (o.created_at = ? AND o.id > ?))
     ORDER BY o.created_at DESC, o.id LIMIT ?`)
-    .bind(actorId, lastTime, lastTime, lastId, limit + 1)
-    .all<{
-      id: string
-      event_id: string
-      title: string
-      starts_at: number
-      state: string
-      total_minor: number
-      currency: string
-      created_at: number
-    }>()
-  const rows = result.results.slice(0, limit)
+      .bind(actorId, lastTime, lastTime, lastId, limit + 1),
+  ])
+  if (!access!.results.length)
+    throw new ApiFailure(
+      "FORBIDDEN",
+      403,
+      "An active verified account is required."
+    )
+  const results = result!.results as Array<{
+    id: string
+    event_id: string
+    title: string
+    starts_at: number
+    state: string
+    total_minor: number
+    currency: string
+    created_at: number
+  }>
+  const rows = results.slice(0, limit)
   const last = rows.at(-1)
   return accountOrdersResponseSchema.parse({
     items: rows.map((row) => ({
@@ -60,7 +72,7 @@ export async function readAccountOrders(
       createdAt: new Date(row.created_at).toISOString(),
     })),
     nextCursor:
-      result.results.length > limit && last
+      results.length > limit && last
         ? btoa(JSON.stringify([last.created_at, last.id]))
         : null,
   })

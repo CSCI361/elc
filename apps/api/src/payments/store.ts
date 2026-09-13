@@ -76,15 +76,21 @@ export function checkoutRequest(row: PaymentRow): PaymentCheckoutRequest {
   return request
 }
 
-export async function readPayment(db: D1Database, actorId: string, id: string) {
+export async function readPayment(
+  db: D1Database,
+  actorId: string,
+  id: string,
+  dependencies: { beforeRead?: () => Promise<void> } = {}
+) {
   await requireActiveAccount(db, actorId)
-  const row = await loadPayment(db, id)
-  if (row.actor_id !== actorId)
-    throw new ApiFailure("NOT_FOUND", 404, "Payment not found.")
-  const refund = await db
-    .prepare("SELECT state FROM refunds WHERE payment_attempt_id = ?")
-    .bind(id)
-    .first<{ state: string }>()
+  await dependencies.beforeRead?.()
+  const row = await db
+    .prepare(`SELECT pa.*,r.state AS refund_state FROM payment_attempts pa JOIN user u ON u.id=pa.actor_id
+    LEFT JOIN profiles p ON p.user_id=u.id LEFT JOIN refunds r ON r.payment_attempt_id=pa.id
+    WHERE pa.id=? AND u.id=? AND u.email_verified=1 AND p.suspended_at IS NULL`)
+    .bind(id, actorId)
+    .first<PaymentRow & { refund_state: string | null }>()
+  if (!row) throw new ApiFailure("NOT_FOUND", 404, "Payment not found.")
   return paymentResponseSchema.parse({
     payment: {
       id,
@@ -95,7 +101,7 @@ export async function readPayment(db: D1Database, actorId: string, id: string) {
       amountMinor: row.amount_minor,
       currency: row.currency,
       checkoutUrl: row.state === "pending" ? row.checkout_url : null,
-      refundState: refund?.state ?? null,
+      refundState: row.refund_state,
     },
   })
 }

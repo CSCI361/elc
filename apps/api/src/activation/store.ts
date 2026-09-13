@@ -6,7 +6,7 @@ import {
   policy,
 } from "@elc/shared"
 import { ApiFailure } from "../db/transitions"
-import { findEvent } from "../events/store"
+import { findEvent, type EventRow } from "../events/store"
 import type { PaymentRow } from "../payments/store"
 import { requirePlatformPermission } from "../auth/permissions"
 
@@ -79,39 +79,69 @@ export async function readActivation(
   platformRead = false,
   dependencies: { beforeReturn?: () => Promise<void> } = {}
 ) {
-  if (platformRead)
+  if (platformRead) {
     await requirePlatformPermission(db, actorId, "platform:moderate")
-  const event = platformRead
-    ? await findEvent(db, eventId)
-    : await requireActivationOwner(db, eventId, actorId)
-  const activation = await loadActivation(db, eventId)
-  const settings = await readActivationSettings(db)
-  const account = await db
-    .prepare(
-      "SELECT u.email_verified, p.suspended_at FROM user u LEFT JOIN profiles p ON p.user_id = u.id WHERE u.id = ?"
+    await findEvent(db, eventId)
+  } else await requireActivationOwner(db, eventId, actorId)
+  await dependencies.beforeReturn?.()
+  // Owners retain diagnostic access to their checklist while suspended/unverified.
+  // Moderators require an active account and current platform grant. All returned facts
+  // share the same final snapshot, including the owner's blockers and payment URL state.
+  const authority = platformRead
+    ? "actor.email_verified=1 AND actor_profile.suspended_at IS NULL AND EXISTS(SELECT 1 FROM platform_grants g WHERE g.user_id=actor.id AND g.permission='platform:moderate')"
+    : "e.organizer_id=actor.id"
+  const context = `WITH authorized_event AS(SELECT e.* FROM events e JOIN user actor ON actor.id=? LEFT JOIN profiles actor_profile ON actor_profile.user_id=actor.id WHERE e.id=? AND ${authority})`
+  const statement = (sql: string) =>
+    db.prepare(`${context} ${sql}`).bind(actorId, eventId)
+  const results = await db.batch([
+    statement("SELECT * FROM authorized_event"),
+    statement(
+      "SELECT a.* FROM authorized_event e JOIN event_activations a ON a.event_id=e.id"
+    ),
+    db.prepare(
+      "SELECT fee_minor,revision FROM activation_settings WHERE id='default'"
+    ),
+    statement(
+      "SELECT u.email_verified,p.suspended_at FROM authorized_event e JOIN user u ON u.id=e.organizer_id LEFT JOIN profiles p ON p.user_id=u.id"
+    ),
+    statement(
+      "SELECT 1 FROM authorized_event e JOIN ticket_types t ON t.event_id=e.id WHERE t.kind='paid' AND t.price_minor>0 LIMIT 1"
+    ),
+    statement(
+      "SELECT pa.*,r.state AS refund_state FROM authorized_event e JOIN activation_attempts aa ON aa.event_id=e.id JOIN payment_attempts pa ON pa.id=aa.payment_attempt_id LEFT JOIN refunds r ON r.payment_attempt_id=pa.id ORDER BY aa.created_at DESC,pa.rowid DESC LIMIT 1"
+    ),
+    statement(
+      "SELECT pa.amount_minor FROM authorized_event e JOIN event_activations a ON a.event_id=e.id JOIN payment_attempts pa ON pa.id=a.successful_payment_attempt_id"
+    ),
+  ])
+  const event = results[0]!.results[0] as EventRow | undefined
+  if (!event)
+    throw new ApiFailure(
+      "FORBIDDEN",
+      403,
+      platformRead
+        ? "Platform moderation permission is required."
+        : "Only the current event owner can view paid-sales activation."
     )
-    .bind(event.organizer_id)
-    .first<{ email_verified: number; suspended_at: number | null }>()
-  const hasPaidType = await db
-    .prepare(
-      "SELECT 1 FROM ticket_types WHERE event_id = ? AND kind = 'paid' AND price_minor > 0 LIMIT 1"
-    )
-    .bind(eventId)
-    .first()
-  const latest = await db
-    .prepare(
-      "SELECT pa.*, r.state AS refund_state FROM activation_attempts aa JOIN payment_attempts pa ON pa.id = aa.payment_attempt_id LEFT JOIN refunds r ON r.payment_attempt_id = pa.id WHERE aa.event_id = ? ORDER BY aa.created_at DESC, pa.rowid DESC LIMIT 1"
-    )
-    .bind(eventId)
-    .first<
-      PaymentRow & { refund_state: "pending" | "succeeded" | "failed" | null }
-    >()
-  const successful = activation?.successful_payment_attempt_id
-    ? await db
-        .prepare("SELECT amount_minor FROM payment_attempts WHERE id = ?")
-        .bind(activation.successful_payment_attempt_id)
-        .first<{ amount_minor: number }>()
-    : null
+  const activation = results[1]!.results[0] as ActivationRow | undefined
+  const configured = results[2]!.results[0] as
+    | { fee_minor: number; revision: number }
+    | undefined
+  const settings = activationSettingsSchema.parse({
+    feeMinor: configured?.fee_minor ?? policy.activationFeeMinor,
+    revision: configured?.revision ?? 0,
+    currency: "KZT",
+  })
+  const account = results[3]!.results[0] as
+    | { email_verified: number; suspended_at: number | null }
+    | undefined
+  const hasPaidType = results[4]!.results.length > 0
+  const latest = results[5]!.results[0] as
+    | (PaymentRow & { refund_state: "pending" | "succeeded" | "failed" | null })
+    | undefined
+  const successful = results[6]!.results[0] as
+    | { amount_minor: number }
+    | undefined
   const blockers: Array<
     | "email_unverified"
     | "account_suspended"
@@ -157,9 +187,6 @@ export async function readActivation(
       ].includes(reason)
     ) ||
     (!!successful && blockers.length > 0)
-  await dependencies.beforeReturn?.()
-  if (platformRead)
-    await requirePlatformPermission(db, actorId, "platform:moderate")
   return activationResponseSchema.parse({
     activation: {
       eventId,
@@ -213,7 +240,10 @@ export async function readActivation(
             amountMinor: latest.amount_minor,
             currency: latest.currency,
             checkoutUrl:
-              !platformRead && latest.state === "pending"
+              !platformRead &&
+              account?.email_verified &&
+              account.suspended_at === null &&
+              latest.state === "pending"
                 ? latest.checkout_url
                 : null,
             refundState: latest.refund_state,
