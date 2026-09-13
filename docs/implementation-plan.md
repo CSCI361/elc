@@ -54,8 +54,11 @@ scanner and payout web view have passed their scoped checks. Refund recovery
 adds ten D1 tests; the mobile online unit adds twenty-four tests across native
 transport, scanner access and Expo authentication. Support attachments now have
 11 passing D1/R2/workerd tests, and all 33 support tests pass together. Content
-validation, private downloads, atomic message links and cleanup are implemented;
-the attachment composer is in progress. Native offline storage is in progress.
+validation, private downloads, atomic message links and cleanup are implemented.
+The attachment composer has passed multilingual browser acceptance, including
+upload/message response loss and revoked access. Native offline storage is in
+progress. Event reporting and retained history APIs now have scoped D1 evidence;
+their web dashboards are in progress.
 
 This is partial release coverage. Actual refunds and signed webhooks, remaining
 web workflows, delivery, reporting, Expo/offline, external OAuth/email/analytics,

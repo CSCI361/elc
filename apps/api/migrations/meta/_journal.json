@@ -134,6 +134,13 @@
       "when": 1789257351779,
       "tag": "0018_support_attachment_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1789259427865,
+      "tag": "0019_reporting_indexes",
+      "breakpoints": true
     }
   ]
 }

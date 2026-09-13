@@ -415,6 +415,11 @@ export const paymentAttempts = sqliteTable(
       t.providerPaymentId
     ),
     uniqueIndex("provider_order_identity").on(t.provider, t.providerOrderId),
+    index("payment_subject_reporting").on(
+      t.purpose,
+      t.subjectId,
+      t.succeededAt
+    ),
     check(
       "payment_amount",
       sql`${t.amountMinor} > 0 AND ${t.currency} = 'KZT'`
@@ -529,32 +534,42 @@ export const activationAttempts = sqliteTable(
   ]
 )
 
-export const refunds = sqliteTable("refunds", {
-  requestedBy: text("requested_by").references(() => user.id),
-  supportCaseId: text("support_case_id").references(() => supportCases.id),
-  authorizationReason: text("authorization_reason"),
-  id: text("id").primaryKey(),
-  paymentAttemptId: text("payment_attempt_id")
-    .notNull()
-    .unique()
-    .references(() => paymentAttempts.id),
-  reason: text("reason").notNull(),
-  state: text("state", { enum: ["pending", "succeeded", "failed"] })
-    .notNull()
-    .default("pending"),
-  amountMinor: integer("amount_minor").notNull(),
-  providerRefundId: text("provider_refund_id"),
-  dispatchState: text("dispatch_state", {
-    enum: ["prepared", "dispatched", "uncertain", "reconciled"],
-  })
-    .notNull()
-    .default("prepared"),
-  requestJson: text("request_json"),
-  lastErrorCode: text("last_error_code"),
-  updatedAt: integer("updated_at").notNull().default(0),
-  createdAt: integer("created_at").notNull(),
-  confirmedAt: integer("confirmed_at"),
-})
+export const refunds = sqliteTable(
+  "refunds",
+  {
+    requestedBy: text("requested_by").references(() => user.id),
+    supportCaseId: text("support_case_id").references(() => supportCases.id),
+    authorizationReason: text("authorization_reason"),
+    id: text("id").primaryKey(),
+    paymentAttemptId: text("payment_attempt_id")
+      .notNull()
+      .unique()
+      .references(() => paymentAttempts.id),
+    reason: text("reason").notNull(),
+    state: text("state", { enum: ["pending", "succeeded", "failed"] })
+      .notNull()
+      .default("pending"),
+    amountMinor: integer("amount_minor").notNull(),
+    providerRefundId: text("provider_refund_id"),
+    dispatchState: text("dispatch_state", {
+      enum: ["prepared", "dispatched", "uncertain", "reconciled"],
+    })
+      .notNull()
+      .default("prepared"),
+    requestJson: text("request_json"),
+    lastErrorCode: text("last_error_code"),
+    updatedAt: integer("updated_at").notNull().default(0),
+    createdAt: integer("created_at").notNull(),
+    confirmedAt: integer("confirmed_at"),
+  },
+  (t) => [
+    index("refund_confirmation_reporting").on(
+      t.state,
+      t.confirmedAt,
+      t.paymentAttemptId
+    ),
+  ]
+)
 
 export const simulatedPayouts = sqliteTable(
   "simulated_payouts",
@@ -869,7 +884,10 @@ export const auditEntries = sqliteTable(
     correlationId: text("correlation_id").notNull(),
     createdAt: integer("created_at").notNull(),
   },
-  (t) => [index("audit_event_time").on(t.eventId, t.createdAt)]
+  (t) => [
+    index("audit_event_time").on(t.eventId, t.createdAt),
+    index("audit_scope_event_time").on(t.scope, t.eventId, t.createdAt, t.id),
+  ]
 )
 
 export const outbox = sqliteTable(
