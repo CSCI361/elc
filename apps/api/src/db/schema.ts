@@ -26,6 +26,30 @@ export const profiles = sqliteTable("profiles", {
   updatedAt: integer("updated_at").notNull(),
 })
 
+export const ga4Reports = sqliteTable(
+  "ga4_reports",
+  {
+    cacheKey: text("cache_key").primaryKey(),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    resultJson: text("result_json"),
+    fetchedAt: integer("fetched_at"),
+    expiresAt: integer("expires_at").notNull(),
+    leaseToken: text("lease_token"),
+    leaseUntil: integer("lease_until").notNull().default(0),
+    touchedAt: integer("touched_at").notNull(),
+  },
+  (t) => [
+    index("ga4_reports_event").on(t.eventId, t.touchedAt, t.cacheKey),
+    index("ga4_reports_cleanup").on(t.touchedAt),
+    check(
+      "ga4_reports_payload_size",
+      sql`${t.resultJson} IS NULL OR length(${t.resultJson}) <= 262144`
+    ),
+  ]
+)
+
 export const platformGrants = sqliteTable(
   "platform_grants",
   {

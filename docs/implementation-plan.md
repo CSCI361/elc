@@ -7,6 +7,14 @@ Work resumed at the user's request from checkpoint `3edfe08`. The
 incomplete activation modules, credentials setup and ordered next steps. The
 release remains in progress.
 
+Latest completed unit: authorized GA4 report caching and the localized event
+dashboard panel. Migration 0024 is applied locally. The full suite passes 1,010
+tests across 66 files; full checks and web/Worker/Astro builds pass. Browser
+acceptance covers unavailable reporting, injected aggregates, date changes,
+revocation and all three locales at 390 pixels. See
+[GA4 reporting evidence](./evidence/ga4-reporting.md). Live GA4 configuration
+and consent-based collection remain pending.
+
 ## Scope and evidence rules
 
 Implement the academic release in [architecture decisions](./architecture-decisions.md)

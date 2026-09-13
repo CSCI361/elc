@@ -388,7 +388,7 @@ function parsedReport(
   return report
 }
 
-/** Credentials are deployment configuration. Call only after resolving public-event access and campaign ownership on the server. */
+/** Credentials are deployment configuration. Call only after resolving report access and campaign ownership on the server. Collection is limited separately to public events. */
 export function createGa4Provider(
   configuration: Ga4ProviderConfiguration,
   dependencies: Dependencies = {}

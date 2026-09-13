@@ -14,6 +14,7 @@ import {
 import { AnalyticsFilters, EventChoices } from "./filters"
 import { DailyLine, HorizontalBars, MetricValue, MetricsTable } from "./charts"
 import { useAnalyticsText } from "./messages"
+import { TrafficPanel } from "./traffic"
 import "./analytics.css"
 
 function CurrentState({ data }: { data: EventAnalyticsResponse }) {
@@ -290,6 +291,12 @@ function AnalyticsWorkspace({ eventId }: { eventId: string }) {
             <p className="field-hint">{t("feeHint")}</p>
           </section>
           <CurrentState data={data} />
+          <TrafficPanel
+            key={data.generatedAt}
+            data={data}
+            query={state.query}
+            onDenied={loader.deny}
+          />
           <section className="event-panel" aria-label={t("dailyTable")}>
             <div className="analytics-two-columns">
               <DailyLine rows={data.daily} metric="grossMinor" />

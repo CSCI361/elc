@@ -22,6 +22,7 @@ import {
   dispatchNotificationOutbox,
 } from "./delivery/fanout"
 import { cleanupDeliveryPayloads } from "./delivery/payload-cleanup"
+import { cleanupTrafficReports } from "./traffic/read"
 
 export type { AppType } from "./app"
 export { SupportCase } from "./support/live/room"
@@ -36,6 +37,7 @@ export default {
     context.waitUntil(dispatchNotificationOutbox(env))
     context.waitUntil(dispatchEmailDeliveries(env))
     context.waitUntil(cleanupDeliveryPayloads(env))
+    context.waitUntil(cleanupTrafficReports(env.DB))
   },
   async queue(batch, env) {
     let provider: PaymentAdapter | undefined

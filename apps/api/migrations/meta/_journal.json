@@ -169,6 +169,13 @@
       "when": 1789285317737,
       "tag": "0023_delivery-inspection-indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1789286969201,
+      "tag": "0024_ga4_report_cache",
+      "breakpoints": true
     }
   ]
 }

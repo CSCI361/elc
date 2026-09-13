@@ -16,6 +16,8 @@ export interface Bindings {
   GOOGLE_CLIENT_ID?: string
   GOOGLE_CLIENT_SECRET?: string
   RESEND_API_KEY?: string
+  GA4_PROPERTY_ID?: string
+  GA4_SERVICE_ACCOUNT_JSON?: string
   POLAR_ACCESS_TOKEN?: string
   POLAR_WEBHOOK_SECRET?: string
   POLAR_PRODUCT_ID?: string
