@@ -7,6 +7,33 @@ checkpoint, not a completed academic release.
 
 ## Current continuation state
 
+The latest validated integration closes protected-read authorization races and
+adds scheduled reservation expiry. See the two evidence documents linked from
+the implementation plan. All 124 focused cases pass, including 42 new tests.
+Migration 0031 adds reservation/event and inventory lookup indexes and is applied
+locally after a protected export in `.wrangler/pre-migration-0031.{sql,json}`.
+Preserve that export until its manifest's 30-day deadline.
+
+Actual Cron acceptance used an isolated disposable Worker on 127.0.0.1:8798,
+without provider credentials. Paused mode left 53 holds untouched; running ticks
+expired 50, then two, then zero, while preserving one live hold. Audit, receipt,
+inventory and promo counts matched. That Worker/browser are stopped and the
+disposable database state removed. Results remain in
+`.wrangler/expiry-runtime/results.json`. The preserved application still runs on
+localhost:5173; its database and sandbox transactions were not used for the Cron
+fixture.
+
+Full checks pass 443 files, builds pass (665.07 kB entry, existing warning), and
+backup verification passes 34 safety cases plus the full-schema restore. The
+refunded-ticket browser rerun passes in KK/RU/EN, with all three credentials
+rejected as refunded and its temporary scan grant restored. The combined full
+suite passes 1,358 tests across 81 files in 590.24 seconds; session 2652 exited 0.
+Its log is `.wrangler/authority-expiry-tests.log`. Build session 2973 and backup
+session 45060 completed successfully. Both agents returned ownership, and the
+independent expiry review found no actionable issue. The source freeze is lifted.
+Next: offline operator/admin screens, cached mobile seat/status labels and the
+nonempty recovery rehearsal. Agent preparation for those units was read-only.
+
 Updated on 2026-09-13 after organizer profiles and actual Polar refund/webhook
 acceptance. The historical sections below preserve the original offline
 checkpoint. The academic release remains in progress.
@@ -97,11 +124,9 @@ secret, mode 0600; preserve it. The Worker was restarted in session 75107 and
 remains on localhost:5173. The temporary scan grant was restored through the API.
 
 The read-only requirements audits identified remaining local units in the plan:
-legacy read authorization races, bounded scheduled reservation expiry, offline
-device/conflict screens and cached seat labels, platform campaign review and a
-nonempty restored-state reconciliation rehearsal. Neither agent has an active
-implementation assignment. Validation is complete. Continue with authorization races and bounded reservation
-expiry, followed by the missing operator/admin screens and recovery rehearsal.
+offline device/conflict screens and cached seat labels, platform campaign review
+and a nonempty restored-state reconciliation rehearsal. Protected reads and
+bounded reservation expiry have since passed the full regression above.
 Keep the external/device acceptance gates explicit; the release is incomplete.
 
 The completed Polar compensation fixture must be preserved: payment

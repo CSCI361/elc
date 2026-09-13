@@ -11,56 +11,21 @@ import {
   requestHash,
 } from "../db/transitions"
 import { activeCheckoutSql } from "./guards"
+import { expireReservationBatch, RESERVATION_EXPIRY_BATCH_SIZE } from "./expiry"
 import { checkoutResponse, loadOrder, loadOrderRows } from "./read"
 
-/** Lazy cleanup makes expired inventory available even before a scheduled sweep. */
+/** Drain this event at a fixed cutoff using bounded transactions, independently of Cron. */
 export async function expireReservations(
   db: D1Database,
   eventId: string,
   now = Date.now()
 ) {
-  const expired = (
-    await db
-      .prepare(`SELECT r.id FROM reservations r JOIN orders o ON o.id = r.order_id
-    WHERE r.event_id = ? AND r.state = 'active' AND r.expires_at <= ? AND o.state = 'pending' LIMIT 1`)
-      .bind(eventId, now)
-      .all<{ id: string }>()
-  ).results
-  if (!expired.length) return 0
-  const target = `SELECT r.id FROM reservations r JOIN orders o ON o.id = r.order_id
-    WHERE r.event_id = ? AND r.state = 'active' AND r.expires_at <= ? AND o.state = 'pending'`
-  const result = await db.batch([
-    db
-      .prepare(`INSERT INTO audit_entries (id, event_id, actor_id, scope, action, entity_id, description, correlation_id, created_at)
-      SELECT 'expiry:' || r.id, r.event_id, r.account_id, 'account', 'checkout.expired', r.order_id,
-      'Reservation expired and unsold inventory was released.', 'expiry:' || r.id, ?
-      FROM reservations r WHERE r.id IN (${target})`)
-      .bind(now, eventId, now),
-    db
-      .prepare(`INSERT INTO request_receipts (actor_id, request_id, input_hash, resource_id, created_at)
-      SELECT 'system:expiry', r.id, 'reservation-expiry-v1', r.order_id, ? FROM reservations r WHERE r.id IN (${target})`)
-      .bind(now, eventId, now),
-    db
-      .prepare(
-        `UPDATE inventory SET reservation_id = NULL WHERE order_id IS NULL AND reservation_id IN (${target})`
-      )
-      .bind(eventId, now),
-    db
-      .prepare(
-        `UPDATE promo_allocations SET released_at = ? WHERE committed_at IS NULL AND released_at IS NULL AND reservation_id IN (${target})`
-      )
-      .bind(now, eventId, now),
-    db
-      .prepare(
-        `UPDATE orders SET state = 'expired', revision = revision + 1 WHERE state = 'pending' AND id IN (SELECT order_id FROM reservations WHERE id IN (${target}))`
-      )
-      .bind(eventId, now),
-    db
-      .prepare(`UPDATE reservations SET state = 'expired' WHERE event_id = ?
-      AND state = 'active' AND expires_at <= ? AND EXISTS (SELECT 1 FROM orders o WHERE o.id = reservations.order_id AND o.state = 'expired')`)
-      .bind(eventId, now),
-  ])
-  return result[5]!.meta.changes
+  let expired = 0
+  for (;;) {
+    const batch = await expireReservationBatch(db, eventId, now)
+    expired += batch.expired
+    if (batch.selected < RESERVATION_EXPIRY_BATCH_SIZE) return expired
+  }
 }
 
 export async function readCheckout(

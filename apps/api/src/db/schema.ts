@@ -413,6 +413,7 @@ export const reservations = sqliteTable(
       .on(t.accountId, t.eventId)
       .where(sql`${t.state} = 'active'`),
     index("reservation_expiry").on(t.state, t.expiresAt),
+    index("reservation_event_expiry").on(t.eventId, t.state, t.expiresAt),
     check(
       "reservation_deadline",
       sql`${t.expiresAt} = ${t.createdAt} + 600000`
@@ -444,6 +445,7 @@ export const inventory = sqliteTable(
   },
   (t) => [
     uniqueIndex("one_event_seat").on(t.eventId, t.section, t.row, t.number),
+    index("inventory_reservation").on(t.reservationId),
     index("inventory_availability").on(
       t.eventId,
       t.ticketTypeId,

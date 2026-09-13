@@ -24,6 +24,7 @@ import {
 import { cleanupDeliveryPayloads } from "./delivery/payload-cleanup"
 import { cleanupTrafficReports } from "./traffic/read"
 import { recoveryPaused } from "./recovery/gate"
+import { sweepExpiredReservations } from "./orders/expiry"
 import { runRetentionCleanup } from "./retention"
 import { cleanupEventImageAssets } from "./events/images/cleanup"
 import {
@@ -46,6 +47,7 @@ export default {
           await runRetentionCleanup(env)
         })()
       )
+    context.waitUntil(sweepExpiredReservations(env))
     context.waitUntil(dispatchPaymentOutbox(env))
     context.waitUntil(dispatchSupportLiveOutbox(env))
     context.waitUntil(simulateDuePayouts(env.DB))

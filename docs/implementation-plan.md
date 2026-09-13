@@ -7,6 +7,17 @@ Work resumed at the user's request from checkpoint `3edfe08`. The
 incomplete activation modules, credentials setup and ordered next steps. The
 release remains in progress.
 
+The current integration closes [protected-read authorization races](./evidence/protected-read-authority.md)
+and adds [scheduled reservation expiry](./evidence/reservation-expiry.md). Final
+authorized snapshots cover tickets, orders, account lists, payments and activation.
+Cron processes at most 50 reservations per invocation; lazy event cleanup uses
+bounded transactions. Migration 0031 adds indexed selection and inventory release.
+All 124 focused cases pass, including 42 new cases. Actual disposable Worker Cron
+acceptance proves recovery pause, a 50/2/0 progression and preservation of a live
+hold. Full checks across 443 files, builds, backup verification and the refunded
+ticket browser rerun pass. The combined full regression passes 1,358 tests across
+81 files in 590.24 seconds.
+
 Commit `e1ac9b3` adds [saved organizer profiles](./evidence/organizer-profile-web.md)
 and an [account-scoped profile API](./evidence/organizer-profile-api.md). A separate
 profile table preserves locale and moderation behavior. Atomic revisions and
@@ -86,13 +97,9 @@ remains required before release completion.
 
 ## Remaining local work from the requirements review
 
-The profile integration review identified these concrete gaps. Each needs its
-own implementation and evidence before the release can be considered complete.
+The profile integration review identified the following local gaps. Protected
+reads and scheduled expiry now pass the combined full regression. The remaining units each need implementation and evidence.
 
-- Recheck current account and relationship authority after asynchronous work in
-  legacy ticket, order, payment and activation reads (architecture section 5).
-- Add bounded scheduled cleanup for idle expired reservations, including payment
-  races, promo release and the recovery pause (architecture Cron responsibilities).
 - Add offline device revocation, incident handling and conflict-review screens
   using the existing authorized APIs. Show assigned-seat snapshots in cached
   attendee search (SRS 4.3.1 and architecture offline operations).

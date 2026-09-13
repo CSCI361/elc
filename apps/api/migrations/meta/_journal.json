@@ -218,6 +218,13 @@
       "when": 1789300586175,
       "tag": "0030_organizer_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "6",
+      "when": 1789302950479,
+      "tag": "0031_reservation_expiry_indexes",
+      "breakpoints": true
     }
   ]
 }
