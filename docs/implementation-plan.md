@@ -56,16 +56,21 @@ transport, scanner access and Expo authentication. Support attachments now have
 11 passing D1/R2/workerd tests, and all 33 support tests pass together. Content
 validation, private downloads, atomic message links and cleanup are implemented.
 The attachment composer has passed multilingual browser acceptance, including
-upload/message response loss and revoked access. Native offline storage is in
-progress. Event reporting and retained history APIs now have scoped D1 evidence;
-their web dashboards are in progress.
+upload/message response loss and revoked access. Native offline storage and the
+encrypted journal have 46 passing native tests, including 33 offline tests on
+actual SQLCipher files, and iOS/Android JavaScript bundles. Physical-device
+acceptance remains pending. Event reporting and retained history now have API
+and browser evidence, including exact reporting totals and duplication recovery
+after a lost response.
 
 This is partial release coverage. Actual refunds and signed webhooks, remaining
 web workflows, delivery, reporting, Expo/offline, external OAuth/email/analytics,
 deployment and physical-device checks remain open. The last full integration
-baseline passed 424 tests across 32 files. Scoped formatting/lint/type checks
-and the complete web/Worker/Astro build also pass. Native bundling and the next
-web/attachment units are being validated separately.
+baseline passed 424 tests across 32 files. The subsequent 633-test run passed
+632 tests; its remaining test expected an older audit-trigger error name. The
+updated assertion passed separately. Scoped formatting/lint/type checks and
+the complete web/Worker/Astro build also pass. The next complete run will include
+the queued delivery implementation.
 The saved checkpoint is historical; use the current evidence documents for work
 completed since resuming.
 
@@ -232,15 +237,15 @@ controls and external/background delivery remain pending.
 
 - [ ] Expo native development builds, Google/email sign-in, assigned-event list,
       camera scans, attendee search, counts and permission-checked reversal.
-- [ ] SQLCipher cache with SecureStore keys; signed account/device/event snapshots,
+- [x] SQLCipher cache with SecureStore keys; signed account/device/event snapshots,
       token hashes without raw credentials and four-hour expiry capped by event end.
-- [ ] Minute refresh while connected; provisional results, snapshot age and separate
+- [x] Minute refresh while connected; provisional results, snapshot age and separate
       pending counts; unknown/expired data and clock rollback require connectivity.
-- [ ] Stable scan operation IDs, local atomic duplicate prevention, restart-safe
+- [x] Stable scan operation IDs, local atomic duplicate prevention, restart-safe
       journals, batch replay, per-operation results and audited local undo.
 - [ ] Two disconnected devices produce one canonical admission and a recorded
       conflict after sync; current cancellation/refund/revocation checks apply.
-- [ ] Same-account journal recovery after sign-out, device revocation/loss incident,
+- [x] Same-account journal recovery after sign-out, device revocation/loss incident,
       24-hour acknowledgement cleanup and seven-day unsynchronized expiry.
 - [ ] Organizer/check-in-lead conflict review with reasons; unauthorized operations
       may be audited but cannot gain admission authority.
@@ -259,8 +264,13 @@ controls and external/background delivery remain pending.
       queries; provisional offline results excluded from confirmed attendance.
 - [ ] GA4 opt-in per origin, sanitized approved public-route events, reporting IDs,
       server credentials, scoped aggregates, one-hour cache and failure fallback.
-- [ ] Retained past/cancelled events, append-only scoped activity timeline and
+- [x] Retained past/cancelled events, append-only scoped activity timeline and
       allowlisted duplication into a fresh unactivated draft without transactions.
+
+Evidence: [native offline](./evidence/mobile-offline.md),
+[event analytics](./evidence/analytics.md), and
+[web history](./evidence/web-history.md). Multi-event reporting, GA4 and native
+device acceptance remain separate required checks.
 
 ### M7-M8: complete release evidence
 

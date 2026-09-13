@@ -11,6 +11,9 @@ import { Loading } from "@/events/ui"
 import { SupportRoute } from "@/support"
 import { isSupportPath } from "@/support/policies"
 import { payoutEventId } from "@/payouts/policies"
+import { HistoryRoute } from "@/history"
+import { isHistoryPath } from "@/history/policies"
+import { analyticsEventId } from "@/analytics/policies"
 import {
   createInvitationMemory,
   readInvitationToken,
@@ -24,6 +27,16 @@ const InvitationPage = lazy(() =>
 )
 const PayoutPage = lazy(() =>
   import("@/payouts/page").then((module) => ({ default: module.PayoutPage }))
+)
+const EventAnalyticsPage = lazy(() =>
+  import("@/analytics/page").then((module) => ({
+    default: module.EventAnalyticsPage,
+  }))
+)
+const AnalyticsIndexPage = lazy(() =>
+  import("@/analytics/index-page").then((module) => ({
+    default: module.AnalyticsIndexPage,
+  }))
 )
 
 const initialURL = new URL(window.location.href)
@@ -51,6 +64,29 @@ if (
 
 function AppRoutes() {
   const { messages: t } = useAccount()
+  if (window.location.pathname === "/organizer/analytics")
+    return (
+      <AppShell>
+        <Suspense fallback={<Loading />}>
+          <AnalyticsIndexPage />
+        </Suspense>
+      </AppShell>
+    )
+  const analyticsId = analyticsEventId(window.location.pathname)
+  if (analyticsId)
+    return (
+      <AppShell>
+        <Suspense fallback={<Loading />}>
+          <EventAnalyticsPage eventId={analyticsId} />
+        </Suspense>
+      </AppShell>
+    )
+  if (isHistoryPath(window.location.pathname))
+    return (
+      <AppShell>
+        <HistoryRoute path={window.location.pathname} />
+      </AppShell>
+    )
   const payoutId = payoutEventId(window.location.pathname)
   if (payoutId)
     return (

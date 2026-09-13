@@ -19,6 +19,13 @@ import { useAccount } from "@/auth/context"
 import { useAccessText } from "@/access/messages"
 import { useSupportText } from "@/support/messages"
 import { usePayoutText } from "@/payouts/messages"
+import { useHistoryText } from "@/history/messages"
+import { useAnalyticsText } from "@/analytics/messages"
+import {
+  duplicateEligible,
+  duplicateHref,
+  eventHistoryHref,
+} from "@/history/policies"
 import { supportHref } from "@/support/policies"
 import { CancellationPanel } from "@/support/cancellation-panel"
 import { CalendarActions } from "./exports"
@@ -462,6 +469,35 @@ export function EventEditorPage({ eventId }: { eventId?: string }) {
   return <ExistingEventEditor eventId={eventId} />
 }
 
+function RetainedEventActions({ event }: { event: EventApi }) {
+  const [openedAt] = useState(Date.now)
+  const { account } = useAccount()
+  const { t: historyText } = useHistoryText()
+  const { t: analyticsText } = useAnalyticsText()
+  return (
+    <>
+      {account?.user.id === event.organizerId ? (
+        <>
+          <a
+            className="secondary-link"
+            href={`/events/${segment(event.id)}/analytics`}
+          >
+            {analyticsText("title")}
+          </a>
+          <a className="secondary-link" href={eventHistoryHref(event.id)}>
+            {historyText("timeline")}
+          </a>
+        </>
+      ) : null}
+      {duplicateEligible(event, openedAt) ? (
+        <a className="secondary-link" href={duplicateHref(event.id)}>
+          {historyText("duplicate")}
+        </a>
+      ) : null}
+    </>
+  )
+}
+
 function ExistingEventEditor({ eventId }: { eventId: string }) {
   const { t: payoutText } = usePayoutText()
   const { t: supportText } = useSupportText()
@@ -496,6 +532,7 @@ function ExistingEventEditor({ eventId }: { eventId: string }) {
           {t("organize")}
         </a>
         <h1>{event.title}</h1>
+        <RetainedEventActions event={event} />
         <CancellationPanel event={event} onChanged={reload} />
         <a
           className="secondary-link"
@@ -526,6 +563,7 @@ function ExistingEventEditor({ eventId }: { eventId: string }) {
           <h1>{event.title}</h1>
         </div>
         <div className="event-actions">
+          <RetainedEventActions event={event} />
           <a
             className="secondary-link"
             href={`/organizer/events/${segment(event.id)}/payouts`}

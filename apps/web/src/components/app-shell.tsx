@@ -11,6 +11,8 @@ import { LocaleSelect } from "@/auth/locale-select"
 import { useTheme } from "./theme-provider"
 import { useEventText } from "@/events/messages"
 import { useSupportText } from "@/support/messages"
+import { useHistoryText } from "@/history/messages"
+import { useAnalyticsText } from "@/analytics/messages"
 
 export function AppShell({
   children,
@@ -23,6 +25,8 @@ export function AppShell({
   const { theme, setTheme } = useTheme()
   const { t: eventLabel } = useEventText()
   const { t: supportLabel } = useSupportText()
+  const { t: historyLabel } = useHistoryText()
+  const { t: analyticsLabel } = useAnalyticsText()
   const dark =
     theme === "dark" ||
     (theme === "system" &&
@@ -85,7 +89,8 @@ export function AppShell({
           href="/events"
           aria-current={
             window.location.pathname === "/" ||
-            window.location.pathname.startsWith("/events")
+            (window.location.pathname.startsWith("/events") &&
+              !window.location.pathname.endsWith("/analytics"))
               ? "page"
               : undefined
           }
@@ -95,13 +100,42 @@ export function AppShell({
         <a
           href="/organizer/events"
           aria-current={
-            window.location.pathname.startsWith("/organizer/events")
+            window.location.pathname.startsWith("/organizer/events") &&
+            !window.location.pathname.endsWith("/history") &&
+            !window.location.pathname.endsWith("/duplicate")
               ? "page"
               : undefined
           }
         >
           {eventLabel("organize")}
         </a>
+        {status === "active" ? (
+          <>
+            <a
+              href="/organizer/analytics"
+              aria-current={
+                window.location.pathname === "/organizer/analytics" ||
+                window.location.pathname.endsWith("/analytics")
+                  ? "page"
+                  : undefined
+              }
+            >
+              {analyticsLabel("availableEvents")}
+            </a>
+            <a
+              href="/organizer/history"
+              aria-current={
+                window.location.pathname === "/organizer/history" ||
+                window.location.pathname.endsWith("/history") ||
+                window.location.pathname.endsWith("/duplicate")
+                  ? "page"
+                  : undefined
+              }
+            >
+              {historyLabel("title")}
+            </a>
+          </>
+        ) : null}
         {status === "active" ? (
           <a
             href="/orders"

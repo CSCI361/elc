@@ -762,7 +762,7 @@ describe("support cases and durable history on D1", () => {
         )
         .bind(opened.case.id)
         .run()
-    ).rejects.toThrow("support_audit_immutable")
+    ).rejects.toThrow(/(?:support_audit|audit_entries)_immutable/)
     await expect(
       db.batch([
         db
