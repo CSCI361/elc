@@ -1,6 +1,13 @@
 import { useAccount } from "../auth/context"
 const copy = {
   title: ["Операциялық жазбалар", "Операционные записи", "Operational records"],
+  campaignId: ["Промоакция ID", "ID кампании", "Campaign ID"],
+  invalidFilters: [
+    "URL сүзгілері жарамсыз. Сүзгілерді тазалаңыз.",
+    "Недопустимые фильтры в URL. Сбросьте фильтры.",
+    "Invalid URL filters. Reset the filters.",
+  ],
+  resetFilters: ["Сүзгілерді тазарту", "Сбросить фильтры", "Reset filters"],
   kind: ["Жазба түрі", "Тип записей", "Record type"],
   orders: ["Тапсырыстар", "Заказы", "Orders"],
   payments: ["Төлемдер", "Платежи", "Payments"],

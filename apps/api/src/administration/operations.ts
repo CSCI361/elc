@@ -65,6 +65,10 @@ export async function listOperations(
     )
     bindings.push(input.accountId)
   }
+  if (input.campaignId) {
+    parts.push("o.campaign_id=?")
+    bindings.push(input.campaignId)
+  }
   await dependencies.beforeRead?.()
   const now = (dependencies.now ?? Date.now)()
   const select =

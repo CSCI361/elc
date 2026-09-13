@@ -112,15 +112,20 @@ Protected reads and scheduled expiry pass the full regression. Offline
 operations, cached mobile seat/status labels and nonempty recovery reconciliation
 now pass their focused/runtime acceptance and the combined full regression.
 
-The remaining feature identified by the review is a bounded platform campaign
-catalog and promotional-code activity view (SRS 4.12). Implement
-`GET /admin/campaigns` with current `platform:moderate` authority, independent
-active-hold and committed-redemption counts, and retained event metadata. Omit
-redeemable codes, token hashes and sharing URLs. Add a `campaignId` filter to
-order operations and use existing audit search for campaign lifecycle history.
-The localized administration view should link to those records without exposing
-organizer mutations. Count usage only after selecting a bounded campaign page;
-verify current authority, retention, attribution and cursor scope in D1 tests.
+The platform campaign catalog and promotional-code activity view (SRS 4.12)
+are implemented and saved at the 2026-09-13 checkpoint. The dedicated reader
+requires current `platform:moderate` authority and exposes bounded retained
+metadata with active-hold and committed-redemption counts. It excludes codes,
+hashes and sharing URLs. The localized catalog links to campaign-filtered orders
+and lifecycle audit; CSV preserves the displayed filters. No migration was needed.
+The API's 12 new cases and 20 existing operations/schema checks pass, as do the
+web's 25 policy cases and both scoped checks. Root integration review, disposable
+browser acceptance, full checks, regression and build remain pending. See
+[API evidence](./evidence/platform-campaigns-api.md),
+[web evidence](./evidence/platform-campaigns-web.md), and the exact restart steps
+in the [resume checkpoint](./resume-checkpoint.md). Work is paused at the user's
+request; the previous full-suite baseline remains 1,408 tests across 84 files.
+
 Actual [Polar signed delivery and a fulfilled-order refund](./evidence/polar-webhooks-refund.md)
 now pass through the local Worker. Five genuine events, exact replay, tampered
 body rejection and provider redelivery preserve one event/outbox row per event.

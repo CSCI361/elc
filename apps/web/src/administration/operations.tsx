@@ -11,6 +11,12 @@ import { EventError, Field, Loading, SelectField } from "../events/ui"
 import { useHistoryText } from "../history/messages"
 import { useAdministrationText } from "./messages"
 import { useOperationsText } from "./operations-messages"
+import {
+  operationsFilters,
+  operationsSearch,
+  operationsSubmission,
+  type OperationsQuery,
+} from "./operations-policies"
 import { OperationsExport } from "./operations-export"
 
 type Item = OperationsResponse["items"][number]
@@ -118,29 +124,18 @@ function Record({ item }: { item: Item }) {
     </article>
   )
 }
-export function OperationsRecords() {
+function CurrentOperations({ initial }: { initial: OperationsQuery }) {
   const { t } = useOperationsText(),
     { t: adminText } = useAdministrationText()
-  const [kind, setKind] = useState<OperationsKind>("orders"),
-    [q, setQ] = useState(""),
-    [eventId, setEventId] = useState(""),
-    [accountId, setAccountId] = useState("")
-  const [search, setSearch] = useState({
-      kind,
-      q: "",
-      eventId: "",
-      accountId: "",
-      after: "",
-    }),
-    [denied, setDenied] = useState(false)
-  const parameters = new URLSearchParams({
-    kind: search.kind,
-    q: search.q,
-    limit: "20",
-  })
-  for (const key of ["eventId", "accountId", "after"] as const)
-    if (search[key]) parameters.set(key, search[key])
-  const query = parameters.toString(),
+  const [kind, setKind] = useState<OperationsKind>(initial.kind),
+    [q, setQ] = useState(initial.q),
+    [eventId, setEventId] = useState(initial.eventId ?? ""),
+    [accountId, setAccountId] = useState(initial.accountId ?? ""),
+    [campaignId, setCampaignId] = useState(initial.campaignId ?? "")
+  const [search, setSearch] = useState(initial),
+    [denied, setDenied] = useState(false),
+    [validation, setValidation] = useState<unknown>(null)
+  const query = operationsSearch(search),
     resource = useResource(
       `/admin/operations?${query}`,
       operationsResponseSchema,
@@ -148,17 +143,23 @@ export function OperationsRecords() {
     )
   function submit(event: FormEvent) {
     event.preventDefault()
-    setDenied(false)
-    setSearch({
+    const next = operationsSubmission({
       kind,
-      q: q.trim(),
-      eventId: eventId.trim(),
-      accountId: accountId.trim(),
-      after: "",
+      q,
+      eventId,
+      accountId,
+      campaignId,
     })
+    if (!next) {
+      setValidation(new EventApiError("INVALID_INPUT", 400))
+      return
+    }
+    setValidation(null)
+    setDenied(false)
+    setSearch(next)
     resource.reload()
   }
-  const navigate = (after = "") => {
+  const navigate = (after?: string) => {
     setDenied(false)
     setSearch({ ...search, after })
   }
@@ -169,7 +170,11 @@ export function OperationsRecords() {
         <SelectField
           label={t("kind")}
           value={kind}
-          onChange={(event) => setKind(event.target.value as OperationsKind)}
+          onChange={(event) => {
+            const value = event.target.value as OperationsKind
+            setKind(value)
+            if (value !== "orders") setCampaignId("")
+          }}
         >
           {(["orders", "payments", "audit"] as const).map((value) => (
             <option key={value} value={value}>
@@ -196,10 +201,19 @@ export function OperationsRecords() {
           value={accountId}
           onChange={(event) => setAccountId(event.target.value)}
         />
+        {kind === "orders" ? (
+          <Field
+            label={t("campaignId")}
+            maxLength={128}
+            value={campaignId}
+            onChange={(event) => setCampaignId(event.target.value)}
+          />
+        ) : null}
         <button type="submit" className="primary-link">
           {adminText("search")}
         </button>
       </form>
+      {validation ? <EventError error={validation} /> : null}
       {denied || resource.error ? (
         <EventError
           error={resource.error ?? new EventApiError("FORBIDDEN", 403)}
@@ -246,6 +260,22 @@ export function OperationsRecords() {
           )}
         </>
       )}
+    </>
+  )
+}
+
+export function OperationsRecords() {
+  const { t } = useOperationsText()
+  const [initial] = useState(() => operationsFilters(window.location.search))
+  return initial ? (
+    <CurrentOperations initial={initial} />
+  ) : (
+    <>
+      <h2>{t("title")}</h2>
+      <p role="alert">{t("invalidFilters")}</p>
+      <a href="/admin/operations" className="text-action">
+        {t("resetFilters")}
+      </a>
     </>
   )
 }

@@ -3,8 +3,18 @@ import { requireVerifiedSession } from "../auth/session"
 import type { Bindings } from "../env"
 import { listAdministration, setSuspension } from "./service"
 import { listOperations, exportOperations } from "./operations"
+import { listPlatformCampaigns } from "./campaigns"
 
 export const administrationRoutes = new Hono<{ Bindings: Bindings }>()
+  .get("/admin/campaigns", async (c) =>
+    c.json(
+      await listPlatformCampaigns(
+        c.env.DB,
+        (await requireVerifiedSession(c)).user.id,
+        c.req.query()
+      )
+    )
+  )
   .get("/admin/operations", async (c) =>
     c.json(
       await listOperations(

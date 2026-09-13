@@ -1,11 +1,75 @@
 # Resume checkpoint
 
-Saved on 2026-09-13 at the user's request before going offline. The user has since
-explicitly resumed from this checkpoint. This file preserves the saved state;
-current progress is tracked in the implementation plan. This is a development
-checkpoint, not a completed academic release.
+Saved on 2026-09-13 at the user's request to pause and resume later. This
+checkpoint supersedes the historical continuation notes below. The academic
+release is incomplete.
 
-## Current continuation state
+## Resume here
+
+Repository: `/Users/yerassyl/dev/elc`. Branch: `feat/academic-release`.
+The local `chore: checkpoint platform campaign review` commit saves the current
+API, shared contract, web implementation, tests and evidence. Find its hash with
+`git log -1 --oneline`; do not reset to the preceding baseline. The last complete
+integration baseline is `c6e4271`, with 1,408 tests across 84 files passing.
+
+Platform campaign review is implemented but awaiting integration acceptance.
+Both agents finished, returned ownership and have no remaining processes or
+edits. No full regression or browser fixture is running. The owned web/Worker
+and Astro development servers were stopped for this checkpoint. The existing
+browser session and local database are preserved.
+
+Focused results for the pending unit:
+
+- API: 12 new campaign cases passed; 20 existing operations/schema checks also
+  passed. Scoped checks passed seven code files. The executed query plan uses a
+  bounded materialized page and `promo_usage` for both counters. No migration.
+- Web: 25 policy tests passed. Scoped formatting, lint and type checks passed.
+  The localized catalog, validated order/audit links and exact CSV filters are
+  implemented. Browser acceptance has not run.
+- Evidence: [API](./evidence/platform-campaigns-api.md) and
+  [web](./evidence/platform-campaigns-web.md). These documents distinguish the
+  focused results from pending integration checks.
+
+Resume in this order:
+
+1. Read this checkpoint, the [implementation plan](./implementation-plan.md),
+   and [architecture decisions](./architecture-decisions.md). Architecture
+   overrides the [SRS](./elc_SRS_Initial_Draft.pdf). Inspect `git status` and run
+   `vp install` before development. Keep the full academic-release scope.
+2. Review the campaign reader, shared contract and operations filters, then the
+   web catalog and URL initialization. The API is `GET /api/admin/campaigns`;
+   the browser route is `/admin/campaigns`. No organizer codes, token hashes or
+   redeemable URLs belong in the platform response.
+3. Start `vp run dev` for port 5173. Start `vp run dev:marketing` only when
+   marketing verification is needed. Rediscover the `elc-web-admin` browser
+   session; do not rely on an old CDP port or tool session ID.
+4. Inspect and run the prepared private helper
+   `.wrangler/web-platform-campaigns-acceptance.mjs`. Its syntax check passed,
+   but it has never run and has created no fixtures. The CSV button's actual
+   English label is `Export this page as CSV`. The helper uses disposable
+   synthetic accounts and explicitly synthetic local paid activation, with no
+   Polar call. Verify its exact selectors before running. It covers usage,
+   pagination, KK/RU/EN mobile layout, order/audit drilldowns, CSV, authority
+   loss and failed-read clearing. Check cleanup and visually inspect screenshots.
+5. Resolve integration findings, update evidence, then run `vp check --fix`.
+   Freeze application/test edits before `vp test`; also run `vp run build`.
+   A full regression commonly takes about ten minutes with quiet logs. Poll the
+   same process rather than restarting it. Do not edit during commit hooks.
+6. Record the actual integration result and commit any fixes. Continue the
+   remaining provider, deployment and physical-device acceptance gates in the
+   plan. Do not treat local tests as proof of those gates.
+
+Preserve ignored `apps/api/.dev.vars` (mode 0600), `.wrangler/state`, private
+Polar acceptance files, and the protected pre-migration 0030/0031 exports until
+their manifest deadlines. No secrets are part of the checkpoint commit. Local
+builds copy `.dev.vars` into `apps/web/dist/elc_local/.dev.vars`; never deploy
+that local build output. Do not repeat the preserved Polar checkouts or mutate
+the compensated event to test cancellation. The original fulfilled order is
+already refunded, and the abandoned order already has one compensation refund.
+The temporary Polar webhook endpoint remains disabled. No provider action,
+push or deployment was performed while making this checkpoint.
+
+## Previously validated work
 
 Commits `dbb6136` and `7b7e94c` save protected reads and reservation expiry.
 Commits `0456053` and `8a2d2c1` save offline operations web/API/mobile and the
@@ -24,10 +88,8 @@ This is a bundler split, not evidence of reduced total initial download. Build
 session 78303 completed. The full regression passes 1,408 tests across 84 files
 in 633.07 seconds. Session 55885 exited 0; its log is
 `.wrangler/offline-recovery-tests.log`. Check/build logs use
-`.wrangler/offline-recovery-{check,build}.log`. Source freeze is lifted after this
-result. Next implement platform promotional-code activity review using the
-outline in the implementation plan. The two agents
-have returned ownership; their next-unit preparation was read-only.
+`.wrangler/offline-recovery-{check,build}.log`. This result applies to the committed offline/recovery baseline. The pending
+platform campaign integration is described in the current checkpoint above.
 
 The latest validated integration closes protected-read authorization races and
 adds scheduled reservation expiry. See the two evidence documents linked from

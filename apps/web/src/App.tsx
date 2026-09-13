@@ -90,7 +90,7 @@ function AppRoutes() {
       </AppShell>
     )
   const administrationSection =
-    /^\/admin\/(accounts|events|settings|operations)$/.exec(
+    /^\/admin\/(accounts|events|settings|operations|campaigns)$/.exec(
       window.location.pathname
     )?.[1]
   if (administrationSection)
@@ -104,6 +104,7 @@ function AppRoutes() {
                 | "events"
                 | "settings"
                 | "operations"
+                | "campaigns"
             }
           />
         </Suspense>

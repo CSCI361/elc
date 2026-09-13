@@ -7,14 +7,24 @@ import {
   refundStateSchema,
 } from "./states"
 
-export const operationsQuerySchema = z.strictObject({
-  kind: z.enum(["orders", "payments", "audit"]).default("orders"),
-  q: z.string().trim().max(200).default(""),
-  eventId: entityIdSchema.optional(),
-  accountId: entityIdSchema.optional(),
-  after: entityIdSchema.optional(),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
-})
+export const operationsQuerySchema = z
+  .strictObject({
+    kind: z.enum(["orders", "payments", "audit"]).default("orders"),
+    q: z.string().trim().max(200).default(""),
+    eventId: entityIdSchema.optional(),
+    accountId: entityIdSchema.optional(),
+    campaignId: entityIdSchema.optional(),
+    after: entityIdSchema.optional(),
+    limit: z.coerce.number().int().min(1).max(50).default(20),
+  })
+  .superRefine((input, context) => {
+    if (input.campaignId && input.kind !== "orders")
+      context.addIssue({
+        code: "custom",
+        path: ["campaignId"],
+        message: "Campaign filters apply only to orders.",
+      })
+  })
 const record = {
   id: entityIdSchema,
   createdAt: utcTimestampSchema,

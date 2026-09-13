@@ -34,3 +34,4 @@ export * from "./operations-api"
 
 export * from "./organizer-records-api"
 export * from "./organizer-profile-api"
+export * from "./platform-campaigns-api"
