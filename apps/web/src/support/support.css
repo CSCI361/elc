@@ -80,6 +80,49 @@
   font-size: 0.8rem;
   user-select: all;
 }
+.support-attachments {
+  margin: 0;
+  border-block: 1px solid var(--border) !important;
+  padding-block: 1rem !important;
+}
+.support-attachments legend {
+  font-weight: 700;
+}
+.support-attachments input {
+  max-width: 100%;
+  min-width: 0;
+}
+.support-attachments p {
+  margin: 0;
+}
+.support-file-list {
+  display: grid;
+  gap: 0.8rem;
+  padding: 0;
+  list-style: none;
+}
+.support-file-list li {
+  display: grid;
+  gap: 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  min-width: 0;
+}
+.support-file-list small {
+  color: var(--muted-foreground);
+}
+.support-file-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.support-file-list button {
+  min-height: 44px;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 .support-notice {
   padding: 1rem;
   border: 1px solid var(--border);

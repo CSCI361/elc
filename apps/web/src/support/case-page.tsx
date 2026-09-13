@@ -1,5 +1,4 @@
 import {
-  addSupportMessageSchema,
   assignSupportCaseSchema,
   supportAssigneeListSchema,
   supportCaseResponseSchema,
@@ -14,13 +13,21 @@ import { useAccount } from "@/auth/context"
 import { Button } from "@/components/ui/button"
 import { EventApiError, segment, useCommand, useResource } from "@/events/api"
 import { useEventText } from "@/events/messages"
-import { EventError, Loading, SelectField, TextArea } from "@/events/ui"
+import { EventError, Loading, SelectField } from "@/events/ui"
 import { RefundPanel } from "./refund-panel"
 import { useSupportText } from "./messages"
 import { useSupportLive } from "./live"
 import { useSupportCase } from "./case-resource"
+import { AttachmentDownload, AttachmentReply } from "./attachments"
+import { supportAccessLost } from "./attachment-api"
 
-function Change({ change }: { change: SupportCaseChange }) {
+function Change({
+  change,
+  onAccessLost,
+}: {
+  change: SupportCaseChange
+  onAccessLost: (error: unknown) => void
+}) {
   const { locale, t } = useSupportText()
   return (
     <li>
@@ -46,6 +53,18 @@ function Change({ change }: { change: SupportCaseChange }) {
         <p>{change.message.body}</p>
       ) : change.kind === "status" ? (
         <p>{t(change.after.status)}</p>
+      ) : null}
+      {change.message?.attachments?.length ? (
+        <ul className="support-file-list">
+          {change.message.attachments.map((file) => (
+            <AttachmentDownload
+              caseId={change.caseId}
+              file={file}
+              key={file.id}
+              onAccessLost={onAccessLost}
+            />
+          ))}
+        </ul>
       ) : null}
     </li>
   )
@@ -207,65 +226,14 @@ function Status({
     </section>
   )
 }
-function Reply({
-  value,
-  reload,
-}: {
-  value: SupportCase
-  reload: (saved?: boolean) => void
-}) {
-  const { t } = useSupportText(),
-    { t: eventText } = useEventText(),
-    command = useCommand()
-  const [body, setBody] = useState("")
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const parsed = addSupportMessageSchema.safeParse({
-      requestId: "validate",
-      expectedRevision: value.revision,
-      body,
-    })
-    if (!parsed.success) {
-      command.setError(new EventApiError("INVALID_INPUT", 400))
-      return
-    }
-    const result = await command.send(
-      `/support/cases/${segment(value.id)}/messages`,
-      supportMutationResponseSchema,
-      parsed.data
-    )
-    if (result) {
-      setBody("")
-      reload(true)
-    }
-  }
-  return (
-    <form className="support-form" onSubmit={submit}>
-      {command.error ? (
-        <EventError error={command.error} retry={reload} />
-      ) : null}
-      <TextArea
-        label={t("message")}
-        value={body}
-        onChange={(event) => setBody(event.target.value)}
-        required
-        maxLength={8000}
-        rows={5}
-        disabled={command.pending}
-      />
-      <p className="field-hint">{t("privacy")}</p>
-      <Button type="submit" disabled={command.pending}>
-        {command.pending ? eventText("loading") : t("send")}
-      </Button>
-    </form>
-  )
-}
 function CaseContents({
   data,
   reload,
+  onAccessLost,
 }: {
   data: ReturnType<typeof supportCaseResponseSchema.parse>
   reload: (saved?: boolean) => void
+  onAccessLost: (error: unknown) => void
 }) {
   const { t } = useSupportText(),
     { t: eventText } = useEventText()
@@ -290,7 +258,7 @@ function CaseContents({
     if (notice) noticeRef.current?.focus()
   }, [notice])
   useSupportLive(data.case.id, data.case.lastSequence, reloadAll)
-  if (history.error)
+  if (supportAccessLost(history.error))
     return <EventError error={history.error} retry={reloadAll} />
   return (
     <>
@@ -343,12 +311,19 @@ function CaseContents({
       <div className="support-grid">
         <section className="event-panel">
           <h2>{t("conversation")}</h2>
+          {history.error ? (
+            <EventError error={history.error} retry={history.reload} />
+          ) : null}
           {!history.data ? (
             <Loading />
           ) : (
             <ol className="support-timeline">
               {history.data.items.map((change) => (
-                <Change change={change} key={change.id} />
+                <Change
+                  change={change}
+                  key={change.id}
+                  onAccessLost={onAccessLost}
+                />
               ))}
             </ol>
           )}
@@ -382,11 +357,13 @@ function CaseContents({
               {t("latest")}
             </button>
           </div>
-          {data.permissions.canMessage ? (
-            <Reply value={data.case} reload={saved} />
-          ) : (
-            <p>{t("resolvedHint")}</p>
-          )}
+          {!data.permissions.canMessage ? <p>{t("resolvedHint")}</p> : null}
+          <AttachmentReply
+            value={data.case}
+            reload={saved}
+            onAccessLost={onAccessLost}
+            disabled={!data.permissions.canMessage}
+          />
         </section>
         <div>
           {data.permissions.canManage ? (
@@ -409,7 +386,8 @@ function CaseContents({
 }
 export function SupportCasePage({ caseId }: { caseId: string }) {
   const { t } = useSupportText()
-  const detail = useSupportCase(caseId)
+  const { account } = useAccount()
+  const detail = useSupportCase(caseId, account?.user.id ?? "")
   return (
     <div className="events-page support-page">
       <a className="back-link" href="/support">
@@ -417,10 +395,16 @@ export function SupportCasePage({ caseId }: { caseId: string }) {
       </a>
       {detail.error ? (
         <EventError error={detail.error} retry={detail.reload} />
-      ) : !detail.data ? (
+      ) : null}
+      {detail.data ? (
+        <CaseContents
+          key={`${account?.user.id}:${caseId}`}
+          data={detail.data}
+          reload={detail.reload}
+          onAccessLost={detail.deny}
+        />
+      ) : detail.error ? null : (
         <Loading />
-      ) : (
-        <CaseContents data={detail.data} reload={detail.reload} />
       )}
     </div>
   )
