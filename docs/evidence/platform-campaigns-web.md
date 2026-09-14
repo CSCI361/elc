@@ -35,3 +35,32 @@ vp check apps/web/src/administration/campaigns* apps/web/src/administration/oper
 ```
 
 The integrating agent owns disposable local browser verification and canonical database assertions. Those results are recorded after that run; the checks above do not claim browser acceptance or provider activity.
+
+## Integration acceptance (2026-09-14)
+
+Resumed on a fresh clone of `feat/academic-release` at `b007814`. A disposable
+Playwright run against the local Worker created a moderator and an organizer
+through real sign-up, email verification and sign-in, one unlisted event, one
+free ticket type and 22 disabled campaigns. All 24 recorded checks passed:
+
+- An organizer without `platform:moderate` receives HTTP 403 from the catalog API.
+- The catalog API response contains no campaign codes, hashes or URLs.
+- Kazakh, Russian and English each show 20 cards at 390 pixels with no
+  horizontal overflow and no page errors.
+- Pagination shows 20, then 2, then returns to the first page.
+- A literal name search narrows the catalog to one campaign with zero holds and
+  zero committed redemptions.
+- Attributed-order and audit links carry the campaign and event filters and link
+  only to `/admin/operations`; no redeemable campaign URL appears.
+- The audit drilldown CSV downloads with the campaign lifecycle row, and the
+  orders drilldown loads without the invalid-filter state.
+- Revoking `platform:moderate` removes displayed campaigns on focus refresh, and
+  the API then returns HTTP 403.
+
+All campaigns in this fixture were disabled with no usage; nonzero hold and
+redemption counters remain covered by the API integration tests. The headless
+Chromium shell rendered Kazakh dates as `2026 M09 14` because it ships reduced
+locale data; Node's full ICU formats the same value as `2026 ж. 14 қыр.`, so no
+code change was made. Kazakh date display in a full browser remains part of the
+recorded browser-version acceptance. All synthetic accounts, events, campaigns,
+mail rows and R2 payloads were removed.

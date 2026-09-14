@@ -24,3 +24,11 @@ Focused verification uses disposable D1 databases created from all current migra
 - Scoped `vp check --fix` passed for all seven code files, covering the new shared contract, shared exports, operations query, campaign reader/tests and administration wiring.
 
 No provider or preserved local database was accessed. Browser acceptance and full regression are recorded separately by the integration task.
+
+## Integration regression (2026-09-14)
+
+The full suite passes 1,445 tests across 86 files in 645.91 seconds, including
+the 12 campaign API cases. `vp check` passes 571 formatted files and 465 lint and
+type-checked files, and `vp run build` exits 0 for the web, Worker and Astro
+builds. Browser acceptance is recorded in the
+[web evidence](./platform-campaigns-web.md).

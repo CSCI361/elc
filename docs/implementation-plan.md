@@ -1,6 +1,6 @@
 # elc implementation plan
 
-Updated: 2026-09-13
+Updated: 2026-09-14
 
 Work resumed at the user's request from checkpoint `3edfe08`. The
 [resume checkpoint](./resume-checkpoint.md) records the saved payment/web work,
@@ -108,6 +108,13 @@ remains required before release completion.
 
 ## Remaining local work from the requirements review
 
+On 2026-09-14 the checkboxes below were reconciled with the linked evidence.
+An item is checked when its local tests or browser evidence pass and it names no
+external provider or physical device. Two-device conflicts, conflict review,
+paid event-cancellation refunds and payment replay are covered by D1 tests;
+their physical-device and Polar acceptance remain listed under M7-M8 and the
+external checks. Reported-event review and local seed data were added afterwards on the same day; see [event reports](./evidence/event-reports.md) and [seed data](./evidence/seed-data.md).
+
 Protected reads and scheduled expiry pass the full regression. Offline
 operations, cached mobile seat/status labels and nonempty recovery reconciliation
 now pass their focused/runtime acceptance and the combined full regression.
@@ -119,12 +126,10 @@ metadata with active-hold and committed-redemption counts. It excludes codes,
 hashes and sharing URLs. The localized catalog links to campaign-filtered orders
 and lifecycle audit; CSV preserves the displayed filters. No migration was needed.
 The API's 12 new cases and 20 existing operations/schema checks pass, as do the
-web's 25 policy cases and both scoped checks. Root integration review, disposable
-browser acceptance, full checks, regression and build remain pending. See
+web's 25 policy cases and both scoped checks. On 2026-09-14 disposable browser acceptance passed all 24 checks, the full regression passed 1,445 tests across 86 files, and full checks and builds passed. An independent integration review of the campaign unit found no correctness or security issues; its one open question, whether the campaign audit link returns rows, is answered by the browser run's audit CSV. See
 [API evidence](./evidence/platform-campaigns-api.md),
 [web evidence](./evidence/platform-campaigns-web.md), and the exact restart steps
-in the [resume checkpoint](./resume-checkpoint.md). Work is paused at the user's
-request; the previous full-suite baseline remains 1,408 tests across 84 files.
+in the [resume checkpoint](./resume-checkpoint.md). The previous full-suite baseline was 1,408 tests across 84 files.
 
 Actual [Polar signed delivery and a fulfilled-order refund](./evidence/polar-webhooks-refund.md)
 now pass through the local Worker. Five genuine events, exact replay, tampered
@@ -252,7 +257,7 @@ are reviewed; the integration owner reviews changes and commits deliberately.
 - [x] Establish `apps/api`, `apps/mobile`, `apps/marketing`, and `packages/shared`.
 - [x] Configure pnpm workspaces, Vite+ formatting/lint/type checks and tests.
 - [x] Fix existing validation failures; configure meaningful application builds.
-- [ ] Provide documented local setup, migrations, seed data and development commands.
+- [x] Provide documented local setup, migrations, seed data and development commands.
 - [ ] Commit CI checks, secret exclusions, and local/preview/demo resource configuration.
 
 Current evidence: the React and Hono Worker build together, local D1/R2/Queue/
@@ -272,7 +277,7 @@ narrow layout. Deployment and GA4 remain pending.
       web and Expo; native API requests attach their authenticated session.
 - [ ] Better Auth-generated schema and application Drizzle schema have reviewed
       SQL migrations applied through Wrangler, with reproducible seed fixtures.
-- [ ] Verified-account transactions and support; matching-email private invitations
+- [x] Verified-account transactions and support; matching-email private invitations
       with expiry/revocation; event staff permissions; explicit platform grants.
 - [ ] Negative authorization tests cover unrelated events/orders/tickets/cases,
       downloads, exports, analytics, history and unassigned mobile users.
@@ -297,16 +302,16 @@ account screens.
       verified payment -> canonical ticket/PDF/email -> check in -> reject duplicate.
 - [ ] Repeat with general admission, assigned seats, free registration and a
       fully discounted paid ticket (activation still required; no provider checkout).
-- [ ] Implement KZT 5,000 activation and compensation on failed activation;
+- [x] Implement KZT 5,000 activation and compensation on failed activation;
       organizer-paid 3% fee, full-refund fee reversal and seven-day payout holds.
 - [x] Ten-minute holds, one active checkout/account/event, six-ticket default,
       immutable payment-attempt contents and server-calculated price snapshots.
 - [x] Prove atomic last-ticket, same-seat, multi-seat and limited-promo races on
       D1/Workers. Zero-row conditional writes must not allow partial commits.
-- [ ] Prove duplicate/out-of-order payment events, expired/abandoned holds,
+- [x] Prove duplicate/out-of-order payment events, expired/abandoned holds,
       cancellation during payment, late-payment compensation and refund retries.
 - [x] Prove simultaneous check-ins, idempotent retries and authorized reversals.
-- [ ] Orders, inventory, promo, tickets, audit and outbox commit together; queue
+- [x] Orders, inventory, promo, tickets, audit and outbox commit together; queue
       failure/replay cannot duplicate tickets or lose required side effects.
 - [ ] Record actual Polar KZT checkout/refund compatibility. Use the documented
       internal-simulation fallback only with recorded evidence and decision.
@@ -338,18 +343,18 @@ event-cancellation and deployed acceptance remain pending.
 
 - [x] Web registration, verification, sign-in, password reset, account language,
       other-session revocation and sign-out with real local browser evidence.
-- [ ] Attendee discovery, event details, private invitation acceptance, registration,
+- [x] Attendee discovery, event details, private invitation acceptance, registration,
       checkout, confirmation, account orders, ticket downloads and support entry points.
-- [ ] Organizer profiles, event creation/edit/preview/publish/unpublish/cancel,
+- [x] Organizer profiles, event creation/edit/preview/publish/unpublish/cancel,
       visibility, capacity, ticket types/windows/hiding, staff and activation checklist.
 - [x] Accessible SVG seat map for the specified 80-seat hall, state labels,
       keyboard selection, atomic holds and preserved seat snapshots.
-- [ ] Platform search, reported-event review, user/event suspension, activation
+- [x] Platform search, reported-event review, user/event suspension, activation
       inspection, fee/settings configuration, operational exports and audit records.
-- [ ] Full refunds requested through cases; voluntary cutoff/admission checks,
+- [x] Full refunds requested through cases; voluntary cutoff/admission checks,
       automatic event-cancellation refunds, pending-refund admission block,
       conditional restocking and consumed completed promo redemptions.
-- [ ] Simulated payout records, unresolved-order holds and later adjustments.
+- [x] Simulated payout records, unresolved-order holds and later adjustments.
 
 Current evidence: the [web account flows](./evidence/web-authentication.md) work
 in Kazakh, Russian and English, with saved preferences, safe return paths and
@@ -375,9 +380,9 @@ The remaining external acceptance is pending.
       grayscale paper scanning succeeds on physical iOS and Android devices.
 - [ ] Resend notifications cover all documented account, ticket, payment, event,
       refund, payout and support events. Delivery failures remain separate.
-- [ ] Campaign creation/defaults/enabling, percentage/fixed discounts, applicability,
+- [x] Campaign creation/defaults/enabling, percentage/fixed discounts, applicability,
       expiry, limits and attributed reporting; scanners reject campaign QR codes.
-- [ ] Calendar links and `.ics` on event/confirmation views; stable UID, sequence,
+- [x] Calendar links and `.ics` on event/confirmation views; stable UID, sequence,
       time zones, cancellation metadata and fresh IDs when events are duplicated.
 - [ ] Verify replacement procedures that leave one calendar entry in Google web,
       Outlook web and Apple Calendar iOS/macOS; no automatic-sync claims.
@@ -403,24 +408,24 @@ Actual Resend acceptance remains pending.
       pending counts; unknown/expired data and clock rollback require connectivity.
 - [x] Stable scan operation IDs, local atomic duplicate prevention, restart-safe
       journals, batch replay, per-operation results and audited local undo.
-- [ ] Two disconnected devices produce one canonical admission and a recorded
+- [x] Two disconnected devices produce one canonical admission and a recorded
       conflict after sync; current cancellation/refund/revocation checks apply.
 - [x] Same-account journal recovery after sign-out, device revocation/loss incident,
       24-hour acknowledgement cleanup and seven-day unsynchronized expiry.
-- [ ] Organizer/check-in-lead conflict review with reasons; unauthorized operations
+- [x] Organizer/check-in-lead conflict review with reasons; unauthorized operations
       may be audited but cannot gain admission authority.
 
 ### M6: support, analytics and history
 
-- [ ] Contextual attendee and organizer-to-platform cases, categories, assignment,
+- [x] Contextual attendee and organizer-to-platform cases, categories, assignment,
       four statuses, messages, notifications and relationship-scoped access.
-- [ ] JPEG/PNG/PDF validation, quarantine, 5 MiB/three-file limits, metadata removal,
+- [x] JPEG/PNG/PDF validation, quarantine, 5 MiB/three-file limits, metadata removal,
       safe PDF restrictions, authorized attachment downloads and abandoned cleanup.
-- [ ] Durable Object WebSockets publish committed updates; permission revocation,
+- [x] Durable Object WebSockets publish committed updates; permission revocation,
       reconnect/cursor catch-up and duplicate handling preserve D1 history.
-- [ ] Authoritative capacity, ticket, gross/discount/refund/net/payout, ticket-type,
+- [x] Authoritative capacity, ticket, gross/discount/refund/net/payout, ticket-type,
       campaign and attendance metrics with correct date/time-zone semantics.
-- [ ] Required charts with matching tables, event/date/type filters and bounded
+- [x] Required charts with matching tables, event/date/type filters and bounded
       queries; provisional offline results excluded from confirmed attendance.
 - [ ] GA4 opt-in per origin, sanitized approved public-route events, reporting IDs,
       server credentials, scoped aggregates, one-hour cache and failure fallback.
@@ -487,6 +492,11 @@ screens and partial activation code still need the acceptance work recorded in
 
 | 2026-09-13 | [Organizer profiles](./evidence/organizer-profile-web.md) | Browser, 52 focused cases and full regression of 1,316 tests pass |
 | 2026-09-13 | [Polar refund and signed delivery](./evidence/polar-webhooks-refund.md) | One fulfilled-order refund, three invalidated credentials, five genuine events and provider redelivery pass |
+| 2026-09-14 | Fresh-clone validation | Added the missing web `zod` dependency; `vp check`, 1,445 tests across 86 files and all builds pass |
+| 2026-09-14 | [Platform campaigns](./evidence/platform-campaigns-web.md) | All 24 disposable browser checks pass in three locales at 390 pixels; fixtures removed |
+| 2026-09-14 | [Event reports](./evidence/event-reports.md) | Migration 0032, 12 API, 2 retention and 6 web tests, a fixed resubmission race and 19 browser checks pass |
+| 2026-09-14 | [Seed data](./evidence/seed-data.md) | 6 plan tests pass; two local runs create then reuse 4 demo accounts and 2 events |
+| 2026-09-14 | Final local integration | `vp check`, all builds, 6 seed tests and 1,465 tests across 88 files pass in 682.70 seconds |
 
 ## External checks awaiting access or execution
 

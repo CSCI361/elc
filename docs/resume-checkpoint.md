@@ -1,5 +1,17 @@
 # Resume checkpoint
 
+## Resumed on 2026-09-14
+
+Work resumed on a fresh clone of `feat/academic-release` at `b007814`, without
+the previous machine's ignored `.dev.vars`, `.wrangler/state` or Polar records.
+`vp run setup:local` created new local keys and all 32 migrations were applied
+to an empty local database. The web package now declares its `zod` dependency,
+which a fresh install requires. `vp check`, the full regression of 1,445 tests
+across 86 files and all builds pass. Platform campaign browser acceptance passed
+all 24 checks and its fixtures were removed; see the
+[web evidence](./evidence/platform-campaigns-web.md). An independent integration review of the campaign unit found no correctness or security issues; its one open question, whether the campaign audit link returns rows, is answered by the browser run's audit CSV. After those additions, `vp check`, all builds and the full regression of 1,465 tests across 88 files pass. The same day added reported-event review for SRS §4.12 (migration 0032) and `vp run seed:local` demonstration data; see the [event report](./evidence/event-reports.md) and [seed data](./evidence/seed-data.md) evidence. Provider, deployment and physical-device
+gates remain pending and cannot be run from this clone without credentials.
+
 Saved on 2026-09-13 at the user's request to pause and resume later. This
 checkpoint supersedes the historical continuation notes below. The academic
 release is incomplete.
