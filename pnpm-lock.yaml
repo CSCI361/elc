@@ -419,6 +419,9 @@ importers:
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
+      zod:
+        specifier: ^4.6.2
+        version: 4.6.2
     devDependencies:
       '@types/qrcode':
         specifier: 1.5.6
