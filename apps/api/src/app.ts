@@ -29,6 +29,7 @@ import { organizerRecordsRoutes } from "./organizer-records"
 import { organizerProfileRoutes } from "./organizer-profile"
 import { deliveryRoutes } from "./delivery/routes"
 import { administrationRoutes } from "./administration"
+import { reportRoutes } from "./reports"
 import { recoveryPaused } from "./recovery/gate"
 import { retentionRoutes } from "./retention"
 
@@ -155,6 +156,7 @@ export const app = new Hono<{
   .route("/api", historyRoutes)
   .route("/api", deliveryRoutes)
   .route("/api", administrationRoutes)
+  .route("/api", reportRoutes)
   .route("/api", retentionRoutes)
   .all("/api/*", (c) =>
     c.json(

@@ -1381,3 +1381,41 @@ export const supportAttachments = sqliteTable(
     ),
   ]
 )
+
+export const eventReports = sqliteTable(
+  "event_reports",
+  {
+    id: text("id").primaryKey(),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => events.id),
+    reporterId: text("reporter_id")
+      .notNull()
+      .references(() => user.id),
+    category: text("category", {
+      enum: ["misleading", "prohibited", "fraud", "safety", "other"],
+    }).notNull(),
+    details: text("details").notNull(),
+    state: text("state", { enum: ["open", "dismissed", "actioned"] })
+      .notNull()
+      .default("open"),
+    revision: integer("revision").notNull().default(1),
+    resolvedBy: text("resolved_by").references(() => user.id),
+    resolutionReason: text("resolution_reason"),
+    resolvedAt: integer("resolved_at"),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (t) => [
+    uniqueIndex("event_reports_open_reporter")
+      .on(t.eventId, t.reporterId)
+      .where(sql`${t.state} = 'open'`),
+    index("event_reports_queue").on(t.state, t.id),
+    index("event_reports_event_state").on(t.eventId, t.state),
+    index("event_reports_reporter").on(t.reporterId),
+    check(
+      "event_report_values",
+      sql`length(trim(${t.details})) BETWEEN 1 AND 1000 AND ${t.revision} > 0 AND ${t.updatedAt} >= ${t.createdAt} AND ((${t.state} = 'open' AND ${t.resolvedAt} IS NULL AND ${t.resolvedBy} IS NULL AND ${t.resolutionReason} IS NULL) OR (${t.state} <> 'open' AND ${t.resolvedAt} IS NOT NULL AND ${t.resolvedBy} IS NOT NULL AND length(trim(${t.resolutionReason})) BETWEEN 1 AND 500))`
+    ),
+  ]
+)

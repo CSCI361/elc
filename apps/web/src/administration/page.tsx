@@ -25,6 +25,7 @@ import {
 import "../analytics/analytics.css"
 import "./administration.css"
 import { PlatformCampaigns } from "./campaigns"
+import { PlatformEventReports } from "./reports"
 import { OperationsRecords } from "./operations"
 
 function Records({
@@ -211,7 +212,13 @@ function Workspace({
   section,
 }: {
   accountId: string
-  section: "accounts" | "events" | "settings" | "operations" | "campaigns"
+  section:
+    | "accounts"
+    | "events"
+    | "settings"
+    | "operations"
+    | "campaigns"
+    | "reports"
 }) {
   const { t } = useAdministrationText(),
     access = useResource("/admin/access", platformAccessResponseSchema, 15000)
@@ -245,6 +252,12 @@ function Workspace({
               {t("campaigns")}
             </a>
             <a
+              href="/admin/reports"
+              aria-current={section === "reports" ? "page" : undefined}
+            >
+              {t("reports")}
+            </a>
+            <a
               href="/admin/operations"
               aria-current={section === "operations" ? "page" : undefined}
             >
@@ -266,6 +279,8 @@ function Workspace({
           <ActivationFeeSettings />
         ) : section === "campaigns" ? (
           <PlatformCampaigns />
+        ) : section === "reports" ? (
+          <PlatformEventReports />
         ) : section === "operations" ? (
           <OperationsRecords />
         ) : (
@@ -280,7 +295,13 @@ function Workspace({
 export function AdministrationPage({
   section,
 }: {
-  section: "accounts" | "events" | "settings" | "operations" | "campaigns"
+  section:
+    | "accounts"
+    | "events"
+    | "settings"
+    | "operations"
+    | "campaigns"
+    | "reports"
 }) {
   const { account } = useAccount()
   return (

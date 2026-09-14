@@ -11,6 +11,7 @@ const copy = {
     "Operational records",
   ],
   campaigns: ["Промоакциялар", "Промокампании", "Promotional campaigns"],
+  reports: ["Шағымдар", "Жалобы", "Event reports"],
   accounts: ["Тіркелгілер", "Аккаунты", "Accounts"],
   events: ["Іс-шаралар", "События", "Events"],
   settings: ["Белсендіру алымы", "Сбор за активацию", "Activation fee"],

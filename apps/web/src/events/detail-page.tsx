@@ -42,6 +42,7 @@ import { useSupportText } from "@/support/messages"
 import { usePublicEventAnalytics } from "@/analytics/collection"
 import { CampaignNotice } from "./campaign-notice"
 import { useCampaignNoticeText } from "./campaign-notice-messages"
+import { EventReportForm } from "@/reports/report-form"
 
 function ReservationForm({
   event,
@@ -332,6 +333,7 @@ export function EventDetailPage({ eventId }: { eventId: string }) {
   const previewNow = useServerNow()
   const { t: supportText } = useSupportText()
   const { locale, t } = useEventText()
+  const { account } = useAccount()
   const detail = useResource(
     `/events/${segment(eventId)}${preview ? "/preview" : ""}`,
     eventDetailResponseSchema,
@@ -423,6 +425,9 @@ export function EventDetailPage({ eventId }: { eventId: string }) {
           >
             {supportText("help")}
           </a>
+          {account && !preview && account.user.id !== event.organizerId ? (
+            <EventReportForm eventId={event.id} />
+          ) : null}
         </div>
         <div>
           {inventory.error ? (

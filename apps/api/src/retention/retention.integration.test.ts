@@ -623,4 +623,32 @@ describe("academic retention on D1 and R2", () => {
     ])
       expect(await count(table)).toBe(0)
   })
+  const eventReport = (id: string, reporter: string, state = "open") =>
+    db
+      .prepare(`INSERT INTO event_reports(id,event_id,reporter_id,category,details,state,revision,resolved_by,resolution_reason,resolved_at,created_at,updated_at)
+   VALUES (?,'event',?,'misleading','Synthetic report',?,1,?,?,?,?,?)`)
+      .bind(
+        id,
+        reporter,
+        state,
+        state === "open" ? null : "other",
+        state === "open" ? null : "Reviewed",
+        state === "open" ? null : fixture.now,
+        fixture.now,
+        fixture.now
+      )
+      .run()
+  it("retires open and resolved event reports with the event", async () => {
+    await eventReport("open-report", "buyer")
+    await eventReport("resolved-report", "scanner", "dismissed")
+    expect(await retireEvent(db, "event", { now: clock })).toBe(true)
+    expect(await count("event_reports")).toBe(0)
+  })
+  it("keeps an inactive account while it filed or resolved a retained event report", async () => {
+    await eventReport("retained-report", "buyer", "dismissed")
+    expect(await cleanupInactiveProfiles(db, now)).toBe(0)
+    expect(
+      await db.prepare("SELECT id FROM user WHERE id='other'").first()
+    ).not.toBeNull()
+  })
 })

@@ -124,6 +124,7 @@ const accountReferences = `NOT EXISTS (SELECT 1 FROM events WHERE organizer_id=p
  AND NOT EXISTS (SELECT 1 FROM support_cases WHERE requester_id=p.user_id OR assignee_id=p.user_id)
  AND NOT EXISTS (SELECT 1 FROM audit_entries WHERE actor_id=p.user_id OR (scope='account' AND entity_id=p.user_id))
  AND NOT EXISTS (SELECT 1 FROM event_permissions WHERE user_id=p.user_id)
+ AND NOT EXISTS (SELECT 1 FROM event_reports WHERE reporter_id=p.user_id OR resolved_by=p.user_id)
  AND NOT EXISTS (SELECT 1 FROM invitations WHERE accepted_by=p.user_id)
  AND NOT EXISTS (SELECT 1 FROM reservations WHERE account_id=p.user_id)
  AND NOT EXISTS (SELECT 1 FROM payment_attempts WHERE actor_id=p.user_id)

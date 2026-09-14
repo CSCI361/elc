@@ -202,6 +202,7 @@ export async function retireEvent(
       db.prepare("DELETE FROM campaigns WHERE event_id=?").bind(id),
       db.prepare("DELETE FROM ticket_types WHERE event_id=?").bind(id),
       db.prepare("DELETE FROM invitations WHERE event_id=?").bind(id),
+      db.prepare("DELETE FROM event_reports WHERE event_id=?").bind(id),
       db.prepare("DELETE FROM event_permissions WHERE event_id=?").bind(id),
       db.prepare("DELETE FROM audit_entries WHERE event_id=?").bind(id),
       db.prepare("DELETE FROM event_images WHERE event_id=?").bind(id),

@@ -225,6 +225,13 @@
       "when": 1789302950479,
       "tag": "0031_reservation_expiry_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "6",
+      "when": 1789386907401,
+      "tag": "0032_event_reports",
+      "breakpoints": true
     }
   ]
 }
