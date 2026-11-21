@@ -1,5 +1,10 @@
 import { organizerHistoryResponseSchema } from "@elc/shared"
+import {
+  ClockCounterClockwiseIcon,
+  MagnifyingGlassIcon,
+} from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/ui/empty-state"
 import { segment, useResource } from "@/events/api"
 import { useEventText } from "@/events/messages"
 import { Field, SectionLoading, SelectField } from "@/events/ui"
@@ -23,7 +28,8 @@ function CurrentList({ query }: { query: string }) {
     return <HistoryFailure error={resource.error} retry={resource.reload} />
   if (!resource.data) return <SectionLoading />
   const data = resource.data,
-    params = new URLSearchParams(query)
+    params = new URLSearchParams(query),
+    filtered = ["q", "phase", "start", "end"].some((key) => params.get(key))
   const date = new Intl.DateTimeFormat(locale, {
     timeZone: data.timeZone,
     dateStyle: "long",
@@ -71,9 +77,24 @@ function CurrentList({ query }: { query: string }) {
         ))}
       </div>
       {data.items.length === 0 ? (
-        <p className="event-panel" role="status">
-          {t("empty")}
-        </p>
+        filtered ? (
+          <EmptyState
+            icon={MagnifyingGlassIcon}
+            title={t("empty")}
+            hint={t("emptyFilteredHint")}
+            action={
+              <a className="btn btn-secondary" href="/organizer/history">
+                {t("reset")}
+              </a>
+            }
+          />
+        ) : (
+          <EmptyState
+            icon={ClockCounterClockwiseIcon}
+            title={t("emptyFirst")}
+            hint={t("emptyFirstHint")}
+          />
+        )
       ) : null}
       <nav className="event-pagination" aria-label={t("title")}>
         {params.has("cursor") ? (

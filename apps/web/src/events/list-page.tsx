@@ -11,6 +11,7 @@ import {
 import { useEffect, useEffectEvent, useState, type FormEvent } from "react"
 import { Bar, SkeletonRegion } from "@/components/ui/skeleton"
 import { ChipRow } from "@/components/ui/chip-row"
+import { EmptyState } from "@/components/ui/empty-state"
 import { segment, useResource } from "./api"
 import { useEventText } from "./messages"
 import { EventImageCover } from "./image-gallery"
@@ -238,21 +239,30 @@ export function EventListPage({ organizer = false }: { organizer?: boolean }) {
         <EventGridSkeleton label={t("loading")} />
       ) : resource.data?.items.length === 0 ? (
         organizer && !term && !activeCategory ? (
-          <div className="event-empty">
-            <TicketIcon size={32} aria-hidden />
-            <h2>{t("noOwnEvents")}</h2>
-            <p>{t("noOwnEventsHint")}</p>
-            <a className="btn btn-primary" href="/organizer/events/new">
-              <PlusIcon size={16} weight="bold" aria-hidden />
-              {t("newEvent")}
-            </a>
-          </div>
+          <EmptyState
+            icon={TicketIcon}
+            title={t("noOwnEvents")}
+            hint={t("noOwnEventsHint")}
+            action={
+              <a className="btn btn-primary" href="/organizer/events/new">
+                <PlusIcon size={16} weight="bold" aria-hidden />
+                {t("newEvent")}
+              </a>
+            }
+          />
         ) : (
-          <div className="event-empty">
-            <TicketIcon size={32} aria-hidden />
-            <h2>{t("noEvents")}</h2>
-            <p>{t("noEventsHint")}</p>
-          </div>
+          <EmptyState
+            icon={MagnifyingGlassIcon}
+            title={t("noEvents")}
+            hint={t("noEventsHint")}
+            action={
+              term || activeCategory ? (
+                <a className="btn btn-secondary" href={hrefFor({})}>
+                  {t("clearSearch")}
+                </a>
+              ) : undefined
+            }
+          />
         )
       ) : (
         <div

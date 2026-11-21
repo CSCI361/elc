@@ -5,8 +5,10 @@ import {
   deliveryPdfStateSchema,
   type DeliveryListQuery,
 } from "@elc/shared"
+import { EnvelopeSimpleIcon } from "@phosphor-icons/react"
 import { useState, type FormEvent } from "react"
 import { useAccount } from "@/auth/context"
+import { EmptyState } from "@/components/ui/empty-state"
 import { navigate } from "@/lib/navigation"
 import { AuthNotice } from "@/auth/notice"
 import { Button } from "@/components/ui/button"
@@ -220,7 +222,7 @@ function DeliveryList() {
       {!data ? (
         <SectionLoading />
       ) : !data.items.length ? (
-        <p>{t("empty")}</p>
+        <EmptyState icon={EnvelopeSimpleIcon} title={t("empty")} />
       ) : (
         <>
           <p className="field-hint">{t("tableHint")}</p>

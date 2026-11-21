@@ -48,7 +48,7 @@ export const reportMessages = {
   dismissed: ["Әрекетсіз жабылды", "Закрыта без действий", "Dismissed"],
   actioned: ["Шара қолданылды", "Приняты меры", "Action taken"],
   all: ["Барлығы", "Все", "All"],
-  empty: ["Шағымдар жоқ.", "Жалоб нет.", "No reports."],
+  empty: ["Шағымдар жоқ", "Жалоб нет", "No reports"],
   event: ["Іс-шара ID", "ID события", "Event ID"],
   eventStatus: ["Іс-шара күйі", "Статус события", "Event status"],
   eventSuspended: ["Тоқтатылған", "Приостановлено", "Suspended"],

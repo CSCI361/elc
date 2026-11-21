@@ -335,10 +335,11 @@ const text = {
     "This reservation cannot be changed after payment starts.",
   ],
   reference: ["Сұрау нөмірі", "Номер запроса", "Request reference"],
-  emptyOrders: [
-    "Тапсырыстар әлі жоқ.",
-    "Заказов пока нет.",
-    "You have no orders yet.",
+  emptyOrders: ["Билеттер әзірге жоқ", "Билетов пока нет", "No tickets yet"],
+  emptyOrdersHint: [
+    "Тіркелген іс-шараларыңыздың билеттері мен кіруге арналған QR-кодтар осында көрсетіледі.",
+    "Здесь появятся билеты на события, куда вы зарегистрировались, и QR-коды для входа.",
+    "Tickets for events you register for show up here, with the QR code for the door.",
   ],
   enablePaidSales: [
     "Ақылы билеттерді қосу",

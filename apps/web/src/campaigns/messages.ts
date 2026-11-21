@@ -67,7 +67,12 @@ const messages = {
     "Terms reviewed, enable",
   ],
   disable: ["Науқанды өшіру", "Выключить кампанию", "Disable campaign"],
-  empty: ["Әзірге науқан жоқ.", "Кампаний пока нет.", "No campaigns yet."],
+  empty: ["Әзірге науқан жоқ", "Кампаний пока нет", "No campaigns yet"],
+  emptyHint: [
+    "Жеңілдік науқанын жоғарыда жасаңыз. Ол арқылы сатылған билеттер саны осында көрсетіледі.",
+    "Создайте скидочную кампанию выше. Здесь будет видно, сколько билетов продано по ней.",
+    "Create a discount campaign above to see how many tickets it sells.",
+  ],
   previous: ["Алдыңғы бет", "Предыдущая страница", "Previous page"],
   next: ["Келесі бет", "Следующая страница", "Next page"],
   page: ["Бет", "Страница", "Page"],

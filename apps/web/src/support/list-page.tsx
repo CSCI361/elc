@@ -8,6 +8,7 @@ import { ChatsCircleIcon, PlusIcon } from "@phosphor-icons/react"
 import { useResource, segment } from "@/events/api"
 import { useEventText } from "@/events/messages"
 import { Bar, SkeletonRegion } from "@/components/ui/skeleton"
+import { EmptyState } from "@/components/ui/empty-state"
 import { EventError, SelectField } from "@/events/ui"
 import { Button } from "@/components/ui/button"
 import { useSupportText } from "./messages"
@@ -22,6 +23,9 @@ export function SupportListPage() {
   const query = parsed.success
     ? parsed.data
     : { view: "mine" as const, limit: 20 }
+  const filtered = (["eventId", "status", "category"] as const).some(
+    (key) => key in query && query[key]
+  )
   const apiQuery = new URLSearchParams({ view: query.view, limit: "20" })
   for (const key of ["eventId", "status", "category", "cursor"] as const)
     if (key in query && query[key]) apiQuery.set(key, query[key]!)
@@ -120,10 +124,21 @@ export function SupportListPage() {
             ))}
           </div>
           {!result.data.items.length ? (
-            <div className="event-empty">
-              <ChatsCircleIcon size={32} aria-hidden />
-              <h2>{t("empty")}</h2>
-            </div>
+            <EmptyState
+              icon={ChatsCircleIcon}
+              title={t("empty")}
+              hint={filtered ? undefined : t("emptyHint")}
+              action={
+                filtered ? (
+                  <a
+                    className="btn btn-secondary"
+                    href={`/support?view=${query.view}`}
+                  >
+                    {t("resetFilters")}
+                  </a>
+                ) : undefined
+              }
+            />
           ) : null}
           <div className="event-pagination">
             {query.cursor ? (

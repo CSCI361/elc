@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from "react"
+import { FlagIcon } from "@phosphor-icons/react"
+import { EmptyState } from "@/components/ui/empty-state"
 import {
   eventReportQueueResponseSchema,
   eventReportResolutionSchema,
@@ -180,7 +182,7 @@ export function PlatformEventReports() {
       ) : !queue.data ? (
         <SectionLoading />
       ) : queue.data.items.length === 0 ? (
-        <p>{t("empty")}</p>
+        <EmptyState icon={FlagIcon} title={t("empty")} />
       ) : (
         <ul className="administration-records">
           {queue.data.items.map((item) => (

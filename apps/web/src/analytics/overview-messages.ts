@@ -94,6 +94,26 @@ const copy = {
     "Обновить общую аналитику",
     "Refresh overview",
   ],
+  empty: [
+    "Есеп беретін іс-шара әзірге жоқ",
+    "Пока нет событий для отчета",
+    "No events to report on yet",
+  ],
+  emptyHint: [
+    "Өз іс-шараларыңыз бен қызметкер ретінде қосылған іс-шаралардың сатылымы, кірулері мен төлемдері осында жинақталады.",
+    "Здесь собираются продажи, проходы и платежи по вашим событиям и событиям, где вы в команде.",
+    "Sales, check-ins and payments from every event you own or staff add up here.",
+  ],
+  emptySearch: [
+    "Бұл іздеуге сай іс-шара жоқ",
+    "Нет событий по этому запросу",
+    "No events match this search",
+  ],
+  emptySearchHint: [
+    "Басқа атауды енгізіңіз немесе іздеуді тазартыңыз.",
+    "Попробуйте другое название или очистите поиск.",
+    "Try another title or clear the search.",
+  ],
 } satisfies Record<string, readonly [string, string, string]>
 export type OverviewTextKey = keyof typeof copy
 export function overviewText(locale: Locale, key: OverviewTextKey) {

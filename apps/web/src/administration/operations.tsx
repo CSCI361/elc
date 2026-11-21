@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from "react"
+import { ListMagnifyingGlassIcon } from "@phosphor-icons/react"
+import { EmptyState } from "@/components/ui/empty-state"
 import {
   operationsResponseSchema,
   type OperationsKind,
@@ -285,7 +287,10 @@ function CurrentOperations({ initial }: { initial: OperationsQuery }) {
               <OperationRecord key={item.id} item={item} />
             ))
           ) : (
-            <p>{adminText("empty")}</p>
+            <EmptyState
+              icon={ListMagnifyingGlassIcon}
+              title={adminText("empty")}
+            />
           )}
         </>
       )}

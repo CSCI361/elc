@@ -2,9 +2,15 @@ import {
   organizerRecordsResponseSchema,
   type OrganizerRecordsQuery,
 } from "@elc/shared"
+import {
+  MagnifyingGlassIcon,
+  QrCodeIcon,
+  UsersIcon,
+} from "@phosphor-icons/react"
 import { useAccount } from "@/auth/context"
 import { AuthNotice } from "@/auth/notice"
 import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/ui/empty-state"
 import { EventApiError, segment, useResource } from "@/events/api"
 import { EventError, Field, Protected, SectionLoading } from "@/events/ui"
 import { HistoryHeading, Retention } from "@/history/ui"
@@ -195,9 +201,32 @@ function CurrentRecords({
               ))}
       </div>
       {!data.items.length ? (
-        <p className="event-panel" role="status">
-          {t("empty")}
-        </p>
+        recordsSearch(query) !== recordsSearch(recordsReset(query)) ? (
+          <EmptyState
+            icon={MagnifyingGlassIcon}
+            title={t("empty")}
+            action={
+              <a
+                className="btn btn-secondary"
+                href={recordsHref(eventId, recordsReset(query))}
+              >
+                {t("reset")}
+              </a>
+            }
+          />
+        ) : data.kind === "checkins" ? (
+          <EmptyState
+            icon={QrCodeIcon}
+            title={t("emptyCheckins")}
+            hint={t("emptyCheckinsHint")}
+          />
+        ) : (
+          <EmptyState
+            icon={UsersIcon}
+            title={t(data.kind === "orders" ? "emptyOrders" : "emptyTickets")}
+            hint={t("emptySalesHint")}
+          />
+        )
       ) : null}
       <nav className="records-links" aria-label={t("pagination")}>
         {query.cursor ? (

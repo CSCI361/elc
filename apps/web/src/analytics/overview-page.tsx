@@ -9,7 +9,9 @@ import type {
   OrganizerAnalyticsOverviewQuery,
   OrganizerAnalyticsOverviewResponse,
 } from "@elc/shared"
+import { ChartLineUpIcon, MagnifyingGlassIcon } from "@phosphor-icons/react"
 import { Button } from "../components/ui/button"
+import { EmptyState } from "../components/ui/empty-state"
 import { EventApiError } from "../events/api"
 import { EventError, Field, SectionLoading, SelectField } from "../events/ui"
 import { useAnalyticsText } from "./messages"
@@ -192,7 +194,37 @@ export function OrganizerOverview() {
         </div>
       ) : null}
       {state.loading ? <SectionLoading /> : null}
-      {data ? (
+      {data && data.scope.eventCount === 0 ? (
+        data.scope.q ? (
+          <EmptyState
+            icon={MagnifyingGlassIcon}
+            title={text("emptySearch")}
+            hint={text("emptySearchHint")}
+            action={
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() =>
+                  navigate(overviewPage({ ...state.query, q: undefined }, null))
+                }
+              >
+                {t("clearSearch")}
+              </Button>
+            }
+          />
+        ) : (
+          <EmptyState
+            icon={ChartLineUpIcon}
+            title={text("empty")}
+            hint={text("emptyHint")}
+            action={
+              <a className="btn btn-primary" href="/organizer/events/new">
+                {t("createEvent")}
+              </a>
+            }
+          />
+        )
+      ) : data ? (
         <>
           <section aria-labelledby="overview-period-title">
             <h2 id="overview-period-title" tabIndex={-1} ref={periodHeading}>

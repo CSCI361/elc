@@ -22,9 +22,30 @@ const messages = {
   navigation: ["Жазба түрлері", "Типы записей", "Record views"],
   pagination: ["Жазба беттері", "Страницы записей", "Record pages"],
   empty: [
-    "Бұл сүзгілерге сәйкес жазба жоқ.",
-    "Нет записей по выбранным фильтрам.",
-    "No records match these filters.",
+    "Бұл сүзгілерге сәйкес жазба жоқ",
+    "Нет записей по выбранным фильтрам",
+    "No records match these filters",
+  ],
+  emptyTickets: [
+    "Қатысушылар әзірге жоқ",
+    "Участников пока нет",
+    "No attendees yet",
+  ],
+  emptyOrders: ["Тапсырыстар әзірге жоқ", "Заказов пока нет", "No orders yet"],
+  emptyCheckins: [
+    "Кірулер әзірге жоқ",
+    "Проходов пока нет",
+    "No check-ins yet",
+  ],
+  emptySalesHint: [
+    "Осы іс-шараға тіркелгендер осында көрсетіледі.",
+    "Здесь появятся регистрации на это событие.",
+    "Registrations for this event show up here.",
+  ],
+  emptyCheckinsHint: [
+    "Кіреберісте сканерленген билеттер осында бірден көрсетіледі.",
+    "Билеты, отсканированные на входе, появятся здесь сразу.",
+    "Tickets scanned at the door show up here as it happens.",
   ],
   invalid: [
     "Сүзгілер жарамсыз. Іздеу мен жазба нөмірлерін тексеріңіз немесе сүзгілерді тазалаңыз.",

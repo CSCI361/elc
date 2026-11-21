@@ -43,10 +43,11 @@ const copy = {
     "Saving with no permissions selected revokes this account's explicit permissions.",
   ],
   revokeAll: ["Таңдауды тазалау", "Снять выбор", "Clear selection"],
-  noStaff: [
-    "Әлі қызметкерлер тағайындалмады.",
-    "Сотрудники пока не назначены.",
-    "No staff have been assigned yet.",
+  noStaff: ["Қызметкерлер әзірге жоқ", "Сотрудников пока нет", "No staff yet"],
+  noStaffHint: [
+    "Билет сканерлеу немесе қолдауға жауап беру үшін адамдарды email арқылы қосыңыз.",
+    "Добавьте людей по email, чтобы они сканировали билеты или отвечали в поддержке.",
+    "Add people by email so they can scan tickets or answer support.",
   ],
   staffMissing: [
     "Бұл мекенжайға сәйкес аккаунт табылмады. Қызметкер алдымен тіркелуі керек.",
@@ -84,9 +85,9 @@ const copy = {
     "Invitation queued for delivery.",
   ],
   noInvitations: [
-    "Шақырулар әлі жоқ.",
-    "Приглашений пока нет.",
-    "No invitations yet.",
+    "Шақырулар әзірге жоқ",
+    "Приглашений пока нет",
+    "No invitations yet",
   ],
   reissue: [
     "Жаңа шақыру шығару",

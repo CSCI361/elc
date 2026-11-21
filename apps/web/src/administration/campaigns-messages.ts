@@ -23,9 +23,9 @@ export const campaignAdministrationMessages = {
   next: ["Келесі бет", "Следующая страница", "Next page"],
   reload: ["Қайта жүктеу", "Обновить", "Reload"],
   empty: [
-    "Бұл сүзгілерге сәйкес промоакция жоқ.",
-    "По выбранным фильтрам кампаний нет.",
-    "No campaigns match these filters.",
+    "Бұл сүзгілерге сәйкес промоакция жоқ",
+    "По выбранным фильтрам кампаний нет",
+    "No campaigns match these filters",
   ],
   campaignId: ["Промоакция ID", "ID кампании", "Campaign ID"],
   event: ["Іс-шара", "Событие", "Event"],

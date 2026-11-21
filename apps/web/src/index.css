@@ -904,7 +904,6 @@ textarea.auth-input {
 /* Account */
 .account-page {
   width: 100%;
-  max-width: 960px;
 }
 .account-heading {
   max-width: 680px;
@@ -1310,25 +1309,55 @@ textarea.auth-input {
   background: var(--danger-soft);
   color: var(--danger);
 }
-.event-empty {
+.empty-state {
   display: grid;
   justify-items: center;
-  gap: 8px;
-  padding: 56px 24px;
+  gap: 6px;
+  padding: 48px 24px;
   text-align: center;
-  border: 1px dashed var(--line-strong);
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 12px;
-  color: var(--ink-2);
 }
-.event-empty > svg {
-  color: var(--ink-3);
-  margin-bottom: 8px;
+.empty-state-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 10px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand-ink);
 }
-.event-empty > .btn {
-  margin-top: 8px;
-}
-.event-empty h2 {
+.empty-state-title {
   color: var(--ink);
+  font-size: 1rem;
+  font-weight: 600;
+  text-wrap: balance;
+}
+.empty-state-hint {
+  max-width: 46ch;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.empty-state-action {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+.empty-state[data-inline] {
+  padding: 28px 16px;
+  background: none;
+  border: 0;
+}
+.empty-state[data-inline] .empty-state-icon {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 6px;
+  background: var(--surface-2);
+  color: var(--ink-2);
 }
 .event-inline-note {
   display: flex;

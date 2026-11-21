@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from "react"
+import { ChartBarIcon, MagnifyingGlassIcon } from "@phosphor-icons/react"
 import { analyticsEventsResponseSchema } from "@elc/shared"
 import { useAccount } from "../auth/context"
 import { Button } from "../components/ui/button"
+import { EmptyState } from "../components/ui/empty-state"
 import { useResource } from "../events/api"
 import { EventError, Field, Protected, SectionLoading } from "../events/ui"
 import { useAnalyticsText } from "./messages"
@@ -93,8 +95,29 @@ function AvailableReports() {
                 </li>
               ))}
             </ul>
+          ) : query.search ? (
+            <EmptyState
+              icon={MagnifyingGlassIcon}
+              title={t("noReports")}
+              action={
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setDraft("")
+                    setQuery({ search: "", after: "" })
+                  }}
+                >
+                  {t("clearSearch")}
+                </Button>
+              }
+            />
           ) : (
-            <p>{t("noReports")}</p>
+            <EmptyState
+              icon={ChartBarIcon}
+              title={t("noReportsFirst")}
+              inline
+            />
           )}
           {query.after || result.data.nextCursor ? (
             <div className="analytics-actions">

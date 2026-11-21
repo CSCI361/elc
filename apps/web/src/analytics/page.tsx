@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react"
+import { ChartBarIcon } from "@phosphor-icons/react"
 import type { EventAnalyticsQuery, EventAnalyticsResponse } from "@elc/shared"
+import { EmptyState } from "@/components/ui/empty-state"
 import { useAccount } from "../auth/context"
 import { EventApiError } from "../events/api"
 import { EventError, SectionLoading, Protected } from "../events/ui"
@@ -135,7 +137,7 @@ function Breakdown({
           <MetricsTable rows={rows} caption="table" />
         </>
       ) : (
-        <p>{t("empty")}</p>
+        <EmptyState icon={ChartBarIcon} title={t("empty")} inline />
       )}
       {after || cursor ? (
         <>

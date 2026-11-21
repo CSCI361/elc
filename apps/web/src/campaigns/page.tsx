@@ -3,9 +3,11 @@ import {
   campaignResponseSchema,
   eventDetailResponseSchema,
 } from "@elc/shared"
+import { TagIcon } from "@phosphor-icons/react"
 import { useState, type FormEvent } from "react"
 import { useAccount } from "@/auth/context"
 import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/ui/empty-state"
 import {
   api,
   EventApiError,
@@ -448,7 +450,11 @@ function CampaignWorkspace({ eventId }: { eventId: string }) {
               />
             ))
           ) : (
-            <p>{t("empty")}</p>
+            <EmptyState
+              icon={TagIcon}
+              title={t("empty")}
+              hint={detail.data.event.cancelledAt ? undefined : t("emptyHint")}
+            />
           )}
           {cursors.length > 1 || list.data.nextCursor ? (
             <nav className="event-actions" aria-label={t("page")}>

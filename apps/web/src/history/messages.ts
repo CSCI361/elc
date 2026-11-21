@@ -23,9 +23,34 @@ const copy = {
     "Filter by event start date, up to 180 days.",
   ],
   empty: [
-    "Бұл сүзгілерге сай қолжетімді тарих жоқ.",
-    "Нет доступной истории по выбранным фильтрам.",
-    "No accessible history matches these filters.",
+    "Бұл сүзгілерге сай іс-шара жоқ",
+    "Нет событий по выбранным фильтрам",
+    "No events match these filters",
+  ],
+  emptyFilteredHint: [
+    "Күндерді не күйді өзгертіңіз немесе сүзгілерді тазартыңыз.",
+    "Измените даты или состояние либо сбросьте фильтры.",
+    "Change the dates or phase, or reset the filters.",
+  ],
+  emptyFirst: [
+    "Аяқталған іс-шаралар әзірге жоқ",
+    "Завершенных событий пока нет",
+    "No finished events yet",
+  ],
+  emptyFirstHint: [
+    "Іс-шара аяқталғанда немесе жойылғанда, оның тапсырыстары, кірулері мен әрекеттері осында сақталады.",
+    "Когда событие завершится или будет отменено, оно появится здесь вместе с заказами, проходами и действиями.",
+    "When an event ends or is cancelled, it moves here with its orders, check-ins and activity.",
+  ],
+  emptyTimeline: [
+    "Бұл кезеңде әрекет жоқ",
+    "Нет действий за этот период",
+    "No activity in this period",
+  ],
+  emptyTimelineHint: [
+    "Ұзағырақ кезеңді немесе басқа әрекет түрін таңдаңыз.",
+    "Выберите период длиннее или другой тип действий.",
+    "Pick a longer period or another activity type.",
   ],
   denied: [
     "Тарих қолжетімсіз. Іс-шара иесінің немесе тарихты қарау құқығы қажет.",

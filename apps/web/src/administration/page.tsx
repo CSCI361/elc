@@ -1,4 +1,6 @@
+import { MagnifyingGlassIcon } from "@phosphor-icons/react"
 import { ChipRow } from "@/components/ui/chip-row"
+import { EmptyState } from "@/components/ui/empty-state"
 import { OfflineOperationsLink } from "@/offline-operations/navigation"
 import { useRef, useState, type FormEvent } from "react"
 import {
@@ -165,7 +167,9 @@ function Records({
               </tbody>
             </table>
           </div>
-          {!resource.data.items.length ? <p>{t("empty")}</p> : null}
+          {!resource.data.items.length ? (
+            <EmptyState icon={MagnifyingGlassIcon} title={t("empty")} inline />
+          ) : null}
           {search.after || resource.data.nextCursor ? (
             <div className="analytics-actions">
               <button

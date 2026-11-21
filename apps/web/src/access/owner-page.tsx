@@ -12,10 +12,12 @@ import {
   type EventStaff,
   type Permission,
 } from "@elc/shared"
+import { EnvelopeSimpleIcon, UsersThreeIcon } from "@phosphor-icons/react"
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import { useAccount } from "@/auth/context"
 import { AuthNotice } from "@/auth/notice"
 import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/ui/empty-state"
 import {
   EventApiError,
   segment,
@@ -192,6 +194,14 @@ function StaffPanel({
       <h2>{t("staff")}</h2>
       <p>{t("staffHint")}</p>
       <p className="field-hint">{t("explicitHint")}</p>
+      {!data.items.length ? (
+        <EmptyState
+          icon={UsersThreeIcon}
+          title={t("noStaff")}
+          hint={t("noStaffHint")}
+          inline
+        />
+      ) : null}
       <details className="access-new" open={data.items.length === 0}>
         <summary>{t("addStaff")}</summary>
         <StaffForm
@@ -202,7 +212,6 @@ function StaffPanel({
           onReload={reload}
         />
       </details>
-      {!data.items.length ? <p>{t("noStaff")}</p> : null}
       {data.items.map((staff) => (
         <details
           className="access-record"
@@ -382,7 +391,13 @@ function InvitationsPanel({
         <EventError error={command.error} retry={reload} />
       ) : null}
       <p className="field-hint">{t("reissueHint")}</p>
-      {!resource.data.items.length ? <p>{t("noInvitations")}</p> : null}
+      {!resource.data.items.length ? (
+        <EmptyState
+          icon={EnvelopeSimpleIcon}
+          title={t("noInvitations")}
+          inline
+        />
+      ) : null}
       {resource.data.items.map((invitation) => (
         <InvitationRecord
           key={`${invitation.id}:${resource.data!.revision}`}

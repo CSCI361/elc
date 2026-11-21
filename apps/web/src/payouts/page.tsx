@@ -2,8 +2,10 @@ import {
   eventPayoutsResponseSchema,
   type EventPayoutsResponse,
 } from "@elc/shared"
+import { BankIcon } from "@phosphor-icons/react"
 import { useEffect, useRef, useState } from "react"
 import { AuthNotice } from "@/auth/notice"
+import { EmptyState } from "@/components/ui/empty-state"
 import { useAccount } from "@/auth/context"
 import { EventApiError, useResource } from "@/events/api"
 import { useEventText } from "@/events/messages"
@@ -217,7 +219,11 @@ function CurrentPayoutPage({ eventId }: { eventId: string }) {
         </h2>
         <p>{t("recordsHint")}</p>
         {!data.payouts.length ? (
-          <p className="event-panel">{t("empty")}</p>
+          <EmptyState
+            icon={BankIcon}
+            title={t("empty")}
+            hint={t("emptyHint")}
+          />
         ) : (
           <div className="payout-records">
             {data.payouts.map((payout) => (

@@ -13,10 +13,16 @@ export const offlineMessages = {
     "Manage devices and admission records reported to the server.",
   ],
   emptyEvents: [
-    "Қолжетімді іс-шара жоқ. Іс-шара иесінің немесе тағайындалған қызметкердің рұқсаты қажет.",
-    "Нет доступных событий. Требуются права владельца или назначенного сотрудника.",
-    "No events are available. Event ownership or a staff assignment is required.",
+    "Офлайн жұмыс істейтін іс-шара жоқ",
+    "Нет событий для офлайн-работы",
+    "No events to run offline",
   ],
+  emptyEventsHint: [
+    "Офлайн сканерлеу өз іс-шараларыңызда және қызметкер ретінде қосылған іс-шараларда жұмыс істейді. Іс-шара жасаңыз немесе ұйымдастырушыдан сізді қосуды сұраңыз.",
+    "Офлайн-сканирование работает для ваших событий и событий, где вы в команде. Создайте событие или попросите организатора добавить вас.",
+    "Offline scanning covers events you own or staff. Create an event, or ask its organizer to add you as staff.",
+  ],
+  createEvent: ["Іс-шара жасау", "Создать событие", "Create event"],
   devices: ["Офлайн құрылғылар", "Офлайн-устройства", "Offline devices"],
   yourDevices: ["Сіздің құрылғыларыңыз", "Ваши устройства", "Your devices"],
   admissions: [
@@ -50,14 +56,24 @@ export const offlineMessages = {
   next: ["Келесі бет", "Следующая страница", "Next page"],
   pagination: ["Беттер", "Страницы", "Pages"],
   emptyDevices: [
-    "Бұл бетте құрылғы жоқ.",
-    "На этой странице нет устройств.",
-    "No devices on this page.",
+    "Сканер құрылғылары әзірге жоқ",
+    "Сканеров пока нет",
+    "No scanner phones yet",
+  ],
+  emptyDevicesHint: [
+    "Қызметкер elc қолданбасында қонақтар тізімін сақтағаннан кейін телефон осында шығады.",
+    "Телефон появится здесь, когда сотрудник сохранит список гостей в приложении elc.",
+    "A phone shows up here after a staff member saves the guest list in the elc app.",
   ],
   emptyReports: [
-    "Бұл бетте жіберілген операция жоқ.",
-    "На этой странице нет переданных операций.",
-    "No reported operations on this page.",
+    "Офлайн кірулер әзірге жоқ",
+    "Офлайн-проходов пока нет",
+    "No offline scans yet",
+  ],
+  emptyReportsHint: [
+    "Интернетсіз сканерленген кірулер телефон желіге қайта қосылғанда осында көрсетіледі.",
+    "Проходы, отсканированные без интернета, появятся здесь, когда телефон снова выйдет в сеть.",
+    "Scans made without internet show up here once the phone is back online and sends them.",
   ],
   registered: ["Тіркелген", "Зарегистрировано", "Registered"],
   lastSync: [

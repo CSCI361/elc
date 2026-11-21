@@ -1,4 +1,6 @@
 import { useRef, useState, type FormEvent } from "react"
+import { TagIcon } from "@phosphor-icons/react"
+import { EmptyState } from "@/components/ui/empty-state"
 import {
   platformCampaignsResponseSchema,
   type PlatformCampaignsQuery,
@@ -247,7 +249,7 @@ function CurrentCampaigns({ initial }: { initial: PlatformCampaignsQuery }) {
               <CampaignRecord key={item.id} item={item} />
             ))
           ) : (
-            <p>{t("empty")}</p>
+            <EmptyState icon={TagIcon} title={t("empty")} />
           )}
         </>
       )}

@@ -7,9 +7,10 @@ import {
   type EventApi,
   type EventImage,
 } from "@elc/shared"
-import { UploadSimpleIcon } from "@phosphor-icons/react"
+import { ImageIcon, UploadSimpleIcon } from "@phosphor-icons/react"
 import { useEffect, useId, useRef, useState, type FormEvent } from "react"
 import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/ui/empty-state"
 import { api, EventApiError, segment } from "./api"
 import { EventError, Field } from "./ui"
 import { EventImageView } from "./image-gallery"
@@ -424,7 +425,7 @@ export function EventImagePanel({
               ))}
             </ol>
           ) : (
-            <p>{t("empty")}</p>
+            <EmptyState icon={ImageIcon} title={t("empty")} inline />
           )}
           {dirty ? (
             <p className="field-hint" role="status">

@@ -1,5 +1,7 @@
 import { useId } from "react"
+import { ChartBarIcon } from "@phosphor-icons/react"
 import type { OrganizerAnalyticsOverviewResponse } from "@elc/shared"
+import { EmptyState } from "../components/ui/empty-state"
 import { DailyLine } from "./charts"
 import { useAnalyticsText } from "./messages"
 import { currentMeasures, summaryMeasures } from "./policies"
@@ -350,7 +352,7 @@ export function OverviewEvents({ data }: { data: Report }) {
           </div>
         </>
       ) : (
-        <p>{t("noReports")}</p>
+        <EmptyState icon={ChartBarIcon} title={t("noReports")} inline />
       )}
     </>
   )

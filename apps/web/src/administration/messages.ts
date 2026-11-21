@@ -33,7 +33,7 @@ const copy = {
   review: ["Қарау", "Проверить", "Review"],
   next: ["Келесі бет", "Следующая страница", "Next page"],
   first: ["Бірінші бет", "Первая страница", "First page"],
-  empty: ["Жазба табылмады.", "Записи не найдены.", "No records found."],
+  empty: ["Жазба табылмады", "Записи не найдены", "No records found"],
   reason: ["Әрекеттің себебі", "Причина действия", "Reason for this action"],
   suspend: ["Тоқтату", "Приостановить", "Suspend"],
   resume: ["Қалпына келтіру", "Возобновить", "Resume"],

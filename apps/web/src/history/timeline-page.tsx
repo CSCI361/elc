@@ -2,8 +2,10 @@ import {
   eventHistoryResponseSchema,
   historyActivityTypeSchema,
 } from "@elc/shared"
+import { ClockCounterClockwiseIcon } from "@phosphor-icons/react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/ui/empty-state"
 import { segment, useResource } from "@/events/api"
 import { useEventText } from "@/events/messages"
 import { Field, SectionLoading, SelectField } from "@/events/ui"
@@ -152,9 +154,11 @@ function CurrentTimeline({
           ))}
         </ol>
       ) : (
-        <p className="event-panel" role="status">
-          {t("empty")}
-        </p>
+        <EmptyState
+          icon={ClockCounterClockwiseIcon}
+          title={t("emptyTimeline")}
+          hint={t("emptyTimelineHint")}
+        />
       )}
       <nav className="event-pagination" aria-label={t("timeline")}>
         {new URLSearchParams(query).has("cursor") ? (

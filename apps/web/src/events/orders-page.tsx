@@ -2,6 +2,7 @@ import { accountOrdersResponseSchema } from "@elc/shared"
 import { ArrowRightIcon, TicketIcon } from "@phosphor-icons/react"
 import { useState } from "react"
 import { Bar, SkeletonRegion } from "@/components/ui/skeleton"
+import { EmptyState } from "@/components/ui/empty-state"
 import { useEventText } from "./messages"
 import { segment, serverNow, useResource } from "./api"
 import { dateParts, priceText } from "./date-parts"
@@ -86,13 +87,16 @@ export function OrdersPage() {
       ) : null}
       {result.loading ? <OrderListSkeleton label={t("loading")} /> : null}
       {result.data?.items.length === 0 ? (
-        <div className="event-empty">
-          <TicketIcon size={32} aria-hidden />
-          <h2>{t("emptyOrders")}</h2>
-          <a className="btn btn-primary" href="/events">
-            {t("discover")}
-          </a>
-        </div>
+        <EmptyState
+          icon={TicketIcon}
+          title={t("emptyOrders")}
+          hint={t("emptyOrdersHint")}
+          action={
+            <a className="btn btn-primary" href="/events">
+              {t("discover")}
+            </a>
+          }
+        />
       ) : null}
       {groups.upcoming.length ? (
         <section className="order-group">

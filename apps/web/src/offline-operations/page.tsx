@@ -1,5 +1,11 @@
 import { useRef, useState } from "react"
 import {
+  DeviceMobileIcon,
+  QrCodeIcon,
+  WifiSlashIcon,
+} from "@phosphor-icons/react"
+import { EmptyState } from "@/components/ui/empty-state"
+import {
   offlineAccessSchema,
   offlineDevicesSchema,
   offlineEventsSchema,
@@ -83,7 +89,16 @@ function AvailableEvents() {
             <p className="field-hint">{t("ownDevices")}</p>
           ) : null}
           {!resource.data.items.length ? (
-            <p>{t("emptyEvents")}</p>
+            <EmptyState
+              icon={WifiSlashIcon}
+              title={t("emptyEvents")}
+              hint={t("emptyEventsHint")}
+              action={
+                <a className="btn btn-primary" href="/organizer/events/new">
+                  {t("createEvent")}
+                </a>
+              }
+            />
           ) : (
             <ul className="offline-event-list" aria-label={t("events")}>
               {resource.data.items.map((item) => (
@@ -161,7 +176,11 @@ function Devices({
       ) : (
         <>
           {!resource.data.items.length ? (
-            <p>{t("emptyDevices")}</p>
+            <EmptyState
+              icon={DeviceMobileIcon}
+              title={t("emptyDevices")}
+              hint={t("emptyDevicesHint")}
+            />
           ) : (
             resource.data.items.map((device) => (
               <DeviceCard
@@ -229,7 +248,11 @@ function Admissions({
       ) : (
         <>
           {!resource.data.items.length ? (
-            <p>{t("emptyReports")}</p>
+            <EmptyState
+              icon={QrCodeIcon}
+              title={t("emptyReports")}
+              hint={t("emptyReportsHint")}
+            />
           ) : (
             resource.data.items.map((report) => (
               <AdmissionCard
