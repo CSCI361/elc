@@ -18,6 +18,19 @@ jobs:
           cache: true
       - run: vp install --frozen-lockfile
       - run: vp check
-      - run: vp test
       - run: vp run verify:backup
       - run: vp run build
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: voidzero-dev/setup-vp@56918a6d0c629c55ae8b88826a7d47fda85769ee # v1.9.0
+        with:
+          node-version: "24.21.0"
+          cache: true
+      - run: vp install --frozen-lockfile
+      - run: vp test --shard=${{ matrix.shard }}/4
