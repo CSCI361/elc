@@ -21,7 +21,6 @@ const homeUrl = languageLinks.find((language) => language.locale === locale)?.hr
     <nav class="main-nav" aria-label={text.navigation}>
       <a href="#workflow">{text.navWorkflow}</a>
       <a href="#attendees">{text.navAttendees}</a>
-      <a href="#demo">{text.navDemo}</a>
     </nav>
     <nav class="language-nav" aria-label={text.language}>
       {languageLinks.map((language) => (
@@ -142,12 +141,11 @@ const homeUrl = languageLinks.find((language) => language.locale === locale)?.hr
       </div>
     </section>
 
-    <section class="demo-section page-width" id="demo" aria-labelledby="demo-title">
+    <section class="demo-section page-width" id="start" aria-labelledby="demo-title">
       <div>
         <p class="eyebrow">{text.demoEyebrow}</p>
         <h2 id="demo-title">{text.demoTitle}</h2>
         <p>{text.demoDescription}</p>
-        <p class="demo-status"><span aria-hidden="true"></span>{text.demoStatus}</p>
       </div>
       <a class="button button-light" href={applicationUrl}>{text.openApp}<Arrow /></a>
     </section>

@@ -647,23 +647,6 @@ h3 {
 .demo-section .button {
   flex-shrink: 0;
 }
-.demo-status {
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  margin-top: 25px;
-  font-size: 11px;
-  line-height: 1.6;
-  color: #e8cbaa;
-}
-.demo-status span {
-  width: 6px;
-  height: 6px;
-  flex-shrink: 0;
-  margin-top: 5px;
-  background: #e8cbaa;
-  border-radius: 50%;
-}
 .demo-section :focus-visible {
   outline-color: #f1d8a7;
 }
@@ -1152,9 +1135,6 @@ details > p {
   }
   .demo-section h2 + p {
     font-size: 13px;
-  }
-  .demo-status {
-    font-size: 10px;
   }
   .faq-section h2 {
     font-size: 29px;

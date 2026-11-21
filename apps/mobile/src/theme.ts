@@ -43,16 +43,6 @@ export const styles = StyleSheet.create({
   },
   body: { fontSize: 16, lineHeight: 23, color: colors.ink },
   muted: { fontSize: 14, lineHeight: 21, color: colors.muted },
-  badge: {
-    color: colors.green,
-    backgroundColor: colors.pale,
-    borderRadius: 20,
-    overflow: "hidden",
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    fontSize: 12,
-    fontWeight: "700",
-  },
   card: {
     backgroundColor: colors.white,
     borderRadius: 20,

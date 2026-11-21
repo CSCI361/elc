@@ -16,7 +16,6 @@ type Copy = {
   language: string
   navWorkflow: string
   navAttendees: string
-  navDemo: string
   openApp: string
   eyebrow: string
   heroLineOne: string
@@ -52,7 +51,6 @@ type Copy = {
   demoEyebrow: string
   demoTitle: string
   demoDescription: string
-  demoStatus: string
   faqTitle: string
   questions: { question: string; answer: string }[]
   footerDescription: string
@@ -64,22 +62,21 @@ export const copy: Record<Locale, Copy> = {
   kk: {
     title: "elc · Іс-шаралар мен билеттер",
     description:
-      "Қазақстандағы іс-шараларды тіркеу мен билеттерді басқаруға арналған elc оқу жобасымен танысыңыз. Тегін іс-шаралар, электронды билеттер және QR арқылы кіру.",
+      "elc Қазақстандағы іс-шараларға тіркеуді және билет таратуды жеңілдетеді. Тегін іс-шаралар, электронды билеттер және QR арқылы кіру.",
     skip: "Негізгі мазмұнға өту",
     home: "elc басты беті",
     navigation: "Негізгі навигация",
     language: "Тілді таңдау",
     navWorkflow: "Қалай жұмыс істейді",
     navAttendees: "Қатысушыларға",
-    navDemo: "Демо туралы",
-    openApp: "Демоны ашу",
-    eyebrow: "Қазақстанға арналған оқу жобасы",
+    openApp: "elc-ті ашу",
+    eyebrow: "Қазақстандағы іс-шараларға билеттер",
     heroLineOne: "Адамдарды",
     heroLineTwo: "біріктіріңіз.",
     heroDescription:
       "Іс-шараны тіркеуден бастап кіреберістегі билет тексеруге дейін. elc ұйымдастырушылар мен қатысушыларға арналған осы жолды бір қолданбада құруда.",
     heroSecondary: "Жұмыс барысын көру",
-    heroNote: "Оқу прототипі. Нақты төлемдер жүргізілмейді.",
+    heroNote: "Бастау тегін. Тек ақылы билет сатқанда төлейсіз.",
     ticketEyebrow: "Билет үлгісі",
     ticketTitle: "Сіздің іс-шараңыз",
     ticketKind: "Тегін тіркелу",
@@ -147,26 +144,20 @@ export const copy: Record<Locale, Copy> = {
     freeLabel: "платформа төлемі",
     freeDescription:
       "Тегін билеттерді тарату үшін ақылы сатуды белсендіру қажет емес.",
-    paidTitle: "Ақылы іс-шараның демо есебі",
+    paidTitle: "Ақылы іс-шара мысалы",
     paidLabel: "әр іс-шараны белсендіру үлгісі",
     paidDescription:
-      "Оқу үлгісінде ұйымдастырушыға 3% өңдеу комиссиясы есептеледі. Белсендіру, төлемдер және қайтарымдар тек сынақ режимінде көрсетіледі.",
-    demoEyebrow: "Ашық айтатын бір жайт",
-    demoTitle: "Бұл оқу жобасы.",
+      "Билет сатудан түскен ақшадан 3% өңдеу комиссиясы ұсталады.",
+    demoEyebrow: "Бастау оңай",
+    demoTitle: "Алғашқы іс-шараңызды бүгін жасаңыз.",
     demoDescription:
-      "elc әлі әзірленіп жатыр. Демо нұсқа төлем, билет және кіру үдерістерін сынауға арналған. Нақты ақша аударылмайды, банк деректері немесе жеке басты растайтын құжаттар сұралмайды.",
-    demoStatus: "Әзірлеу жалғасуда · Мүмкіндіктер кезеңмен қосылады",
+      "Тегін іс-шара жасау мен билет тарату үшін ештеңе төлемейсіз. Ақылы сатуды қажет болғанда ғана қосасыз.",
     faqTitle: "Жиі қойылатын сұрақтар",
     questions: [
       {
         question: "elc кімдерге арналған?",
         answer:
           "Іс-шара өткізетін адамдарға, студенттік ұйымдарға және қауымдастықтарға арналған. Ұйымдастырушылар мен қатысушылар веб-қолданбаны, ал кіреберістегі тағайындалған қызметкерлер мобильді қолданбаны пайдаланады.",
-      },
-      {
-        question: "Демо нұсқада нақты ақша төлене ме?",
-        answer:
-          "Жоқ. Ақылы сату, белсендіру төлемі және қайтарымдар провайдердің сынақ ортасында немесе белгіленген симуляцияда орындалады. Демо жазбалар нақты қаржылық операциялар емес.",
       },
       {
         question: "Билетті қағазға басып шығаруға бола ма?",
@@ -179,29 +170,28 @@ export const copy: Record<Locale, Copy> = {
           "Жобада алдын ала жүктелген дерекпен уақытша офлайн тексеру қарастырылған. Нәтижелер байланыс қалпына келгенде салыстырылады. Бір-біріне қосылмаған екі құрылғы адамның екі рет кіруіне толық тосқауыл қоя алмайды.",
       },
     ],
-    footerDescription: "Қазақстандағы кездесулерге арналған оқу жобасы.",
+    footerDescription: "Қазақстандағы іс-шараларға билеттер",
     footerPrivacy: "Аналитика міндетті емес және рұқсат бергенше өшірулі.",
     top: "Бет басына",
   },
   ru: {
     title: "elc · События и билеты",
     description:
-      "Знакомство с elc, учебным проектом для регистрации на события и управления билетами в Казахстане. Бесплатные события, электронные билеты и вход по QR.",
+      "elc помогает вести регистрацию на события и выдачу билетов в Казахстане. Бесплатные события, электронные билеты и вход по QR.",
     skip: "Перейти к содержанию",
     home: "Главная elc",
     navigation: "Основная навигация",
     language: "Выбор языка",
     navWorkflow: "Как это работает",
     navAttendees: "Участникам",
-    navDemo: "О демо",
-    openApp: "Открыть демо",
-    eyebrow: "Учебный проект для Казахстана",
+    openApp: "Открыть elc",
+    eyebrow: "Билеты на события в Казахстане",
     heroLineOne: "Собирайте",
     heroLineTwo: "людей вместе.",
     heroDescription:
       "От регистрации на событие до проверки билета у входа. elc объединяет этот путь в одном приложении для организаторов и участников.",
     heroSecondary: "Посмотреть процесс",
-    heroNote: "Учебный прототип. Без реальных платежей.",
+    heroNote: "Начать бесплатно. Платите, только когда продаёте билеты.",
     ticketEyebrow: "Образец билета",
     ticketTitle: "Ваше событие",
     ticketKind: "Бесплатная регистрация",
@@ -269,26 +259,20 @@ export const copy: Record<Locale, Copy> = {
     freeLabel: "плата платформе",
     freeDescription:
       "Для выдачи бесплатных билетов не нужно активировать платные продажи.",
-    paidTitle: "Демо расчёт платного события",
+    paidTitle: "Пример платного события",
     paidLabel: "пример активации одного события",
     paidDescription:
-      "В учебной модели организатору начисляется комиссия 3% за обработку. Активация, платежи и возвраты показаны только в тестовом режиме.",
-    demoEyebrow: "Важная деталь",
-    demoTitle: "Это учебный проект.",
+      "С выручки от билетов удерживается комиссия 3% за обработку.",
+    demoEyebrow: "Можно начинать",
+    demoTitle: "Создайте первое событие сегодня.",
     demoDescription:
-      "elc находится в разработке. Демо предназначено для проверки сценариев оплаты, выдачи билетов и входа. Реальные деньги не переводятся, банковские реквизиты и документы для проверки личности не запрашиваются.",
-    demoStatus: "Разработка продолжается · Возможности появляются постепенно",
+      "Бесплатные события и билеты ничего не стоят. Платные продажи включаются, только когда они нужны.",
     faqTitle: "Частые вопросы",
     questions: [
       {
         question: "Для кого создаётся elc?",
         answer:
           "Для людей, студенческих организаций и сообществ, которые проводят события. Организаторы и участники используют веб-приложение, а назначенные сотрудники на входе работают в мобильном приложении.",
-      },
-      {
-        question: "В демо списываются настоящие деньги?",
-        answer:
-          "Нет. Платные продажи, активация события и возвраты проходят в тестовой среде провайдера или в обозначенной симуляции. Демо записи не являются реальными финансовыми операциями.",
       },
       {
         question: "Можно ли распечатать билет?",
@@ -301,29 +285,28 @@ export const copy: Record<Locale, Copy> = {
           "В проекте предусмотрена временная офлайн-проверка по заранее загруженным данным. Результаты сверяются после восстановления связи. Два отключённых друг от друга устройства не могут полностью предотвратить повторный физический вход.",
       },
     ],
-    footerDescription: "Учебный проект для встреч в Казахстане.",
+    footerDescription: "Билеты на события по всему Казахстану",
     footerPrivacy: "Аналитика необязательна и выключена до вашего согласия.",
     top: "Наверх",
   },
   en: {
     title: "elc · Events and tickets",
     description:
-      "Meet elc, an academic project for event registration and ticketing in Kazakhstan. Free events, digital tickets and QR check-in.",
+      "elc makes event registration and ticketing simple in Kazakhstan. Free events, digital tickets and QR check-in.",
     skip: "Skip to content",
     home: "elc home",
     navigation: "Main navigation",
     language: "Choose language",
     navWorkflow: "How it works",
     navAttendees: "For attendees",
-    navDemo: "About the demo",
-    openApp: "Open the demo",
-    eyebrow: "An academic project for Kazakhstan",
+    openApp: "Open elc",
+    eyebrow: "Event tickets for Kazakhstan",
     heroLineOne: "Bring people",
     heroLineTwo: "together.",
     heroDescription:
       "From event registration to checking a ticket at the door. elc is bringing that journey into one application for organizers and attendees.",
     heroSecondary: "See the workflow",
-    heroNote: "Academic prototype. No real payments.",
+    heroNote: "Free to start. Pay only when you sell tickets.",
     ticketEyebrow: "Sample ticket",
     ticketTitle: "Your event",
     ticketKind: "Free registration",
@@ -391,26 +374,19 @@ export const copy: Record<Locale, Copy> = {
     freeLabel: "platform fee",
     freeDescription:
       "You do not need to activate paid sales to distribute free tickets.",
-    paidTitle: "Paid-event demo calculation",
+    paidTitle: "Paid event example",
     paidLabel: "sample activation for one event",
-    paidDescription:
-      "The academic model deducts a 3% processing fee from organizer revenue. Activation, payments and refunds run only in a sandbox or simulation.",
-    demoEyebrow: "A note before you explore",
-    demoTitle: "This is an academic project.",
+    paidDescription: "A 3% processing fee is deducted from ticket revenue.",
+    demoEyebrow: "Ready when you are",
+    demoTitle: "Create your first event today.",
     demoDescription:
-      "elc is in development. The demo is for trying payment, ticketing and admission workflows. It does not move real money or request bank credentials or identity documents.",
-    demoStatus: "In development · Workflows are added in stages",
+      "Free events and tickets cost nothing. Turn on paid sales only when you need them.",
     faqTitle: "Common questions",
     questions: [
       {
         question: "Who is elc being built for?",
         answer:
           "People, student organizations and communities that run events. Organizers and attendees use the web application. Assigned staff use the mobile application at the entrance.",
-      },
-      {
-        question: "Does the demo charge real money?",
-        answer:
-          "No. Paid sales, event activation and refunds use a provider sandbox or a labelled simulation. Demo records are not real financial transactions.",
       },
       {
         question: "Can a ticket be printed?",
@@ -423,7 +399,7 @@ export const copy: Record<Locale, Copy> = {
           "The project includes provisional offline checks using previously downloaded data. Results are reconciled after reconnection. Two disconnected devices cannot fully prevent the same person entering twice.",
       },
     ],
-    footerDescription: "An academic project for gatherings in Kazakhstan.",
+    footerDescription: "Tickets for events across Kazakhstan",
     footerPrivacy: "Analytics is optional and stays off until you allow it.",
     top: "Back to top",
   },

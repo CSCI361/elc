@@ -177,7 +177,6 @@ function EventAdmin({
             </Pressable>
           ))}
         </View>
-        <Text style={styles.badge}>{copy.demo}</Text>
       </View>
       <KeyboardAvoidingView
         style={{ flex: 1 }}

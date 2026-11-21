@@ -141,7 +141,6 @@ export function SignIn({ copy }: { copy: Copy }) {
       >
         <Text style={styles.linkText}>{copy.webAccount}</Text>
       </Pressable>
-      <Text style={styles.muted}>{copy.offlinePending}</Text>
     </>
   )
 }

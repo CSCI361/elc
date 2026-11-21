@@ -3,7 +3,7 @@ type Language = Locale
 const en = {
   title: "Event Admin",
   intro: "Check tickets at your assigned events.",
-  demo: "Academic demo",
+  demo: "Live service",
   signIn: "Sign in",
   signOut: "Sign out",
   email: "Email",
@@ -69,8 +69,6 @@ const en = {
   verifyEmail: "Verify your email on the web, then refresh your session.",
   sessionLoading: "Checking your session…",
   signInError: "Sign-in failed. Check your details and try again.",
-  offlinePending:
-    "Offline verification is not enabled in this build. A network error never confirms admission.",
   refreshError: "Current event data is unavailable. Connect and refresh.",
   local: "Local",
   preview: "Preview",
@@ -90,7 +88,7 @@ type Copy = Record<keyof typeof en, string>
 const kk: Copy = {
   title: "Іс-шара әкімшісі",
   intro: "Сізге тағайындалған іс-шараларда билеттерді тексеріңіз.",
-  demo: "Оқу демосы",
+  demo: "Негізгі қызмет",
   signIn: "Кіру",
   signOut: "Шығу",
   email: "Электрондық пошта",
@@ -156,8 +154,6 @@ const kk: Copy = {
     "Веб-сайтта поштаңызды растаңыз, содан кейін сессияны жаңартыңыз.",
   sessionLoading: "Сессия тексеріліп жатыр…",
   signInError: "Кіру орындалмады. Деректеріңізді тексеріп, қайталап көріңіз.",
-  offlinePending:
-    "Бұл нұсқада офлайн тексеру қосылмаған. Желі қатесі кіруді растамайды.",
   refreshError:
     "Іс-шараның ағымдағы деректері қолжетімсіз. Қосылып, жаңартыңыз.",
   local: "Жергілікті орта",
@@ -177,7 +173,7 @@ const kk: Copy = {
 const ru: Copy = {
   title: "Администратор события",
   intro: "Проверяйте билеты на назначенных вам мероприятиях.",
-  demo: "Учебное демо",
+  demo: "Рабочий сервис",
   signIn: "Войти",
   signOut: "Выйти",
   email: "Электронная почта",
@@ -243,8 +239,6 @@ const ru: Copy = {
   verifyEmail: "Подтвердите почту на сайте, затем обновите сессию.",
   sessionLoading: "Проверяем сессию…",
   signInError: "Не удалось войти. Проверьте данные и повторите попытку.",
-  offlinePending:
-    "В этой сборке офлайн-проверка не включена. Ошибка сети никогда не подтверждает вход.",
   refreshError:
     "Текущие данные мероприятия недоступны. Подключитесь и обновите их.",
   local: "Локальная среда",

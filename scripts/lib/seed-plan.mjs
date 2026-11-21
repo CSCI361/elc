@@ -68,7 +68,7 @@ function freeEvent(
       {
         key: "general",
         name: ticketName,
-        description: "Free entry for the local demonstration.",
+        description: "Free entry.",
         kind: "free",
         priceMinor: 0,
         currency: "KZT",
@@ -108,12 +108,12 @@ export function buildSeedPlan(now) {
     freeEvent(
       {
         key: "developer-meetup",
-        title: "Almaty developer meetup (demo)",
+        title: "Almaty Developer Meetup",
         description:
-          "A local demonstration event for trying discovery, free registration, tickets and check-in.",
+          "Lightning talks from local developers, then open networking. All levels welcome.",
         category: "Technology",
-        venueName: "Demo coworking hall",
-        venueAddress: "Abay Avenue 1, Almaty (demonstration address)",
+        venueName: "SmArt.Point coworking",
+        venueAddress: "Abylai Khan Avenue 141, Almaty",
         daysAhead: 7,
         startHourUtc: 13,
         durationHours: 3,
@@ -126,12 +126,12 @@ export function buildSeedPlan(now) {
     freeEvent(
       {
         key: "student-film-night",
-        title: "Student film night (demo)",
+        title: "Student Film Night",
         description:
-          "A second demonstration event for organizer history, analytics and support workflows.",
+          "Short films made by students, followed by a Q&A with the directors.",
         category: "Film",
-        venueName: "Demo university auditorium",
-        venueAddress: "Satpayev Street 22, Almaty (demonstration address)",
+        venueName: "Student Union cinema room",
+        venueAddress: "Kabanbay Batyr Avenue 53, Astana",
         daysAhead: 14,
         startHourUtc: 14,
         durationHours: 2,

@@ -9,9 +9,6 @@ export const localeNames: Record<Locale, string> = {
 const english = {
   language: "Language",
   skipToContent: "Skip to content",
-  academicDemo: "Academic demonstration",
-  demoDescription:
-    "Payments and identity checks are simulated. No real money is moved.",
   account: "My account",
   signIn: "Sign in",
   signUp: "Create account",
@@ -120,9 +117,6 @@ export const authMessages: Record<Locale, AuthMessages> = {
   kk: {
     language: "Тіл",
     skipToContent: "Мазмұнға өту",
-    academicDemo: "Оқу жобасының демо нұсқасы",
-    demoDescription:
-      "Төлемдер мен тұлғаны тексеру имитацияланады. Нақты ақша аударылмайды.",
     account: "Менің аккаунтым",
     signIn: "Кіру",
     signUp: "Аккаунт ашу",
@@ -225,9 +219,6 @@ export const authMessages: Record<Locale, AuthMessages> = {
   ru: {
     language: "Язык",
     skipToContent: "Перейти к содержимому",
-    academicDemo: "Учебная демонстрация",
-    demoDescription:
-      "Платежи и проверка личности имитируются. Реальные деньги не переводятся.",
     account: "Мой аккаунт",
     signIn: "Войти",
     signUp: "Создать аккаунт",
