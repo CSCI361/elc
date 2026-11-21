@@ -1,21 +1,320 @@
+import { Menu } from "@base-ui/react/menu"
+import { localeNames, localeSchema } from "@elc/shared"
 import {
-  ArrowUpRightIcon,
+  CheckIcon,
+  GlobeSimpleIcon,
+  ListIcon,
   MoonIcon,
+  SignOutIcon,
   SunIcon,
-  TicketIcon,
-  UserCircleIcon,
+  UserIcon,
 } from "@phosphor-icons/react"
-import type { ReactNode } from "react"
-import { useAccount } from "@/auth/context"
-import { LocaleSelect } from "@/auth/locale-select"
-import { useTheme } from "./theme-provider"
-import { useEventText } from "@/events/messages"
-import { useSupportText } from "@/support/messages"
-import { useHistoryText } from "@/history/messages"
-import { useAnalyticsText } from "@/analytics/messages"
-import { DeliveryNavigation } from "@/delivery/navigation"
-import { OfflineOperationsLink } from "@/offline-operations/navigation"
+import { useRef, useState, type ReactNode } from "react"
 import { AnalyticsConsent } from "@/analytics/consent"
+import { useAccount, useSignedIn } from "@/auth/context"
+import { authHref } from "@/auth/navigation"
+import { usePlatformLinks } from "@/delivery/navigation"
+import { useEventText } from "@/events/messages"
+import { useHistoryText } from "@/history/messages"
+import { useLocation } from "@/lib/navigation"
+import { useOfflineText } from "@/offline-operations/messages"
+import { useSupportText } from "@/support/messages"
+import { Logo } from "./ui/logo"
+import { useTheme } from "./theme-provider"
+
+interface NavLink {
+  href: string
+  label: string
+  current: boolean
+}
+
+function MenuPopup({
+  children,
+  align = "end",
+}: {
+  children: ReactNode
+  align?: "start" | "end"
+}) {
+  return (
+    <Menu.Portal>
+      <Menu.Positioner className="menu-positioner" sideOffset={8} align={align}>
+        <Menu.Popup className="menu-popup">{children}</Menu.Popup>
+      </Menu.Positioner>
+    </Menu.Portal>
+  )
+}
+
+function MenuLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Menu.LinkItem className="menu-item" href={href} closeOnClick>
+      {children}
+    </Menu.LinkItem>
+  )
+}
+
+function usePrimaryLinks(): NavLink[] {
+  const signedIn = useSignedIn()
+  const { pathname } = useLocation()
+  const { t } = useEventText()
+  return [
+    {
+      href: "/events",
+      label: t("navEvents"),
+      current:
+        pathname === "/" ||
+        (pathname.startsWith("/events") && !pathname.endsWith("/analytics")),
+    },
+    ...(signedIn
+      ? [
+          {
+            href: "/orders",
+            label: t("myTickets"),
+            current:
+              pathname.startsWith("/orders") || pathname.startsWith("/tickets"),
+          },
+        ]
+      : []),
+    {
+      href: "/organizer/events",
+      label: t("forOrganizers"),
+      current: pathname.startsWith("/organizer"),
+    },
+  ]
+}
+
+function LocaleMenu() {
+  const { locale, messages: t, changeLocale, preferencePending } = useAccount()
+  return (
+    <Menu.Root>
+      <Menu.Trigger
+        className="locale-trigger"
+        aria-label={t.language}
+        disabled={preferencePending}
+      >
+        <GlobeSimpleIcon size={18} aria-hidden />
+        <span>{localeNames[locale]}</span>
+      </Menu.Trigger>
+      <MenuPopup>
+        <Menu.RadioGroup
+          value={locale}
+          onValueChange={(value) =>
+            void changeLocale(localeSchema.parse(value))
+          }
+        >
+          {Object.entries(localeNames).map(([key, label]) => (
+            <Menu.RadioItem
+              key={key}
+              value={key}
+              className="menu-item"
+              lang={key}
+              closeOnClick
+            >
+              {label}
+              <Menu.RadioItemIndicator className="menu-item-check">
+                <CheckIcon size={16} weight="bold" aria-hidden />
+              </Menu.RadioItemIndicator>
+            </Menu.RadioItem>
+          ))}
+        </Menu.RadioGroup>
+      </MenuPopup>
+    </Menu.Root>
+  )
+}
+
+function ThemeToggle() {
+  const { messages: t } = useAccount()
+  const { theme, setTheme } = useTheme()
+  const dark =
+    theme === "dark" ||
+    (theme === "system" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches)
+  return (
+    <button
+      className="icon-button"
+      type="button"
+      onClick={() => setTheme(dark ? "light" : "dark")}
+      aria-label={dark ? t.lightTheme : t.darkTheme}
+    >
+      {dark ? (
+        <SunIcon size={18} aria-hidden />
+      ) : (
+        <MoonIcon size={18} aria-hidden />
+      )}
+    </button>
+  )
+}
+
+function AccountMenu() {
+  const { messages: t, account, signOut } = useAccount()
+  const { t: eventLabel } = useEventText()
+  const { t: supportLabel } = useSupportText()
+  const { t: historyLabel } = useHistoryText()
+  const { t: offlineLabel } = useOfflineText()
+  return (
+    <Menu.Root>
+      <Menu.Trigger className="account-trigger" aria-label={t.account}>
+        <span className="avatar">
+          <UserIcon size={16} weight="bold" aria-hidden />
+        </span>
+      </Menu.Trigger>
+      <MenuPopup>
+        {account ? (
+          <div className="menu-account">
+            <strong>{account.user.name}</strong>
+            <span>{account.user.email}</span>
+          </div>
+        ) : null}
+        <Menu.Separator className="menu-separator" />
+        <MenuLink href="/orders">{eventLabel("myTickets")}</MenuLink>
+        <MenuLink href="/support">{supportLabel("support")}</MenuLink>
+        <MenuLink href="/account">{t.account}</MenuLink>
+        <Menu.Separator className="menu-separator" />
+        <Menu.Group>
+          <Menu.GroupLabel className="menu-group-label">
+            {eventLabel("forOrganizers")}
+          </Menu.GroupLabel>
+          <MenuLink href="/organizer/events">{eventLabel("organize")}</MenuLink>
+          <MenuLink href="/organizer/analytics">
+            {eventLabel("analytics")}
+          </MenuLink>
+          <MenuLink href="/organizer/history">{historyLabel("title")}</MenuLink>
+          <MenuLink href="/offline">{offlineLabel("title")}</MenuLink>
+        </Menu.Group>
+        <Menu.Separator className="menu-separator" />
+        <Menu.Item
+          className="menu-item menu-item-danger"
+          onClick={() => void signOut()}
+        >
+          <SignOutIcon size={16} aria-hidden />
+          {t.signOut}
+        </Menu.Item>
+      </MenuPopup>
+    </Menu.Root>
+  )
+}
+
+function usePlatformNavLinks(): NavLink[] {
+  const { pathname } = useLocation()
+  const deliveries = pathname.startsWith("/admin/deliveries")
+  return usePlatformLinks().map((link) => ({
+    ...link,
+    current:
+      link.href === "/admin/deliveries"
+        ? deliveries
+        : pathname.startsWith("/admin/") && !deliveries,
+  }))
+}
+
+function MobileNav({ links }: { links: NavLink[] }) {
+  const { t } = useEventText()
+  return (
+    <Menu.Root>
+      <Menu.Trigger
+        className="icon-button mobile-nav-trigger"
+        aria-label={t("menu")}
+      >
+        <ListIcon size={20} aria-hidden />
+      </Menu.Trigger>
+      <MenuPopup align="start">
+        {links.map((link) => (
+          <MenuLink key={link.href} href={link.href}>
+            {link.label}
+          </MenuLink>
+        ))}
+      </MenuPopup>
+    </Menu.Root>
+  )
+}
+
+function HeaderNav({ links }: { links: NavLink[] }) {
+  const { messages: t } = useAccount()
+  const { t: eventLabel } = useEventText()
+  return (
+    <>
+      <MobileNav links={links} />
+      <a className="brand-link" href="/" aria-label={`elc, ${t.home}`}>
+        <Logo />
+      </a>
+      <nav className="primary-nav" aria-label={eventLabel("menu")}>
+        {links.map((link) => (
+          <a
+            key={link.href}
+            href={link.href}
+            aria-current={link.current ? "page" : undefined}
+          >
+            {link.label}
+          </a>
+        ))}
+      </nav>
+    </>
+  )
+}
+
+function SignedInNav({ links }: { links: NavLink[] }) {
+  return <HeaderNav links={[...links, ...usePlatformNavLinks()]} />
+}
+
+function Header() {
+  const { messages: t } = useAccount()
+  const signedIn = useSignedIn()
+  const { location } = useLocation()
+  const links = usePrimaryLinks()
+  return (
+    <header className="app-header">
+      <div className="app-header-inner">
+        {signedIn ? <SignedInNav links={links} /> : <HeaderNav links={links} />}
+        <div className="header-actions">
+          <LocaleMenu />
+          <ThemeToggle />
+          {signedIn ? (
+            <AccountMenu />
+          ) : (
+            <a
+              className="btn btn-secondary btn-sm"
+              href={
+                location.startsWith("/auth/")
+                  ? "/auth/sign-in"
+                  : authHref("sign-in", location)
+              }
+            >
+              {t.signIn}
+            </a>
+          )}
+        </div>
+      </div>
+    </header>
+  )
+}
+
+function Footer({
+  onCookieSettings,
+}: {
+  onCookieSettings: (trigger: HTMLElement) => void
+}) {
+  const { t } = useEventText()
+  const { t: supportLabel } = useSupportText()
+  return (
+    <footer className="app-footer">
+      <div className="app-footer-inner">
+        <div className="app-footer-brand">
+          <Logo />
+          <span>{t("footerTagline")}</span>
+        </div>
+        <nav aria-label="elc">
+          <a href="/events">{t("navEvents")}</a>
+          <a href="/organizer/events">{t("forOrganizers")}</a>
+          <a href="/support">{supportLabel("support")}</a>
+          <button
+            type="button"
+            onClick={(event) => onCookieSettings(event.currentTarget)}
+          >
+            {t("cookieSettings")}
+          </button>
+        </nav>
+      </div>
+    </footer>
+  )
+}
 
 export function AppShell({
   children,
@@ -24,177 +323,38 @@ export function AppShell({
   children: ReactNode
   authLayout?: boolean
 }) {
-  const { messages: t, status, account } = useAccount()
-  const { theme, setTheme } = useTheme()
-  const { t: eventLabel } = useEventText()
-  const { t: supportLabel } = useSupportText()
-  const { t: historyLabel } = useHistoryText()
-  const { t: analyticsLabel } = useAnalyticsText()
-  const dark =
-    theme === "dark" ||
-    (theme === "system" &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches)
+  const { messages: t } = useAccount()
+  const [cookieSettings, setCookieSettings] = useState(false)
+  const cookieTrigger = useRef<HTMLElement | null>(null)
   return (
     <div className="elc-app">
       <a href="#main-content" className="skip-link">
         {t.skipToContent}
       </a>
-      <div className="demo-banner" role="region" aria-label={t.academicDemo}>
-        <span className="demo-dot" />
-        {t.academicDemo}
-        <span className="demo-detail">{t.demoDescription}</span>
-      </div>
-      <header className="app-header">
-        <a className="wordmark" href="/" aria-label={`elc, ${t.home}`}>
-          <span className="brand-mark">
-            <TicketIcon size={25} weight="fill" aria-hidden />
-          </span>
-          elc<span className="wordmark-period">.</span>
-        </a>
-        <nav className="header-actions" aria-label={t.account}>
-          <LocaleSelect />
-          <button
-            className="theme-toggle"
-            type="button"
-            onClick={() => setTheme(dark ? "light" : "dark")}
-            aria-label={dark ? t.lightTheme : t.darkTheme}
-          >
-            {dark ? (
-              <SunIcon size={21} aria-hidden />
-            ) : (
-              <MoonIcon size={21} aria-hidden />
-            )}
-          </button>
-          <a
-            className="header-account"
-            href={status === "active" ? "/account" : "/auth/sign-in"}
-            aria-label={status === "active" ? t.account : t.signIn}
-          >
-            <UserCircleIcon size={21} aria-hidden />
-            <span>{status === "active" ? t.account : t.signIn}</span>
-          </a>
-        </nav>
-      </header>
-      <nav className="event-navigation" aria-label={eventLabel("discover")}>
-        {status === "active" ? <OfflineOperationsLink /> : null}
-        {status === "active" && account ? (
-          <DeliveryNavigation key={account.user.id} />
-        ) : null}
-        {status === "active" ? (
-          <a
-            href="/support"
-            aria-current={
-              window.location.pathname.startsWith("/support")
-                ? "page"
-                : undefined
-            }
-          >
-            {supportLabel("support")}
-          </a>
-        ) : null}
-        <a
-          href="/events"
-          aria-current={
-            window.location.pathname === "/" ||
-            (window.location.pathname.startsWith("/events") &&
-              !window.location.pathname.endsWith("/analytics"))
-              ? "page"
-              : undefined
-          }
-        >
-          {eventLabel("discover")}
-        </a>
-        <a
-          href="/organizer/events"
-          aria-current={
-            window.location.pathname.startsWith("/organizer/events") &&
-            !window.location.pathname.endsWith("/history") &&
-            !window.location.pathname.endsWith("/duplicate")
-              ? "page"
-              : undefined
-          }
-        >
-          {eventLabel("organize")}
-        </a>
-        {status === "active" ? (
-          <>
-            <a
-              href="/organizer/analytics"
-              aria-current={
-                window.location.pathname === "/organizer/analytics" ||
-                window.location.pathname.endsWith("/analytics")
-                  ? "page"
-                  : undefined
-              }
-            >
-              {analyticsLabel("availableEvents")}
-            </a>
-            <a
-              href="/organizer/history"
-              aria-current={
-                window.location.pathname === "/organizer/history" ||
-                window.location.pathname.endsWith("/history") ||
-                window.location.pathname.endsWith("/duplicate")
-                  ? "page"
-                  : undefined
-              }
-            >
-              {historyLabel("title")}
-            </a>
-          </>
-        ) : null}
-        {status === "active" ? (
-          <a
-            href="/orders"
-            aria-current={
-              window.location.pathname.startsWith("/orders") ||
-              window.location.pathname.startsWith("/tickets")
-                ? "page"
-                : undefined
-            }
-          >
-            {eventLabel("orders")}
-          </a>
-        ) : null}
-      </nav>
+      <Header />
       <main
         id="main-content"
+        tabIndex={-1}
         className={authLayout ? "auth-layout" : "main-layout"}
       >
-        {authLayout ? (
-          <aside className="auth-story" aria-label={t.welcomeTitle}>
-            <div className="story-topline">
-              <span>elc / {t.academicDemo}</span>
-              <ArrowUpRightIcon size={24} aria-hidden />
-            </div>
-            <div className="story-copy">
-              <h2>{t.welcomeTitle}</h2>
-              <p>{t.welcomeDescription}</p>
-            </div>
-            <div className="ticket-art" aria-hidden="true">
-              <div className="art-orbit orbit-one" />
-              <div className="art-orbit orbit-two" />
-              <div className="art-ticket">
-                <span className="art-ticket-brand">elc.</span>
-                <span className="art-ticket-line">{t.brandCaption}</span>
-                <div className="art-ticket-perforation" />
-                <span className="art-ticket-caption">{t.academicDemo}</span>
-                <TicketIcon size={42} weight="thin" />
-              </div>
-              <span className="art-star">✳</span>
-            </div>
-            <p className="story-note">{t.welcomeNote}</p>
-          </aside>
-        ) : null}
         <div className={authLayout ? "auth-panel" : "main-panel"}>
           {children}
         </div>
       </main>
-      <footer className="app-footer">
-        <span>{t.footerNote}</span>
-        <span>{t.privacyNote}</span>
-      </footer>
-      <AnalyticsConsent />
+      <Footer
+        onCookieSettings={(trigger) => {
+          cookieTrigger.current = trigger
+          setCookieSettings(true)
+        }}
+      />
+      <AnalyticsConsent
+        reopened={cookieSettings}
+        onClose={() => {
+          setCookieSettings(false)
+          cookieTrigger.current?.focus()
+          cookieTrigger.current = null
+        }}
+      />
     </div>
   )
 }
