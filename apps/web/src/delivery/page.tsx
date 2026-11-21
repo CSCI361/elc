@@ -5,12 +5,19 @@ import {
   deliveryPdfStateSchema,
   type DeliveryListQuery,
 } from "@elc/shared"
-import { useEffect, useRef, useState, type FormEvent } from "react"
+import { useState, type FormEvent } from "react"
 import { useAccount } from "@/auth/context"
+import { navigate } from "@/lib/navigation"
 import { AuthNotice } from "@/auth/notice"
 import { Button } from "@/components/ui/button"
 import { segment, useResource } from "@/events/api"
-import { Field, Loading, Protected, SelectField } from "@/events/ui"
+import {
+  Field,
+  Loading,
+  Protected,
+  SectionLoading,
+  SelectField,
+} from "@/events/ui"
 import { useDeliveryText } from "./messages"
 import { deliveryQuery, deliverySearch } from "./policies"
 import { RecoveryForm } from "./recovery-form"
@@ -126,32 +133,16 @@ function DeliveryDetail({ id, accountId }: { id: string; accountId: string }) {
 function DeliveryList() {
   const { t, locale } = useDeliveryText()
   const initial = deliveryQuery(window.location.search)
-  const [query, setQuery] = useState<DeliveryListQuery>(
-    initial ?? { limit: 20 }
-  )
+  const query: DeliveryListQuery = initial ?? { limit: 20 }
   const [invalid, setInvalid] = useState(!initial)
   const resource = useResource(
     `/admin/deliveries?${deliverySearch(query)}`,
     deliveryListResponseSchema,
     15000
   )
-  const heading = useRef<HTMLHeadingElement>(null),
-    focus = useRef(false)
-  useEffect(() => {
-    if (resource.data && !resource.error && focus.current) {
-      focus.current = false
-      heading.current?.focus()
-    }
-  }, [resource.data, resource.error])
   const changeQuery = (input: DeliveryListQuery) => {
-    setQuery(input)
-    focus.current = true
     setInvalid(false)
-    window.history.replaceState(
-      null,
-      "",
-      `/admin/deliveries?${deliverySearch(input)}`
-    )
+    navigate(`/admin/deliveries?${deliverySearch(input)}`, { replace: true })
   }
   function filter(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -171,7 +162,7 @@ function DeliveryList() {
   }
   if (resource.error)
     return <DeliveryFailure error={resource.error} retry={resource.reload} />
-  if (!resource.data) return <Loading />
+  const data = resource.data
   const date = new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -179,7 +170,13 @@ function DeliveryList() {
   })
   return (
     <>
-      <form className="event-panel delivery-filters" onSubmit={filter}>
+      <div className="event-page-heading">
+        <h1>{t("title")}</h1>
+        <button type="button" className="text-action" onClick={resource.reload}>
+          {t("reload")}
+        </button>
+      </div>
+      <form className="delivery-filters" onSubmit={filter}>
         <SelectField
           name="emailState"
           label={t("emailState")}
@@ -219,16 +216,10 @@ function DeliveryList() {
         <Button type="submit">{t("apply")}</Button>
       </form>
       {invalid ? <AuthNotice>{t("invalid")}</AuthNotice> : null}
-      <div className="event-page-heading">
-        <h2 ref={heading} tabIndex={-1}>
-          {t("title")}
-        </h2>
-        <button type="button" className="text-action" onClick={resource.reload}>
-          {t("reload")}
-        </button>
-      </div>
       <p>{t("timeZone")}</p>
-      {!resource.data.items.length ? (
+      {!data ? (
+        <SectionLoading />
+      ) : !data.items.length ? (
         <p>{t("empty")}</p>
       ) : (
         <>
@@ -260,7 +251,7 @@ function DeliveryList() {
                 </tr>
               </thead>
               <tbody>
-                {resource.data.items.map((item) => (
+                {data.items.map((item) => (
                   <tr key={item.id}>
                     <th scope="row">
                       <a href={`/admin/deliveries/${segment(item.id)}`}>
@@ -293,13 +284,13 @@ function DeliveryList() {
             {t("reset")}
           </Button>
         ) : null}
-        {resource.data.nextCursor ? (
+        {data?.nextCursor ? (
           <Button
             type="button"
             onClick={() =>
               changeQuery({
                 ...query,
-                after: resource.data!.nextCursor ?? undefined,
+                after: data.nextCursor ?? undefined,
               })
             }
           >

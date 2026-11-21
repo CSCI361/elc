@@ -42,15 +42,11 @@ const copy = {
     "Отдельные платежи за выбранный период. Они не включены в билетную выручку.",
     "Separate payments in the selected period. They are excluded from ticket revenue.",
   ],
-  payouts: [
-    "Тіркелген симуляциялық төлемдер",
-    "Записанные симулированные выплаты",
-    "Recorded simulated payouts",
-  ],
+  payouts: ["Тіркелген төлемдер", "Записанные выплаты", "Recorded payouts"],
   payoutHint: [
-    "Төлемдер аяқталған күніне, түзетулер тіркелген күніне жатады. Болжамды төлем бөлек көрсетіледі. Банк аударымы жасалмайды.",
-    "Выплаты учитываются по дате завершения, корректировки по дате записи. Оценка выплаты показана отдельно. Банковских переводов нет.",
-    "Payouts use their completion date; adjustments use their recorded date. Estimated payout is shown separately. No bank transfer occurs.",
+    "Төлемдер аяқталған күніне, түзетулер тіркелген күніне жатады. Болжамды төлем бөлек көрсетіледі.",
+    "Выплаты учитываются по дате завершения, корректировки по дате записи. Оценка выплаты показана отдельно.",
+    "Payouts use their completion date; adjustments use their recorded date. Estimated payout is shown separately.",
   ],
   completedCount: [
     "Тіркелген төлемдер саны",

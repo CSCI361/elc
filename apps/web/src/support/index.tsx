@@ -1,22 +1,33 @@
-import { lazy, Suspense } from "react"
+import { Suspense } from "react"
+import { preloadedPage } from "@/lib/preloaded-page"
 import { useAccount } from "@/auth/context"
 import { EventApiError } from "@/events/api"
+import { OrganizerEventLayout } from "@/events/organizer-workspace"
 import { EventError, Loading, Protected } from "@/events/ui"
 import "./support.css"
-const SupportListPage = lazy(() =>
-  import("./list-page").then((module) => ({ default: module.SupportListPage }))
+const SupportListPage = preloadedPage(() =>
+  import("./list-page").then((module) => module.SupportListPage)
 )
-const NewSupportPage = lazy(() =>
-  import("./new-page").then((module) => ({ default: module.NewSupportPage }))
+const NewSupportPage = preloadedPage(() =>
+  import("./new-page").then((module) => module.NewSupportPage)
 )
-const SupportCasePage = lazy(() =>
-  import("./case-page").then((module) => ({ default: module.SupportCasePage }))
+const SupportCasePage = preloadedPage(() =>
+  import("./case-page").then((module) => module.SupportCasePage)
 )
-const RefundPage = lazy(() =>
-  import("./refund-panel").then((module) => ({ default: module.RefundPage }))
+const RefundPage = preloadedPage(() =>
+  import("./refund-panel").then((module) => module.RefundPage)
 )
 function MatchedSupportRoute({ path }: { path: string }) {
-  if (path === "/support") return <SupportListPage />
+  if (path === "/support") {
+    const eventId = new URLSearchParams(window.location.search).get("eventId")
+    return eventId ? (
+      <OrganizerEventLayout eventId={eventId}>
+        <SupportListPage />
+      </OrganizerEventLayout>
+    ) : (
+      <SupportListPage />
+    )
+  }
   if (path === "/support/new") return <NewSupportPage />
   let id: string
   try {

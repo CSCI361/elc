@@ -1,3 +1,4 @@
+import { navigate } from "@/lib/navigation"
 import {
   analyticsEventsResponseSchema,
   eventAnalyticsResponseSchema,
@@ -44,10 +45,8 @@ export function EventChoices({
       <SelectField
         label={t("selectEvent")}
         value={eventId}
-        onChange={(event) =>
-          window.location.assign(
-            `/events/${encodeURIComponent(event.target.value)}/analytics`
-          )
+        onValueChange={(value) =>
+          navigate(`/events/${encodeURIComponent(value)}/analytics`)
         }
       >
         {!choices.data?.items.some((item) => item.id === eventId) ? (
@@ -139,13 +138,13 @@ export function AnalyticsFilters({
     }
   }
   return (
-    <form className="event-panel analytics-filters" onSubmit={submit}>
+    <form className="analytics-filters" onSubmit={submit}>
       <SelectField
         label={t("range")}
         value={range}
-        onChange={(event) => {
-          setRange(event.target.value as EventAnalyticsQuery["range"])
-          if (event.target.value === "custom") {
+        onValueChange={(value) => {
+          setRange(value as EventAnalyticsQuery["range"])
+          if (value === "custom") {
             if (!start) setStart(data?.period.start ?? "")
             if (!end) setEnd(data?.period.end ?? "")
           }
@@ -177,7 +176,7 @@ export function AnalyticsFilters({
         <SelectField
           label={t("ticketType")}
           value={type}
-          onChange={(event) => setType(event.target.value)}
+          onValueChange={(value) => setType(value)}
         >
           <option value="">{t("allTypes")}</option>
           {type && !types.data?.ticketTypes.some((item) => item.id === type) ? (

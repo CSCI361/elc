@@ -9,7 +9,7 @@ import {
   type EventAdministration,
 } from "@elc/shared"
 import { EventApiError, useCommand, useResource } from "../events/api"
-import { EventError, Field, Loading } from "../events/ui"
+import { EventError, Field, SectionLoading } from "../events/ui"
 import { useAdministrationText } from "./messages"
 import { ActivationRecord } from "./activation-record"
 
@@ -162,7 +162,7 @@ export function ActivationFeeSettings() {
     [saved, setSaved] = useState(false)
   if (resource.error)
     return <EventError error={resource.error} retry={resource.reload} />
-  if (!resource.data) return <Loading />
+  if (!resource.data) return <SectionLoading />
   return (
     <section className="event-panel">
       <h2>{t("settings")}</h2>
@@ -256,7 +256,7 @@ export function PaidSalesModeration({ eventId }: { eventId: string }) {
           onDone={resource.reload}
         />
       ) : (
-        <Loading />
+        <SectionLoading />
       )}
     </section>
   )

@@ -1,31 +1,51 @@
 .analytics-page {
   display: grid;
-  gap: 1.5rem;
+  gap: 24px;
   overflow-wrap: anywhere;
 }
-.analytics-page h1,
-.analytics-page h2,
-.analytics-page h3 {
-  margin-block: 0 0.75rem;
+.analytics-page > .back-link {
+  margin-bottom: 0;
 }
-.analytics-simulation {
+.analytics-page h2 {
   margin: 0;
-  padding: 0.85rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: 0.6rem;
-  background: var(--muted);
+}
+.analytics-page h1:focus,
+.analytics-page h2:focus {
+  outline: none;
 }
 .analytics-event-select {
   display: grid;
-  gap: 0.6rem;
+  gap: 12px;
   max-width: 38rem;
 }
 .analytics-report-list {
   display: grid;
-  gap: 1rem;
+  gap: 0;
   list-style: none;
   padding: 0;
   margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.analytics-report-list li {
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2px 16px;
+  padding: 14px 20px;
+}
+.analytics-report-list li > .text-action {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+.analytics-report-list li:first-child {
+  border-top: 0;
 }
 .analytics-report-list .text-action {
   display: inline-block;
@@ -33,9 +53,9 @@
 }
 .analytics-filters {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-  align-items: start;
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  align-items: end;
+  gap: 16px;
   margin: 0;
 }
 .analytics-filter-hint {
@@ -45,74 +65,105 @@
 .analytics-filters button[type="submit"] {
   align-self: end;
 }
+.analytics-page section:not(.event-panel, .analytics-page) {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+}
+.analytics-page section:not(.event-panel, .analytics-page) > h2 + p {
+  margin-top: -6px;
+}
+.analytics-table-details > p {
+  margin-block: 4px 12px;
+}
 .analytics-two-columns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.25rem;
+  gap: 20px;
 }
 .analytics-page .event-panel {
   margin: 0;
   min-width: 0;
+  gap: 16px;
 }
 .analytics-metrics {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-  gap: 0.8rem;
-  margin-block: 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  overflow: hidden;
 }
 .analytics-metrics > div {
-  border: 1px solid var(--border);
-  border-radius: 0.7rem;
-  padding: 1rem;
-  background: var(--card);
+  flex: 1 1 13rem;
+  padding: 18px 20px;
+  box-shadow:
+    1px 0 0 var(--line),
+    0 1px 0 var(--line);
+  min-width: 0;
 }
 .analytics-metrics dt {
-  font-size: 0.9rem;
-  min-height: 2.7em;
+  font-size: 13px;
+  color: var(--ink-2);
+  min-height: 2.6em;
 }
 .analytics-metrics dd {
-  margin: 0.5rem 0 0;
-  font-size: clamp(1.3rem, 2.4vw, 1.8rem);
-  font-weight: 750;
+  margin: 6px 0 0;
+  font-size: clamp(1.3rem, 2.4vw, 1.75rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 }
-.analytics-metrics .analytics-key-metric {
-  border-color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 5%, var(--card));
+.analytics-metrics .analytics-key-metric dt {
+  color: var(--ink);
+  font-weight: 500;
 }
 .analytics-counts {
-  margin: 1rem 0;
+  margin: 0;
   display: grid;
-  gap: 0.7rem;
+  gap: 0;
 }
 .analytics-counts > div {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: baseline;
-  gap: 1rem;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.analytics-counts > div:last-child {
+  border-bottom: 0;
+}
+.analytics-counts dt {
+  color: var(--ink-2);
+  font-size: 14px;
 }
 .analytics-counts dd {
   margin: 0;
   text-align: right;
-  font-weight: 700;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 .analytics-progress-label {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 16px;
+  font-size: 14px;
 }
 .analytics-page progress {
   width: 100%;
-  height: 0.8rem;
-  accent-color: var(--primary);
+  height: 8px;
 }
 .analytics-line {
   margin: 0;
   min-width: 0;
 }
 .analytics-line figcaption {
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-2);
+  margin-bottom: 8px;
 }
 .analytics-line svg {
   display: block;
@@ -121,41 +172,40 @@
   overflow: visible;
 }
 .analytics-line svg text {
-  fill: var(--muted-foreground);
-  font:
-    12px Roboto,
-    sans-serif;
+  fill: var(--ink-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 .analytics-axis {
-  stroke: var(--muted-foreground);
+  stroke: var(--line-strong);
   stroke-width: 1;
 }
 .analytics-grid-line {
-  stroke: var(--border);
+  stroke: var(--line);
   stroke-width: 1;
-  stroke-dasharray: 3 4;
 }
 .analytics-sales-line {
-  stroke: var(--primary);
-  stroke-width: 3;
+  stroke: var(--chart-1);
+  stroke-width: 2;
 }
 .analytics-net-line {
-  stroke: #08776a;
-  stroke-width: 3;
+  stroke: var(--chart-2);
+  stroke-width: 2;
 }
 .analytics-point {
-  fill: var(--primary);
+  fill: var(--chart-1);
 }
 .analytics-bars {
   display: grid;
-  gap: 0.8rem;
-  margin-block: 1rem;
+  gap: 12px;
+  margin-block: 4px;
 }
 .analytics-bar-row {
   display: grid;
   grid-template-columns: minmax(5rem, 1fr) minmax(4rem, 1.2fr) 3rem;
   align-items: center;
-  gap: 0.7rem;
+  gap: 12px;
+  font-size: 14px;
 }
 .analytics-bar-row > span:first-child {
   overflow: hidden;
@@ -164,34 +214,36 @@
 }
 .analytics-bar-row strong {
   text-align: right;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 .analytics-bar-track {
-  height: 0.7rem;
-  border-radius: 0.3rem;
-  background: var(--muted);
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
   overflow: hidden;
 }
 .analytics-bar-track > span {
   display: block;
   height: 100%;
-  background: var(--primary);
+  background: var(--chart-1);
 }
 .analytics-table-details summary {
   cursor: pointer;
   min-height: 44px;
-  padding-block: 0.7rem;
-  font-weight: 700;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
 }
 .analytics-table-region {
   overflow-x: auto;
   max-width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
 }
-.analytics-table-region:focus-visible,
-.analytics-page h2:focus-visible {
-  outline: 3px solid var(--ring);
+.analytics-table-region:focus-visible {
+  outline: 2px solid var(--brand);
   outline-offset: 3px;
 }
 .analytics-table-region table {
@@ -202,25 +254,31 @@
 }
 .analytics-table-region th,
 .analytics-table-region td {
-  padding: 0.75rem;
-  border-bottom: 1px solid var(--border);
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
   text-align: right;
   vertical-align: top;
 }
 .analytics-table-region th {
-  font-size: 0.8rem;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
 }
 .analytics-table-region th:first-child {
   text-align: left;
   min-width: 9rem;
 }
+.analytics-table-region tr:last-child td {
+  border-bottom: 0;
+}
 .analytics-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  align-items: center;
+  gap: 8px 16px;
 }
 .analytics-actions button {
-  min-height: 44px;
+  min-height: 40px;
   white-space: normal;
 }
 .analytics-page button:disabled {
@@ -235,15 +293,34 @@
 @media (max-width: 430px) {
   .analytics-counts > div {
     grid-template-columns: minmax(0, 1fr);
-    gap: 0.25rem;
+    gap: 2px;
   }
   .analytics-counts dd {
     text-align: left;
   }
-  .analytics-metrics {
-    grid-template-columns: minmax(0, 1fr);
+  .analytics-metrics > div {
+    flex-basis: 40%;
+    padding: 14px 16px;
   }
   .analytics-filters {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+.analytics-page progress {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.analytics-page progress::-webkit-progress-bar {
+  background: var(--surface-2);
+}
+.analytics-page progress::-webkit-progress-value {
+  background: var(--brand);
+  border-radius: 999px;
+}
+.analytics-page progress::-moz-progress-bar {
+  background: var(--brand);
 }

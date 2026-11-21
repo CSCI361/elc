@@ -1,6 +1,7 @@
 import type { ActivationResponse } from "@elc/shared"
 import { useEventText } from "../events/messages"
 import { money } from "../events/policies"
+import { payoutReferenceText } from "../organizer-profile/policies"
 import { useAdministrationText } from "./messages"
 
 export function ActivationRecord({
@@ -20,7 +21,6 @@ export function ActivationRecord({
     )
   return (
     <div className="administration-record">
-      <p>{t("activationDemo")}</p>
       <p>
         <strong>
           {t(
@@ -44,20 +44,30 @@ export function ActivationRecord({
           <>
             <dt>{t("organizerName")}</dt>
             <dd>{activation.profile.displayName}</dd>
-            <dt>{t("demoLegalName")}</dt>
+            <dt>{t("legalName")}</dt>
             <dd>{activation.profile.legalName}</dd>
             <dt>{t("organizerContact")}</dt>
             <dd>{activation.profile.contact}</dd>
             <dt>{t("dummyPayout")}</dt>
-            <dd>{activation.profile.dummyPayoutReference}</dd>
+            <dd>
+              {payoutReferenceText(activation.profile.dummyPayoutReference)}
+            </dd>
           </>
         ) : null}
-        <dt>{t("simulatedIdentity")}</dt>
+        <dt>{t("identityCheck")}</dt>
         <dd>{check(activation.identityCheck.state)}</dd>
-        <dt>{t("simulatedPayout")}</dt>
+        <dt>{t("payoutCheck")}</dt>
         <dd>{check(activation.payoutCheck.state)}</dd>
         <dt>{adminText("acceptedTerms")}</dt>
-        <dd>{activation.terms.acceptedVersion ?? adminText("notRecorded")}</dd>
+        <dd>
+          {adminText(
+            activation.terms.acceptedVersion === null
+              ? "notRecorded"
+              : activation.terms.acceptedVersion === activation.terms.version
+                ? "termsCurrent"
+                : "termsEarlier"
+          )}
+        </dd>
         <dt>
           {t(
             activation.fee.paidMinor === null ? "activationFee" : "feeRetained"

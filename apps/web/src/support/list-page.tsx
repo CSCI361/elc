@@ -4,10 +4,11 @@ import {
   supportIssueCategorySchema,
   supportCaseListQuerySchema,
 } from "@elc/shared"
-import { PlusIcon } from "@phosphor-icons/react"
+import { ChatsCircleIcon, PlusIcon } from "@phosphor-icons/react"
 import { useResource, segment } from "@/events/api"
 import { useEventText } from "@/events/messages"
-import { EventError, Loading, SelectField } from "@/events/ui"
+import { Bar, SkeletonRegion } from "@/components/ui/skeleton"
+import { EventError, SelectField } from "@/events/ui"
 import { Button } from "@/components/ui/button"
 import { useSupportText } from "./messages"
 
@@ -44,11 +45,7 @@ export function SupportListPage() {
           {t("newCase")}
         </a>
       </div>
-      <form
-        action="/support"
-        method="get"
-        className="support-filters event-panel"
-      >
+      <form action="/support" method="get" className="support-filters">
         {query.eventId ? (
           <input type="hidden" name="eventId" value={query.eventId} />
         ) : null}
@@ -88,10 +85,18 @@ export function SupportListPage() {
       {result.error ? (
         <EventError error={result.error} retry={result.reload} />
       ) : !result.data ? (
-        <Loading />
+        <SkeletonRegion label={eventText("loading")} className="support-list">
+          {[0, 1, 2].map((row) => (
+            <div key={row} className="support-case-link">
+              <Bar width="40%" height={16} style={{ margin: "3px 0" }} />
+              <Bar width="24%" height={14} style={{ margin: "4px 0" }} />
+              <Bar width="30%" height={12} style={{ margin: "4px 0" }} />
+            </div>
+          ))}
+        </SkeletonRegion>
       ) : (
         <>
-          <div className="support-list">
+          <div className="support-list" hidden={!result.data.items.length}>
             {result.data.items.map((item) => (
               <a
                 className="support-case-link"
@@ -114,7 +119,12 @@ export function SupportListPage() {
               </a>
             ))}
           </div>
-          {!result.data.items.length ? <p>{t("empty")}</p> : null}
+          {!result.data.items.length ? (
+            <div className="event-empty">
+              <ChatsCircleIcon size={32} aria-hidden />
+              <h2>{t("empty")}</h2>
+            </div>
+          ) : null}
           <div className="event-pagination">
             {query.cursor ? (
               <a className="text-action" href={page()}>

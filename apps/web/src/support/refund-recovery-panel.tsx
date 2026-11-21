@@ -7,7 +7,7 @@ import { AuthNotice } from "@/auth/notice"
 import { Button } from "@/components/ui/button"
 import { EventApiError, segment, useCommand, useResource } from "@/events/api"
 import { useEventText } from "@/events/messages"
-import { EventError, Loading, TextArea } from "@/events/ui"
+import { EventError, SectionLoading, TextArea } from "@/events/ui"
 import { useSupportText } from "./messages"
 import {
   refundRecoveryActions,
@@ -80,7 +80,7 @@ export function RefundRecoveryPanel({
         )}
       </section>
     )
-  if (!resource.data) return <Loading />
+  if (!resource.data) return <SectionLoading />
   const view = resource.data,
     actions = requiresRefresh ? [] : refundRecoveryActions(view)
   return (
@@ -134,7 +134,7 @@ export function RefundRecoveryPanel({
       ) : null}
       {actions.length ? (
         <form className="support-form" onSubmit={submit}>
-          <fieldset disabled={command.pending}>
+          <fieldset disabled={command.pending || resource.refreshing}>
             <TextArea
               label={t("reason")}
               name="reason"

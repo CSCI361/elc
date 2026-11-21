@@ -161,7 +161,7 @@ export function RecoveryForm({
             label={t("mode")}
             aria-label={t("mode")}
             value={mode}
-            onChange={(event) => setSelected(event.target.value)}
+            onValueChange={(value) => setSelected(value)}
           >
             {delivery.allowedRecoveryModes.map((value) => (
               <option key={value} value={value}>

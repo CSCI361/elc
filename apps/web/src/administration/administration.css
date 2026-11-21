@@ -1,3 +1,26 @@
+.administration-page {
+  gap: 24px;
+}
+.administration-page > h1 {
+  margin: 0;
+}
+.administration-page .primary-link,
+.administration-page .secondary-link {
+  width: auto;
+  height: 40px;
+  margin-top: 0;
+  align-self: flex-start;
+}
+.administration-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  align-items: end;
+  gap: 16px;
+}
+.administration-filters > .field-hint,
+.administration-filters > .auth-notice {
+  grid-column: 1 / -1;
+}
 .administration-table table {
   min-width: 32rem;
 }
@@ -5,17 +28,8 @@
   opacity: 0.45;
   cursor: default;
 }
-.administration-page > nav a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-}
-.administration-page > nav a[aria-current="page"] {
-  text-decoration: underline;
-  font-weight: 700;
-}
 .administration-page h2:focus-visible {
-  outline: 3px solid var(--ring);
+  outline: 2px solid var(--brand);
   outline-offset: 3px;
 }
 .administration-table th,
@@ -26,25 +40,102 @@
 .administration-table th:first-child {
   max-width: 20rem;
 }
-.administration-record dl {
-  display: grid;
-  grid-template-columns: minmax(8rem, 1fr) minmax(0, 2fr);
-  gap: 0.75rem 1rem;
-  margin-block: 1rem;
-}
-.administration-record dt {
-  font-weight: 700;
-}
-.administration-record dd {
-  margin: 0;
+.administration-record {
+  gap: 10px;
   overflow-wrap: anywhere;
 }
+.administration-reports,
+.administration-records {
+  display: grid;
+  gap: 24px;
+}
+.administration-reports > .event-field {
+  max-width: 240px;
+}
+.administration-records form {
+  display: grid;
+  grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
+  align-items: end;
+}
+.administration-records form > :nth-child(n + 3) {
+  grid-column: 1 / -1;
+}
+.administration-records form > .primary-link {
+  justify-self: start;
+  width: auto;
+}
 @media (max-width: 600px) {
-  .administration-record dl {
+  .administration-records form {
     grid-template-columns: minmax(0, 1fr);
-    gap: 0.25rem;
   }
-  .administration-record dd {
-    margin-bottom: 0.75rem;
+}
+.administration-record h3 {
+  font-size: 15px;
+  font-weight: 600;
+}
+.administration-table caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+.administration-table th,
+.administration-table td {
+  vertical-align: middle;
+}
+.administration-table tbody th {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.table-actions > * + * {
+  margin-inline-start: 16px;
+}
+@media (max-width: 640px) {
+  .administration-table table {
+    min-width: 0;
+  }
+  .administration-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .administration-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 2px 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .administration-table tbody tr:last-child {
+    border-bottom: 0;
+  }
+  .administration-table.analytics-table-region tbody :is(th, td) {
+    grid-column: 1;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+    max-width: none;
+    white-space: normal;
+  }
+  .administration-table tbody td {
+    color: var(--ink-2);
+    font-size: 13px;
+    overflow-wrap: break-word;
+  }
+  .administration-table tbody td.table-actions {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+  .table-actions > * + * {
+    margin-inline-start: 0;
   }
 }

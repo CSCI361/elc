@@ -1,3 +1,4 @@
+import { ChipRow } from "@/components/ui/chip-row"
 import { OfflineOperationsLink } from "@/offline-operations/navigation"
 import { useRef, useState, type FormEvent } from "react"
 import {
@@ -12,8 +13,8 @@ import { useResource } from "../events/api"
 import {
   EventError,
   Field,
-  Loading,
   Protected,
+  SectionLoading,
   SelectField,
 } from "../events/ui"
 import { useAdministrationText } from "./messages"
@@ -74,7 +75,7 @@ function Records({
   const denied = !!resource.error
   return (
     <>
-      <form onSubmit={submit} className="event-panel">
+      <form onSubmit={submit} className="administration-filters">
         <Field
           label={t(kind === "accounts" ? "query" : "eventQuery")}
           maxLength={200}
@@ -84,13 +85,13 @@ function Records({
         <SelectField
           label={t("filter")}
           value={suspended}
-          onChange={(event) => setSuspended(event.target.value)}
+          onValueChange={(value) => setSuspended(value)}
         >
           <option value="all">{t("all")}</option>
           <option value="yes">{t("suspended")}</option>
           <option value="no">{t("active")}</option>
         </SelectField>
-        <button className="primary-link" type="submit">
+        <button className="btn btn-primary" type="submit">
           {t("search")}
         </button>
       </form>
@@ -104,7 +105,7 @@ function Records({
           }}
         />
       ) : !resource.data ? (
-        <Loading />
+        <SectionLoading />
       ) : (
         <>
           <div
@@ -134,9 +135,12 @@ function Records({
                     </th>
                     {"email" in item ? <td>{item.email}</td> : null}
                     <td>{t(item.suspendedAt ? "suspended" : "active")}</td>
-                    <td>
+                    <td className="table-actions">
                       {kind === "events" ? (
-                        <OfflineOperationsLink eventId={item.id} />
+                        <OfflineOperationsLink
+                          eventId={item.id}
+                          className="text-action"
+                        />
                       ) : null}
                       <button
                         type="button"
@@ -162,24 +166,26 @@ function Records({
             </table>
           </div>
           {!resource.data.items.length ? <p>{t("empty")}</p> : null}
-          <div className="analytics-actions">
-            <button
-              type="button"
-              className="text-action"
-              disabled={!search.after}
-              onClick={() => navigate()}
-            >
-              {t("first")}
-            </button>
-            <button
-              type="button"
-              className="text-action"
-              disabled={!resource.data.nextCursor}
-              onClick={() => navigate(resource.data!.nextCursor!)}
-            >
-              {t("next")}
-            </button>
-          </div>
+          {search.after || resource.data.nextCursor ? (
+            <div className="analytics-actions">
+              <button
+                type="button"
+                className="text-action"
+                disabled={!search.after}
+                onClick={() => navigate()}
+              >
+                {t("first")}
+              </button>
+              <button
+                type="button"
+                className="text-action"
+                disabled={!resource.data.nextCursor}
+                onClick={() => navigate(resource.data!.nextCursor!)}
+              >
+                {t("next")}
+              </button>
+            </div>
+          ) : null}
         </>
       )}
       {!denied && resource.data && selected ? (
@@ -224,13 +230,19 @@ function Workspace({
     access = useResource("/admin/access", platformAccessResponseSchema, 15000)
   if (access.error)
     return <EventError error={access.error} retry={access.reload} />
-  if (!access.data) return <Loading />
+  if (!access.data)
+    return (
+      <div className="events-page administration-page">
+        <h1>{t("title")}</h1>
+        <SectionLoading />
+      </div>
+    )
   const canModerate = access.data.permissions.includes("platform:moderate"),
     canConfigure = access.data.permissions.includes("platform:configure")
   return (
     <div className="events-page administration-page">
       <h1>{t("title")}</h1>
-      <nav className="analytics-actions" aria-label={t("title")}>
+      <ChipRow label={t("title")} className="tabs-row">
         {canModerate ? (
           <>
             <a
@@ -273,7 +285,7 @@ function Workspace({
             {t("settings")}
           </a>
         ) : null}
-      </nav>
+      </ChipRow>
       {(section === "settings" ? canConfigure : canModerate) ? (
         section === "settings" ? (
           <ActivationFeeSettings />

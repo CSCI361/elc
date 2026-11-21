@@ -1,32 +1,52 @@
 .delivery-page {
   max-width: 76rem;
+  gap: 24px;
+}
+.delivery-page > .back-link {
+  margin-bottom: 0;
+}
+.delivery-page .primary-link,
+.delivery-page .secondary-link {
+  width: auto;
+  height: 40px;
+  margin-top: 0;
+  align-self: flex-start;
 }
 .delivery-data {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem 2rem;
+  gap: 16px 32px;
+  margin: 0;
 }
 .delivery-data div {
   min-width: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
 }
 .delivery-data dt {
-  color: var(--muted-foreground);
-  font-size: 0.875rem;
+  color: var(--ink-2);
+  font-size: 13px;
 }
 .delivery-data dd {
-  margin: 0.3rem 0 0;
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 500;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
+  font-variant-numeric: tabular-nums;
 }
 .delivery-filters {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
   align-items: end;
-  gap: 1rem;
+  gap: 16px;
+}
+.delivery-filters .btn {
+  width: auto;
 }
 .delivery-recovery form {
   display: grid;
-  gap: 1rem;
+  gap: 16px;
   max-width: 45rem;
 }
 .delivery-recovery textarea {
@@ -35,11 +55,12 @@
 .delivery-table-scroll {
   max-width: 100%;
   overflow: auto;
-  border: 1px solid var(--border);
-  border-radius: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
 }
 .delivery-table-scroll:focus-visible {
-  outline: 2px solid var(--ring);
+  outline: 2px solid var(--brand);
   outline-offset: 3px;
 }
 .delivery-table {
@@ -50,8 +71,8 @@
 .delivery-table th,
 .delivery-table td {
   text-align: left;
-  padding: 0.85rem 1rem;
-  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
   vertical-align: top;
 }
 .delivery-table tbody th {
@@ -59,14 +80,14 @@
   overflow-wrap: anywhere;
   font-weight: 500;
 }
-.delivery-table thead {
-  background: var(--muted);
+.delivery-table tr:last-child th,
+.delivery-table tr:last-child td {
+  border-bottom: 0;
 }
 .delivery-pagination {
   display: flex;
-  gap: 0.75rem;
+  gap: 16px;
   flex-wrap: wrap;
-  margin-top: 1rem;
 }
 @media (max-width: 600px) {
   .delivery-data,

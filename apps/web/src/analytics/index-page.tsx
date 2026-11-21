@@ -3,7 +3,7 @@ import { analyticsEventsResponseSchema } from "@elc/shared"
 import { useAccount } from "../auth/context"
 import { Button } from "../components/ui/button"
 import { useResource } from "../events/api"
-import { EventError, Field, Loading, Protected } from "../events/ui"
+import { EventError, Field, Protected, SectionLoading } from "../events/ui"
 import { useAnalyticsText } from "./messages"
 import { OrganizerOverview } from "./overview-page"
 import "./analytics.css"
@@ -47,7 +47,7 @@ function AvailableReports() {
         </h2>
         <p>{t("reportsIntro")}</p>
       </header>
-      <form className="event-panel analytics-filters" onSubmit={search}>
+      <form className="analytics-filters" onSubmit={search}>
         <Field
           label={t("searchEvents")}
           value={draft}
@@ -59,7 +59,7 @@ function AvailableReports() {
       {result.error ? (
         <EventError error={result.error} retry={result.reload} />
       ) : result.loading ? (
-        <Loading />
+        <SectionLoading />
       ) : result.data ? (
         <>
           {result.data.items.length ? (
@@ -96,24 +96,26 @@ function AvailableReports() {
           ) : (
             <p>{t("noReports")}</p>
           )}
-          <div className="analytics-actions">
-            <button
-              className="text-action"
-              type="button"
-              disabled={!query.after}
-              onClick={() => page("")}
-            >
-              {t("first")}
-            </button>
-            <button
-              className="text-action"
-              type="button"
-              disabled={!result.data.nextCursor}
-              onClick={() => page(result.data!.nextCursor!)}
-            >
-              {t("next")}
-            </button>
-          </div>
+          {query.after || result.data.nextCursor ? (
+            <div className="analytics-actions">
+              <button
+                className="text-action"
+                type="button"
+                disabled={!query.after}
+                onClick={() => page("")}
+              >
+                {t("first")}
+              </button>
+              <button
+                className="text-action"
+                type="button"
+                disabled={!result.data.nextCursor}
+                onClick={() => page(result.data!.nextCursor!)}
+              >
+                {t("next")}
+              </button>
+            </div>
+          ) : null}
         </>
       ) : null}
     </section>

@@ -101,10 +101,16 @@ const copy = {
     "Организатор ещё не сохранил данные для активации платных продаж.",
     "The organizer has not saved a paid-sales activation checklist yet.",
   ],
-  acceptedTerms: [
-    "Қабылданған шарттар нұсқасы",
-    "Принятая версия условий",
-    "Accepted terms version",
+  acceptedTerms: ["Шарттар", "Условия", "Terms"],
+  termsCurrent: [
+    "Ағымдағы нұсқа қабылданған",
+    "Принята текущая версия",
+    "Current version accepted",
+  ],
+  termsEarlier: [
+    "Бұрынғы нұсқа қабылданған",
+    "Принята прежняя версия",
+    "Earlier version accepted",
   ],
   notRecorded: ["Тіркелмеген", "Не записано", "Not recorded"],
   checkPassed: ["Сәтті өтті", "Пройдена", "Passed"],

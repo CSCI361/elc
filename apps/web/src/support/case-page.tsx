@@ -13,7 +13,7 @@ import { useAccount } from "@/auth/context"
 import { Button } from "@/components/ui/button"
 import { EventApiError, segment, useCommand, useResource } from "@/events/api"
 import { useEventText } from "@/events/messages"
-import { EventError, Loading, SelectField } from "@/events/ui"
+import { EventError, Loading, SectionLoading, SelectField } from "@/events/ui"
 import { RefundPanel } from "./refund-panel"
 import { useSupportText } from "./messages"
 import { useSupportLive } from "./live"
@@ -122,14 +122,14 @@ function Assignment({
       {candidates.error ? (
         <EventError error={candidates.error} retry={candidates.reload} />
       ) : !candidates.data ? (
-        <Loading />
+        <SectionLoading />
       ) : (
         <>
           <form onSubmit={submit} className="support-form">
             <SelectField
               label={t("assignment")}
               value={selected}
-              onChange={(event) => setSelected(event.target.value)}
+              onValueChange={(value) => setSelected(value)}
               disabled={command.pending}
             >
               <option value="">{t("unassigned")}</option>
@@ -264,11 +264,13 @@ function CaseContents({
     <>
       <div className="event-page-heading">
         <div>
-          <p className="eyebrow">
-            {t(data.case.audience)} · {t(data.case.category)}
-          </p>
           <h1>{data.case.subject}</h1>
-          <p>{t(data.case.status)}</p>
+          <p className="support-meta-row">
+            <span className="badge">{t(data.case.status)}</span>
+            <span>
+              {t(data.case.audience)} · {t(data.case.category)}
+            </span>
+          </p>
         </div>
         <button type="button" className="text-action" onClick={reloadAll}>
           {eventText("reload")}
@@ -315,7 +317,7 @@ function CaseContents({
             <EventError error={history.error} retry={history.reload} />
           ) : null}
           {!history.data ? (
-            <Loading />
+            <SectionLoading />
           ) : (
             <ol className="support-timeline">
               {history.data.items.map((change) => (

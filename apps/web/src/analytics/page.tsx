@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 import type { EventAnalyticsQuery, EventAnalyticsResponse } from "@elc/shared"
 import { useAccount } from "../auth/context"
 import { EventApiError } from "../events/api"
-import { EventError, Loading, Protected } from "../events/ui"
+import { EventError, SectionLoading, Protected } from "../events/ui"
 import { useEventText } from "../events/messages"
 import { AnalyticsLoader } from "./loader"
 import {
@@ -137,27 +137,31 @@ function Breakdown({
       ) : (
         <p>{t("empty")}</p>
       )}
-      <p className="field-hint">{t("pageHint")}</p>
-      <div className="analytics-actions">
-        <button
-          type="button"
-          className="text-action"
-          disabled={!after}
-          aria-label={`${t("first")}: ${t(title)}`}
-          onClick={() => navigate(analyticsPage(query, kind, null))}
-        >
-          {t("first")}
-        </button>
-        <button
-          type="button"
-          className="text-action"
-          disabled={!cursor}
-          aria-label={`${t("next")}: ${t(title)}`}
-          onClick={() => navigate(analyticsPage(query, kind, cursor))}
-        >
-          {t("next")}
-        </button>
-      </div>
+      {after || cursor ? (
+        <>
+          <p className="field-hint">{t("pageHint")}</p>
+          <div className="analytics-actions">
+            <button
+              type="button"
+              className="text-action"
+              disabled={!after}
+              aria-label={`${t("first")}: ${t(title)}`}
+              onClick={() => navigate(analyticsPage(query, kind, null))}
+            >
+              {t("first")}
+            </button>
+            <button
+              type="button"
+              className="text-action"
+              disabled={!cursor}
+              aria-label={`${t("next")}: ${t(title)}`}
+              onClick={() => navigate(analyticsPage(query, kind, cursor))}
+            >
+              {t("next")}
+            </button>
+          </div>
+        </>
+      ) : null}
     </section>
   )
 }
@@ -210,13 +214,9 @@ function AnalyticsWorkspace({ eventId }: { eventId: string }) {
   })
   return (
     <div className="events-page analytics-page">
-      <a href="/organizer/analytics" className="back-link">
-        {t("availableEvents")}
-      </a>
       <div className="event-page-heading">
         <div>
-          <p className="eyebrow">{t("title")}</p>
-          <h1>{data?.eventTitle ?? t("title")}</h1>
+          <h1>{t("title")}</h1>
         </div>
         <button
           type="button"
@@ -226,7 +226,6 @@ function AnalyticsWorkspace({ eventId }: { eventId: string }) {
           {eventText("reload")}
         </button>
       </div>
-      <p className="analytics-simulation">{t("simulation")}</p>
       {state.error ? (
         <EventError error={state.error} retry={() => navigate(state.query)} />
       ) : null}
@@ -247,7 +246,7 @@ function AnalyticsWorkspace({ eventId }: { eventId: string }) {
           />
         </>
       ) : null}
-      {state.loading ? <Loading /> : null}
+      {state.loading ? <SectionLoading /> : null}
       {data ? (
         <>
           <section aria-labelledby="analytics-period-title">

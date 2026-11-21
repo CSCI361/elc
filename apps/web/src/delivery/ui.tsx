@@ -13,12 +13,7 @@ export function DeliveryFailure({
   const { t } = useDeliveryText()
   return error instanceof EventApiError &&
     [401, 403, 404].includes(error.status) ? (
-    <AuthNotice>
-      {t("denied")}{" "}
-      <button type="button" className="text-action" onClick={retry}>
-        {t("reload")}
-      </button>
-    </AuthNotice>
+    <AuthNotice>{t("denied")}</AuthNotice>
   ) : (
     <EventError error={error} retry={retry} />
   )

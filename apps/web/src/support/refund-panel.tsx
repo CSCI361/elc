@@ -14,7 +14,8 @@ import { AuthNotice } from "@/auth/notice"
 import { EventApiError, segment, useCommand, useResource } from "@/events/api"
 import { useEventText } from "@/events/messages"
 import { money } from "@/events/policies"
-import { EventError, Field, Loading, TextArea } from "@/events/ui"
+import { priceText } from "@/events/date-parts"
+import { EventError, Field, SectionLoading, TextArea } from "@/events/ui"
 import {
   financialActionAvailable,
   matchingRefundCase,
@@ -88,7 +89,13 @@ export function RefundPanel({
         )}
       </section>
     )
-  if (!resource.data) return <Loading />
+  if (!resource.data)
+    return (
+      <section className="event-panel">
+        <h2>{t("refundTitle")}</h2>
+        <SectionLoading rows={2} />
+      </section>
+    )
   const view = resource.data,
     paid = view.totalMinor > 0,
     available = financialActionAvailable(view),
@@ -100,7 +107,7 @@ export function RefundPanel({
       <dl className="order-totals">
         <div>
           <dt>{t("total")}</dt>
-          <dd>{money(view.totalMinor, locale)}</dd>
+          <dd>{priceText(view.totalMinor, locale)}</dd>
         </div>
         {view.refund ? (
           <div>
@@ -168,7 +175,7 @@ export function RefundPanel({
       ) : null}
       {available && validCase ? (
         <form onSubmit={submit} className="support-form">
-          <fieldset disabled={command.pending}>
+          <fieldset disabled={command.pending || resource.refreshing}>
             {paid && !supportCase ? (
               <>
                 <Field
@@ -204,6 +211,7 @@ export function RefundPanel({
       {!view.canApprove &&
       !supportCase &&
       !view.refund &&
+      view.voluntaryEligible &&
       view.orderState === "completed" ? (
         <a
           className="secondary-link"

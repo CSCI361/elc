@@ -1,3 +1,4 @@
+import { navigate } from "@/lib/navigation"
 import {
   openSupportCaseSchema,
   supportMutationResponseSchema,
@@ -44,8 +45,7 @@ export function NewSupportPage() {
       supportMutationResponseSchema,
       parsed.data
     )
-    if (result)
-      window.location.assign(`/support/cases/${segment(result.case.id)}`)
+    if (result) navigate(`/support/cases/${segment(result.case.id)}`)
   }
   return (
     <div className="events-page support-page">
@@ -53,7 +53,7 @@ export function NewSupportPage() {
         {t("title")}
       </a>
       <h1>{t("newCase")}</h1>
-      <section className="event-panel">
+      <section className="event-panel support-new">
         <div className="support-context">
           {context.eventId ? (
             <a
@@ -79,9 +79,7 @@ export function NewSupportPage() {
             <SelectField
               label={t("audience")}
               value={audience}
-              onChange={(event) =>
-                setAudience(event.target.value as SupportAudience)
-              }
+              onValueChange={(value) => setAudience(value as SupportAudience)}
             >
               <option value="attendee" disabled={!hasContext}>
                 {t("attendee")}

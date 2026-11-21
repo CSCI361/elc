@@ -6,8 +6,8 @@ import {
 } from "@elc/shared"
 import { EventApiError, useResource } from "../events/api"
 import { useEventText } from "../events/messages"
-import { money } from "../events/policies"
-import { EventError, Field, Loading, SelectField } from "../events/ui"
+import { dateText, money } from "../events/policies"
+import { EventError, Field, SectionLoading, SelectField } from "../events/ui"
 import { useHistoryText } from "../history/messages"
 import { useAdministrationText } from "./messages"
 import { useOperationsText } from "./operations-messages"
@@ -20,17 +20,12 @@ import {
 import { OperationsExport } from "./operations-export"
 
 type Item = OperationsResponse["items"][number]
-function Record({ item }: { item: Item }) {
+function OperationRecord({ item }: { item: Item }) {
   const { t, locale } = useOperationsText(),
     { t: stateText } = useEventText(),
     { t: adminText } = useAdministrationText(),
     { t: historyText } = useHistoryText()
-  const date = (value: string) =>
-    new Intl.DateTimeFormat(locale, {
-      dateStyle: "medium",
-      timeStyle: "short",
-      timeZone: "Asia/Almaty",
-    }).format(new Date(value))
+  const date = (value: string) => dateText(value, "Asia/Almaty", locale)
   return (
     <article
       className="event-panel administration-record"
@@ -38,75 +33,107 @@ function Record({ item }: { item: Item }) {
     >
       <h3>{"action" in item ? item.action : item.id}</h3>
       {"action" in item ? <p>{item.id}</p> : null}
-      <dl>
-        <dt>{t("created")}</dt>
-        <dd>
-          <time dateTime={item.createdAt}>{date(item.createdAt)}</time>
-        </dd>
+      <dl className="fact-grid">
+        <div>
+          <dt>{t("created")}</dt>
+          <dd>
+            <time dateTime={item.createdAt}>{date(item.createdAt)}</time>
+          </dd>
+        </div>
         {item.eventId ? (
-          <>
+          <div>
             <dt>{t("eventId")}</dt>
             <dd>{item.eventId}</dd>
-          </>
+          </div>
         ) : null}
-        <dt>{"accountId" in item ? t("accountId") : t("actor")}</dt>
-        <dd>
-          {("accountId" in item ? item.accountId : item.actorId) ?? t("none")}
-        </dd>
+        <div>
+          <dt>{"accountId" in item ? t("accountId") : t("actor")}</dt>
+          <dd>
+            {("accountId" in item ? item.accountId : item.actorId) ?? t("none")}
+          </dd>
+        </div>
         {"state" in item ? (
-          <>
+          <div>
             <dt>{adminText("status")}</dt>
             <dd>{stateText(item.state)}</dd>
-          </>
+          </div>
         ) : null}
         {"totalMinor" in item ? (
           <>
-            <dt>{t("total")}</dt>
-            <dd>{money(item.totalMinor, locale)}</dd>
-            <dt>{t("discount")}</dt>
-            <dd>{money(item.discountMinor, locale)}</dd>
-            <dt>{t("fee")}</dt>
-            <dd>{money(item.processingFeeMinor, locale)}</dd>
+            <div>
+              <dt>{t("total")}</dt>
+              <dd>{money(item.totalMinor, locale)}</dd>
+            </div>
+            <div>
+              <dt>{t("discount")}</dt>
+              <dd>{money(item.discountMinor, locale)}</dd>
+            </div>
+            <div>
+              <dt>{t("fee")}</dt>
+              <dd>{money(item.processingFeeMinor, locale)}</dd>
+            </div>
           </>
         ) : null}
         {"purpose" in item ? (
           <>
-            <dt>{t("purpose")}</dt>
-            <dd>{t(item.purpose)}</dd>
-            <dt>{t("subject")}</dt>
-            <dd>{item.subjectId}</dd>
-            <dt>{t("amount")}</dt>
-            <dd>{money(item.amountMinor, locale)}</dd>
-            <dt>{t("dispatch")}</dt>
-            <dd>{t(item.dispatchState)}</dd>
-            <dt>{t("providerPayment")}</dt>
-            <dd>{item.providerPaymentId ?? t("none")}</dd>
-            <dt>{t("providerOrder")}</dt>
-            <dd>{item.providerOrderId ?? t("none")}</dd>
+            <div>
+              <dt>{t("purpose")}</dt>
+              <dd>{t(item.purpose)}</dd>
+            </div>
+            <div>
+              <dt>{t("subject")}</dt>
+              <dd>{item.subjectId}</dd>
+            </div>
+            <div>
+              <dt>{t("amount")}</dt>
+              <dd>{money(item.amountMinor, locale)}</dd>
+            </div>
+            <div>
+              <dt>{t("dispatch")}</dt>
+              <dd>{t(item.dispatchState)}</dd>
+            </div>
+            <div>
+              <dt>{t("providerPayment")}</dt>
+              <dd>{item.providerPaymentId ?? t("none")}</dd>
+            </div>
+            <div>
+              <dt>{t("providerOrder")}</dt>
+              <dd>{item.providerOrderId ?? t("none")}</dd>
+            </div>
             {item.refundState ? (
               <>
-                <dt>{t("refundStatus")}</dt>
-                <dd>{stateText(item.refundState)}</dd>
-                <dt>{t("refunded")}</dt>
-                <dd>{money(item.refundAmountMinor ?? 0, locale)}</dd>
+                <div>
+                  <dt>{t("refundStatus")}</dt>
+                  <dd>{stateText(item.refundState)}</dd>
+                </div>
+                <div>
+                  <dt>{t("refunded")}</dt>
+                  <dd>{money(item.refundAmountMinor ?? 0, locale)}</dd>
+                </div>
               </>
             ) : null}
           </>
         ) : null}
         {"action" in item ? (
           <>
-            <dt>{t("subject")}</dt>
-            <dd>{item.entityId}</dd>
-            <dt>{t("correlation")}</dt>
-            <dd>{item.correlationId}</dd>
+            <div>
+              <dt>{t("subject")}</dt>
+              <dd>{item.entityId}</dd>
+            </div>
+            <div>
+              <dt>{t("correlation")}</dt>
+              <dd>{item.correlationId}</dd>
+            </div>
           </>
         ) : null}
-        <dt>{historyText("expires")}</dt>
-        <dd>
-          <time dateTime={item.retention.expiresAt}>
-            {date(item.retention.expiresAt)}
-          </time>
-        </dd>
+        <div>
+          <dt>{historyText("expires")}</dt>
+          <dd>
+            <time dateTime={item.retention.expiresAt}>
+              {date(item.retention.expiresAt)}
+            </time>
+          </dd>
+        </div>
       </dl>
       {"description" in item ? (
         <p className="preserve-lines">{item.description}</p>
@@ -166,12 +193,12 @@ function CurrentOperations({ initial }: { initial: OperationsQuery }) {
   return (
     <>
       <h2>{t("title")}</h2>
-      <form className="event-panel" onSubmit={submit}>
+      <form className="administration-filters" onSubmit={submit}>
         <SelectField
           label={t("kind")}
           value={kind}
-          onChange={(event) => {
-            const value = event.target.value as OperationsKind
+          onValueChange={(selected) => {
+            const value = selected as OperationsKind
             setKind(value)
             if (value !== "orders") setCampaignId("")
           }}
@@ -223,7 +250,7 @@ function CurrentOperations({ initial }: { initial: OperationsQuery }) {
           }}
         />
       ) : !resource.data ? (
-        <Loading />
+        <SectionLoading />
       ) : (
         <>
           <p>{t("zone")}</p>
@@ -233,27 +260,29 @@ function CurrentOperations({ initial }: { initial: OperationsQuery }) {
             kind={search.kind}
             onDenied={() => setDenied(true)}
           />
-          <div className="analytics-actions">
-            <button
-              type="button"
-              className="text-action"
-              disabled={!search.after}
-              onClick={() => navigate()}
-            >
-              {adminText("first")}
-            </button>
-            <button
-              type="button"
-              className="text-action"
-              disabled={!resource.data.nextCursor}
-              onClick={() => navigate(resource.data!.nextCursor!)}
-            >
-              {adminText("next")}
-            </button>
-          </div>
+          {search.after || resource.data.nextCursor ? (
+            <div className="analytics-actions">
+              <button
+                type="button"
+                className="text-action"
+                disabled={!search.after}
+                onClick={() => navigate()}
+              >
+                {adminText("first")}
+              </button>
+              <button
+                type="button"
+                className="text-action"
+                disabled={!resource.data.nextCursor}
+                onClick={() => navigate(resource.data!.nextCursor!)}
+              >
+                {adminText("next")}
+              </button>
+            </div>
+          ) : null}
           {resource.data.items.length ? (
             resource.data.items.map((item) => (
-              <Record key={item.id} item={item} />
+              <OperationRecord key={item.id} item={item} />
             ))
           ) : (
             <p>{adminText("empty")}</p>

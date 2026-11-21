@@ -6,7 +6,8 @@ import {
   type EventReportQueueResponse,
 } from "@elc/shared"
 import { EventApiError, useCommand, useResource } from "../events/api"
-import { EventError, Field, Loading, SelectField } from "../events/ui"
+import { dateText } from "../events/policies"
+import { EventError, Field, SectionLoading, SelectField } from "../events/ui"
 import { useReportText } from "../reports/messages"
 import {
   reportQueuePath,
@@ -27,12 +28,7 @@ const queueStates: readonly QueueState[] = [
 
 function useReportDate() {
   const { locale } = useReportText()
-  return (value: string) =>
-    new Intl.DateTimeFormat(locale, {
-      dateStyle: "medium",
-      timeStyle: "short",
-      timeZone: "Asia/Almaty",
-    }).format(new Date(value))
+  return (value: string) => dateText(value, "Asia/Almaty", locale)
 }
 
 interface ReportCardProps {
@@ -47,6 +43,7 @@ function ReportCard({ item, onResolved }: ReportCardProps) {
   const [resolution, setResolution] = useState<ResolutionKind>("dismissed")
   const [reason, setReason] = useState("")
   const [problem, setProblem] = useState<ResolutionProblem | null>(null)
+  const [resolved, setResolved] = useState(false)
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -66,6 +63,7 @@ function ReportCard({ item, onResolved }: ReportCardProps) {
       command.setError(new EventApiError("INVALID_RESPONSE", 502))
       return
     }
+    setResolved(true)
     onResolved()
   }
 
@@ -76,7 +74,7 @@ function ReportCard({ item, onResolved }: ReportCardProps) {
         {t(item.category)} · {t(item.state)}
       </p>
       <p className="preserve-lines">{item.details}</p>
-      <dl className="account-data">
+      <dl className="fact-grid">
         <div>
           <dt>{t("event")}</dt>
           <dd>{item.eventId}</dd>
@@ -109,11 +107,9 @@ function ReportCard({ item, onResolved }: ReportCardProps) {
           <SelectField
             label={t("resolution")}
             value={resolution}
-            disabled={command.pending}
-            onChange={(event) =>
-              setResolution(
-                event.target.value === "actioned" ? "actioned" : "dismissed"
-              )
+            disabled={command.pending || resolved}
+            onValueChange={(value) =>
+              setResolution(value === "actioned" ? "actioned" : "dismissed")
             }
           >
             <option value="dismissed">{t("dismissed")}</option>
@@ -124,7 +120,7 @@ function ReportCard({ item, onResolved }: ReportCardProps) {
             required
             maxLength={500}
             value={reason}
-            disabled={command.pending}
+            disabled={command.pending || resolved}
             onChange={(event) => setReason(event.target.value)}
           />
           <p className="field-hint">{t("auditHint")}</p>
@@ -138,7 +134,7 @@ function ReportCard({ item, onResolved }: ReportCardProps) {
           <button
             type="submit"
             className="primary-link"
-            disabled={command.pending}
+            disabled={command.pending || resolved}
           >
             {t("resolve")}
           </button>
@@ -160,14 +156,14 @@ export function PlatformEventReports() {
   const nextCursor = queue.data?.nextCursor ?? null
 
   return (
-    <section aria-label={t("queueTitle")}>
+    <section className="administration-reports" aria-label={t("queueTitle")}>
       <h2>{t("queueTitle")}</h2>
       <p>{t("queueIntro")}</p>
       <SelectField
         label={t("stateFilter")}
         value={state}
-        onChange={(event) => {
-          const next = queueStates.find((value) => value === event.target.value)
+        onValueChange={(selected) => {
+          const next = queueStates.find((value) => value === selected)
           if (!next) return
           setState(next)
           setCursors([])
@@ -182,7 +178,7 @@ export function PlatformEventReports() {
       {queue.error ? (
         <EventError error={queue.error} retry={queue.reload} />
       ) : !queue.data ? (
-        <Loading />
+        <SectionLoading />
       ) : queue.data.items.length === 0 ? (
         <p>{t("empty")}</p>
       ) : (
@@ -196,26 +192,28 @@ export function PlatformEventReports() {
           ))}
         </ul>
       )}
-      <nav className="analytics-actions" aria-label={t("pagination")}>
-        <button
-          type="button"
-          className="text-action"
-          disabled={cursors.length === 0}
-          onClick={() => setCursors([])}
-        >
-          {t("first")}
-        </button>
-        <button
-          type="button"
-          className="text-action"
-          disabled={!nextCursor}
-          onClick={() => {
-            if (nextCursor) setCursors([...cursors, nextCursor])
-          }}
-        >
-          {t("next")}
-        </button>
-      </nav>
+      {cursors.length > 0 || nextCursor ? (
+        <nav className="analytics-actions" aria-label={t("pagination")}>
+          <button
+            type="button"
+            className="text-action"
+            disabled={cursors.length === 0}
+            onClick={() => setCursors([])}
+          >
+            {t("first")}
+          </button>
+          <button
+            type="button"
+            className="text-action"
+            disabled={!nextCursor}
+            onClick={() => {
+              if (nextCursor) setCursors([...cursors, nextCursor])
+            }}
+          >
+            {t("next")}
+          </button>
+        </nav>
+      ) : null}
     </section>
   )
 }

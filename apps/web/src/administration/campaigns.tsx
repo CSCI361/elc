@@ -5,8 +5,8 @@ import {
   type PlatformCampaignsResponse,
 } from "@elc/shared"
 import { EventApiError, useResource } from "../events/api"
-import { money } from "../events/policies"
-import { EventError, Field, Loading, SelectField } from "../events/ui"
+import { dateText, money } from "../events/policies"
+import { EventError, Field, SectionLoading, SelectField } from "../events/ui"
 import { useHistoryText } from "../history/messages"
 import {
   campaignAuditHref,
@@ -25,12 +25,7 @@ function CampaignRecord({
 }) {
   const { t, locale } = useCampaignAdministrationText()
   const { t: historyText } = useHistoryText()
-  const date = (value: string) =>
-    new Intl.DateTimeFormat(locale, {
-      dateStyle: "medium",
-      timeStyle: "short",
-      timeZone: "Asia/Almaty",
-    }).format(new Date(value))
+  const date = (value: string) => dateText(value, "Asia/Almaty", locale)
   return (
     <article
       className="event-panel administration-record"
@@ -38,48 +33,72 @@ function CampaignRecord({
     >
       <h3>{item.name}</h3>
       <p>{t(item.enabled ? "enabled" : "disabled")}</p>
-      <dl>
-        <dt>{t("campaignId")}</dt>
-        <dd>{item.id}</dd>
-        <dt>{t("event")}</dt>
-        <dd>{item.eventTitle}</dd>
-        <dt>{t("eventId")}</dt>
-        <dd>{item.eventId}</dd>
-        <dt>{t("organizerId")}</dt>
-        <dd>{item.organizerId}</dd>
-        <dt>{t("discount")}</dt>
-        <dd>
-          {item.discount.kind === "fixed"
-            ? money(item.discount.amountMinor, locale)
-            : new Intl.NumberFormat(locale, {
-                style: "percent",
-                maximumFractionDigits: 2,
-              }).format(item.discount.basisPoints / 10000)}
-        </dd>
-        <dt>{t("starts")}</dt>
-        <dd>
-          <time dateTime={item.startsAt}>{date(item.startsAt)}</time>
-        </dd>
-        <dt>{t("ends")}</dt>
-        <dd>
-          <time dateTime={item.endsAt}>{date(item.endsAt)}</time>
-        </dd>
-        <dt>{t("limit")}</dt>
-        <dd>{item.maxRedemptions.toLocaleString(locale)}</dd>
-        <dt>{t("holds")}</dt>
-        <dd>{item.activeHolds.toLocaleString(locale)}</dd>
-        <dt>{t("committed")}</dt>
-        <dd>{item.committedRedemptions.toLocaleString(locale)}</dd>
-        <dt>{t("updated")}</dt>
-        <dd>
-          <time dateTime={item.updatedAt}>{date(item.updatedAt)}</time>
-        </dd>
-        <dt>{historyText("expires")}</dt>
-        <dd>
-          <time dateTime={item.retention.expiresAt}>
-            {date(item.retention.expiresAt)}
-          </time>
-        </dd>
+      <dl className="fact-grid">
+        <div>
+          <dt>{t("campaignId")}</dt>
+          <dd>{item.id}</dd>
+        </div>
+        <div>
+          <dt>{t("event")}</dt>
+          <dd>{item.eventTitle}</dd>
+        </div>
+        <div>
+          <dt>{t("eventId")}</dt>
+          <dd>{item.eventId}</dd>
+        </div>
+        <div>
+          <dt>{t("organizerId")}</dt>
+          <dd>{item.organizerId}</dd>
+        </div>
+        <div>
+          <dt>{t("discount")}</dt>
+          <dd>
+            {item.discount.kind === "fixed"
+              ? money(item.discount.amountMinor, locale)
+              : new Intl.NumberFormat(locale, {
+                  style: "percent",
+                  maximumFractionDigits: 2,
+                }).format(item.discount.basisPoints / 10000)}
+          </dd>
+        </div>
+        <div>
+          <dt>{t("starts")}</dt>
+          <dd>
+            <time dateTime={item.startsAt}>{date(item.startsAt)}</time>
+          </dd>
+        </div>
+        <div>
+          <dt>{t("ends")}</dt>
+          <dd>
+            <time dateTime={item.endsAt}>{date(item.endsAt)}</time>
+          </dd>
+        </div>
+        <div>
+          <dt>{t("limit")}</dt>
+          <dd>{item.maxRedemptions.toLocaleString(locale)}</dd>
+        </div>
+        <div>
+          <dt>{t("holds")}</dt>
+          <dd>{item.activeHolds.toLocaleString(locale)}</dd>
+        </div>
+        <div>
+          <dt>{t("committed")}</dt>
+          <dd>{item.committedRedemptions.toLocaleString(locale)}</dd>
+        </div>
+        <div>
+          <dt>{t("updated")}</dt>
+          <dd>
+            <time dateTime={item.updatedAt}>{date(item.updatedAt)}</time>
+          </dd>
+        </div>
+        <div>
+          <dt>{historyText("expires")}</dt>
+          <dd>
+            <time dateTime={item.retention.expiresAt}>
+              {date(item.retention.expiresAt)}
+            </time>
+          </dd>
+        </div>
       </dl>
       {item.retention.held ? (
         <>
@@ -133,7 +152,7 @@ function CurrentCampaigns({ initial }: { initial: PlatformCampaignsQuery }) {
         {t("title")}
       </h2>
       <p>{t("intro")}</p>
-      <form className="event-panel" onSubmit={submit}>
+      <form className="administration-filters" onSubmit={submit}>
         <Field
           label={t("q")}
           value={q}
@@ -155,8 +174,8 @@ function CurrentCampaigns({ initial }: { initial: PlatformCampaignsQuery }) {
         <SelectField
           label={t("enabledFilter")}
           value={enabled}
-          onChange={(event) =>
-            setEnabled(event.target.value as PlatformCampaignsQuery["enabled"])
+          onValueChange={(value) =>
+            setEnabled(value as PlatformCampaignsQuery["enabled"])
           }
         >
           <option value="all">{t("all")}</option>
@@ -176,45 +195,45 @@ function CurrentCampaigns({ initial }: { initial: PlatformCampaignsQuery }) {
       {resource.error ? (
         <EventError error={resource.error} retry={resource.reload} />
       ) : !resource.data ? (
-        <Loading />
+        <SectionLoading />
       ) : (
         <>
           <p>{t("zone")}</p>
           <p>
             {t("generated")}:{" "}
             <time dateTime={resource.data.generatedAt}>
-              {new Intl.DateTimeFormat(locale, {
-                dateStyle: "medium",
-                timeStyle: "short",
-                timeZone: "Asia/Almaty",
-              }).format(new Date(resource.data.generatedAt))}
+              {dateText(resource.data.generatedAt, "Asia/Almaty", locale)}
             </time>
           </p>
           <p>{t("usageHint")}</p>
           <p>{t("eligibilityHint")}</p>
           <nav className="analytics-actions" aria-label={t("pagination")}>
-            <button
-              type="button"
-              className="text-action"
-              disabled={!query.cursor}
-              onClick={() => {
-                setQuery(campaignPage(query))
-                heading.current?.focus()
-              }}
-            >
-              {t("first")}
-            </button>
-            <button
-              type="button"
-              className="text-action"
-              disabled={!resource.data.nextCursor}
-              onClick={() => {
-                setQuery(campaignPage(query, resource.data!.nextCursor!))
-                heading.current?.focus()
-              }}
-            >
-              {t("next")}
-            </button>
+            {query.cursor || resource.data.nextCursor ? (
+              <>
+                <button
+                  type="button"
+                  className="text-action"
+                  disabled={!query.cursor}
+                  onClick={() => {
+                    setQuery(campaignPage(query))
+                    heading.current?.focus()
+                  }}
+                >
+                  {t("first")}
+                </button>
+                <button
+                  type="button"
+                  className="text-action"
+                  disabled={!resource.data.nextCursor}
+                  onClick={() => {
+                    setQuery(campaignPage(query, resource.data!.nextCursor!))
+                    heading.current?.focus()
+                  }}
+                >
+                  {t("next")}
+                </button>
+              </>
+            ) : null}
             <button
               type="button"
               className="text-action"

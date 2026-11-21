@@ -11,7 +11,7 @@ import type {
 } from "@elc/shared"
 import { Button } from "../components/ui/button"
 import { EventApiError } from "../events/api"
-import { EventError, Field, Loading, SelectField } from "../events/ui"
+import { EventError, Field, SectionLoading, SelectField } from "../events/ui"
 import { useAnalyticsText } from "./messages"
 import { useOverviewText } from "./overview-messages"
 import { OverviewLoader } from "./overview-loader"
@@ -59,18 +59,16 @@ function OverviewFilters({
   }
   return (
     <form
-      className="event-panel analytics-filters"
+      className="analytics-filters"
       onSubmit={submit}
       aria-label={text("title")}
     >
       <SelectField
         label={t("range")}
         value={range}
-        onChange={(event) => {
-          setRange(
-            event.target.value as OrganizerAnalyticsOverviewQuery["range"]
-          )
-          if (event.target.value === "custom") {
+        onValueChange={(value) => {
+          setRange(value as OrganizerAnalyticsOverviewQuery["range"])
+          if (value === "custom") {
             if (!start) setStart(data?.period.start ?? "")
             if (!end) setEnd(data?.period.end ?? "")
           }
@@ -173,7 +171,6 @@ export function OrganizerOverview() {
           {text("refresh")}
         </button>
       </header>
-      <p className="analytics-simulation">{t("simulation")}</p>
       <OverviewFilters
         key={filtersKey}
         query={state.query}
@@ -194,7 +191,7 @@ export function OrganizerOverview() {
           />
         </div>
       ) : null}
-      {state.loading ? <Loading /> : null}
+      {state.loading ? <SectionLoading /> : null}
       {data ? (
         <>
           <section aria-labelledby="overview-period-title">

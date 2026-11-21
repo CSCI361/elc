@@ -3,11 +3,6 @@ import { useAccount } from "../auth/context"
 
 const copy = {
   title: ["Іс-шара аналитикасы", "Аналитика события", "Event analytics"],
-  simulation: [
-    "KZT · Симуляция. Нақты ақша қозғалысы жоқ.",
-    "KZT · Симуляция. Без движения реальных денег.",
-    "KZT · Simulation. No real money movement.",
-  ],
   selectEvent: ["Іс-шара", "Событие", "Event"],
   availableEvents: [
     "Қолжетімді есептер",
