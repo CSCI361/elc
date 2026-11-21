@@ -8,7 +8,32 @@
       name="description"
       content="elc: one account for your tickets and events."
     />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>elc</title>
+    <style>
+      html {
+        background: #f6f4f1;
+        color: #292622;
+      }
+      html.dark {
+        background: #1c1b1a;
+        color: #f0e9df;
+        color-scheme: dark;
+      }
+    </style>
+    <script>
+      ;(function () {
+        var theme = "system"
+        try {
+          theme = localStorage.getItem("theme") || "system"
+        } catch (e) {}
+        var dark =
+          theme === "dark" ||
+          (theme !== "light" &&
+            matchMedia("(prefers-color-scheme: dark)").matches)
+        document.documentElement.classList.add(dark ? "dark" : "light")
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>
