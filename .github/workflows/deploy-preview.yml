@@ -1,0 +1,51 @@
+name: deploy preview
+
+on:
+  workflow_run:
+    workflows: [checks]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-preview
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      vars.ELC_PREVIEW_DEPLOY_ENABLED == 'true' &&
+      ((github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main') ||
+      (github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository))
+    environment: preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: voidzero-dev/setup-vp@56918a6d0c629c55ae8b88826a7d47fda85769ee # v1.9.0
+        with:
+          node-version: "24.21.0"
+          cache: true
+      - run: vp install --frozen-lockfile
+      # The Cloudflare Vite plugin picks the Worker environment at build time, not at deploy.
+      - run: vp -C apps/web build
+        env:
+          CLOUDFLARE_ENV: preview
+      - name: Refuse to deploy anything but the preview Worker
+        run: node -e 'const c = require(process.argv[1]); if (c.name !== "elc-preview" || c.vars?.ENVIRONMENT !== "preview") throw new Error(`Unexpected Worker ${c.name}`)' "$PWD/apps/web/dist/elc_local/wrangler.json"
+      - run: vp exec wrangler d1 migrations apply elc-preview --remote --env preview --config apps/api/wrangler.jsonc
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - run: vp exec wrangler deploy --config apps/web/dist/elc_local/wrangler.json
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

@@ -44,4 +44,47 @@
     "bindings": [{ "name": "SUPPORT", "class_name": "SupportCase" }],
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["SupportCase"] }],
+  "env": {
+    "preview": {
+      "name": "elc-preview",
+      "workers_dev": true,
+      "preview_urls": false,
+      "observability": { "enabled": false },
+      "vars": {
+        "ENVIRONMENT": "preview",
+        "APP_ORIGIN": "https://elc-preview.ertaev-19102007.workers.dev",
+        "EMAIL_FROM": "elc <noreply@example.invalid>",
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "elc-preview",
+          "database_id": "850e6486-8bdb-4098-9369-441887943740",
+          "migrations_dir": "migrations",
+        },
+      ],
+      "r2_buckets": [
+        { "binding": "FILES", "bucket_name": "elc-preview-files" },
+        { "binding": "BACKUPS", "bucket_name": "elc-preview-backups" },
+      ],
+      "queues": {
+        "producers": [
+          { "binding": "DELIVERY", "queue": "elc-preview-delivery" },
+        ],
+        "consumers": [
+          {
+            "queue": "elc-preview-delivery",
+            "max_batch_size": 5,
+            "max_batch_timeout": 1,
+            "max_retries": 3,
+            "dead_letter_queue": "elc-preview-delivery-dlq",
+          },
+        ],
+      },
+      "triggers": { "crons": ["* * * * *", "0 0 * * *"] },
+      "durable_objects": {
+        "bindings": [{ "name": "SUPPORT", "class_name": "SupportCase" }],
+      },
+    },
+  },
 }
