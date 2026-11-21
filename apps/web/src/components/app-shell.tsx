@@ -16,6 +16,7 @@ import { authHref } from "@/auth/navigation"
 import { usePlatformLinks } from "@/delivery/navigation"
 import { useEventText } from "@/events/messages"
 import { useHistoryText } from "@/history/messages"
+import { legalLabel } from "@/legal/messages"
 import { useLocation } from "@/lib/navigation"
 import { useOfflineText } from "@/offline-operations/messages"
 import { useSupportText } from "@/support/messages"
@@ -293,6 +294,7 @@ function Footer({
 }) {
   const { t } = useEventText()
   const { t: supportLabel } = useSupportText()
+  const { locale } = useAccount()
   return (
     <footer className="app-footer">
       <div className="app-footer-inner">
@@ -304,6 +306,8 @@ function Footer({
           <a href="/events">{t("navEvents")}</a>
           <a href="/organizer/events">{t("forOrganizers")}</a>
           <a href="/support">{supportLabel("support")}</a>
+          <a href="/privacy">{legalLabel(locale, "privacy")}</a>
+          <a href="/terms">{legalLabel(locale, "terms")}</a>
           <button
             type="button"
             onClick={(event) => onCookieSettings(event.currentTarget)}

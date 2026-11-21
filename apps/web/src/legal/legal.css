@@ -1,0 +1,31 @@
+.legal-page {
+  width: 100%;
+  max-width: 720px;
+  display: grid;
+  gap: 28px;
+}
+.legal-updated {
+  margin-top: 8px;
+  color: var(--ink-3);
+  font-size: 13px;
+}
+.legal-page section {
+  display: grid;
+  gap: 8px;
+}
+.legal-page h2 {
+  font-size: 18px;
+  font-weight: 600;
+}
+.legal-page section p,
+.legal-page li {
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1.65;
+}
+.legal-page ul {
+  display: grid;
+  gap: 6px;
+  padding-left: 20px;
+  list-style: disc;
+}

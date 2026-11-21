@@ -21,6 +21,7 @@ import { HistoryRoute } from "@/history"
 import { isHistoryPath } from "@/history/policies"
 import { analyticsEventId } from "@/analytics/policies"
 import { deliveryRoute } from "@/delivery/route"
+import { LegalPage } from "@/legal/page"
 import {
   createInvitationMemory,
   readInvitationToken,
@@ -134,6 +135,8 @@ function pageFor(pathname: string, location: string): ReactNode {
     return lazyPage(<InvitationPage memory={invitationMemory} />)
   if (isEventPath(pathname)) return <EventsRoute path={pathname} />
   if (pathname === "/account") return <AccountPage />
+  if (pathname === "/privacy") return <LegalPage page="privacy" />
+  if (pathname === "/terms") return <LegalPage page="terms" />
   const authRoute = authRouteFor(location)
   if (authRoute.mode) return <AuthPage route={authRoute} />
   return <NotFound />
