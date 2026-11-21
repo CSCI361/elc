@@ -53,7 +53,7 @@
       "vars": {
         "ENVIRONMENT": "preview",
         "APP_ORIGIN": "https://elc-preview.ertaev-19102007.workers.dev",
-        "EMAIL_FROM": "elc <noreply@example.invalid>",
+        "EMAIL_FROM": "elc <onboarding@resend.dev>",
       },
       "d1_databases": [
         {
