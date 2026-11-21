@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react"
 import type { AuthMessages, Locale } from "@elc/shared"
+import { readHeaderHint } from "./header-hint"
 
 export type Account = {
   user: { id: string; name: string; email: string; emailVerified: boolean }
@@ -38,4 +39,11 @@ export function useAccount() {
   const context = useContext(AuthContext)
   if (!context) throw new Error("useAccount requires AuthProvider")
   return context
+}
+
+export function useSignedIn() {
+  const { status } = useAccount()
+  return (
+    status === "active" || (status === "loading" && readHeaderHint().signedIn)
+  )
 }

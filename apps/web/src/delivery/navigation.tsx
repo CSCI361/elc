@@ -1,51 +1,52 @@
 import { platformAccessResponseSchema } from "@elc/shared"
 import { useResource } from "@/events/api"
+import { useEffect } from "react"
 import { useAccount } from "@/auth/context"
+import {
+  platformHrefsFor,
+  readHeaderHint,
+  rememberPlatform,
+} from "@/auth/header-hint"
 
-const labels = {
+const deliveryLabels = {
   kk: "Хаттарды жеткізу",
   ru: "Доставка писем",
   en: "Email deliveries",
 } as const
 
-export function DeliveryNavigation() {
+const administrationLabels = {
+  kk: "Платформаны басқару",
+  ru: "Управление платформой",
+  en: "Platform administration",
+} as const
+
+export interface PlatformLink {
+  href: string
+  label: string
+}
+
+export function usePlatformLinks(): PlatformLink[] {
   const resource = useResource(
-      "/admin/access",
-      platformAccessResponseSchema,
-      15000
-    ),
-    { locale } = useAccount()
-  if (resource.error || !resource.data) return null
-  return (
-    <>
-      {resource.data.permissions.includes("platform:moderate") ||
-      resource.data.permissions.includes("platform:configure") ? (
-        <a
-          href={
-            resource.data.permissions.includes("platform:moderate")
-              ? "/admin/accounts"
-              : "/admin/settings"
-          }
-        >
-          {locale === "kk"
-            ? "Платформаны басқару"
-            : locale === "ru"
-              ? "Управление платформой"
-              : "Platform administration"}
-        </a>
-      ) : null}
-      {resource.data.permissions.includes("platform:recover") ? (
-        <a
-          href="/admin/deliveries"
-          aria-current={
-            window.location.pathname.startsWith("/admin/deliveries")
-              ? "page"
-              : undefined
-          }
-        >
-          {labels[locale]}
-        </a>
-      ) : null}
-    </>
+    "/admin/access",
+    platformAccessResponseSchema,
+    15000
   )
+  const { locale } = useAccount()
+  const permissions = resource.data?.permissions
+  const failed = Boolean(resource.error)
+  useEffect(() => {
+    if (permissions) rememberPlatform(platformHrefsFor(permissions))
+    else if (failed) rememberPlatform([])
+  }, [permissions, failed])
+  const hrefs = resource.error
+    ? []
+    : permissions
+      ? platformHrefsFor(permissions)
+      : readHeaderHint().platform
+  return hrefs.map((href) => ({
+    href,
+    label: (href === "/admin/deliveries"
+      ? deliveryLabels
+      : administrationLabels)[locale],
+  }))
 }

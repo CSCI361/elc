@@ -13,6 +13,7 @@ import {
   type AuthCapabilities,
 } from "./context"
 import { persistLocale, readBrowserLocale } from "./locale"
+import { rememberSignedIn } from "./header-hint"
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const session = authClient.useSession()
@@ -122,6 +123,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ? "verification-required"
           : (current?.status ?? "loading")
   const account = status === "active" ? (current?.account ?? null) : null
+  useEffect(() => {
+    if (status === "active" || status === "signed-out")
+      rememberSignedIn(status === "active")
+  }, [status])
 
   const changeLocale = useCallback(
     async (next: Locale) => {

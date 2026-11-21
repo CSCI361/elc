@@ -1,6 +1,14 @@
 import { apiErrorSchema } from "@elc/shared"
-import { useCallback, useEffect, useRef, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react"
+import { useAccount } from "../auth/context"
 import type { EventMessageKey } from "./messages"
+import { forgetCached, readCached, writeCached } from "./resource-cache"
 
 export type Parser<T> = { parse: (input: unknown) => T }
 let serverOffset = 0
@@ -65,18 +73,48 @@ export function mutation<T>(
 }
 export const segment = encodeURIComponent
 
-export function useResource<T>(path: string, schema: Parser<T>, pollMs = 0) {
+type ResourceResult<T> = {
+  path: string
+  version: number
+  data?: T
+  error?: unknown
+}
+export function resourceView<T>(
+  result: ResourceResult<T> | null,
+  path: string,
+  version: number,
+  keepPrevious = false
+): { data?: T; error?: unknown; loading: boolean; refreshing: boolean } {
+  const data = result?.path === path || keepPrevious ? result?.data : undefined
+  const current = result?.path === path && result.version === version
+  return {
+    data,
+    error: current ? result.error : undefined,
+    loading: !current && data === undefined,
+    refreshing: !current && data !== undefined,
+  }
+}
+export function useResource<T>(
+  path: string,
+  schema: Parser<T>,
+  pollMs = 0,
+  keepPrevious = false
+) {
+  const { account, status } = useAccount()
+  const owner = account ? account.user.id : status === "signed-out" ? "" : null
+  const ownerRef = useRef(owner)
+  useLayoutEffect(() => {
+    ownerRef.current = owner
+  })
   const [version, setVersion] = useState(0)
-  const [result, setResult] = useState<{
-    path: string
-    version: number
-    data?: T
-    error?: unknown
-  } | null>(null)
+  const [result, setResult] = useState<ResourceResult<T> | null>(null)
   const reload = useCallback(() => setVersion((value) => value + 1), [])
   const update = useCallback(
-    (data: T) => setResult({ path, version, data }),
-    [path, version]
+    (data: T) => {
+      if (owner !== null) writeCached(owner, path, schema, data)
+      setResult({ path, version, data })
+    },
+    [owner, path, schema, version]
   )
   useEffect(() => {
     const controller = new AbortController()
@@ -84,20 +122,25 @@ export function useResource<T>(path: string, schema: Parser<T>, pollMs = 0) {
     const read = async () => {
       if (pending) return
       pending = true
+      const requestOwner = ownerRef.current
       try {
         const data = await api(path, schema, { signal: controller.signal })
-        if (!controller.signal.aborted) setResult({ path, version, data })
+        if (controller.signal.aborted) return
+        if (requestOwner !== null && ownerRef.current === requestOwner)
+          writeCached(requestOwner, path, schema, data)
+        setResult({ path, version, data })
       } catch (error) {
-        if (!controller.signal.aborted)
-          setResult((previous) => ({
-            path,
-            version,
-            error,
-            data:
-              previous?.path === path && previous.version === version
-                ? previous.data
-                : undefined,
-          }))
+        if (controller.signal.aborted) return
+        forgetCached(path)
+        setResult((previous) => ({
+          path,
+          version,
+          error,
+          data:
+            previous?.path === path && previous.version === version
+              ? previous.data
+              : undefined,
+        }))
       } finally {
         pending = false
       }
@@ -118,12 +161,17 @@ export function useResource<T>(path: string, schema: Parser<T>, pollMs = 0) {
       window.removeEventListener("focus", focus)
     }
   }, [path, schema, version, pollMs])
-  const current =
-    result?.path === path && result.version === version ? result : null
+  const cached =
+    result?.path === path || owner === null
+      ? undefined
+      : (readCached(owner, path, schema) as T | undefined)
   return {
-    data: current?.data,
-    error: current?.error,
-    loading: !current,
+    ...resourceView(
+      cached === undefined ? result : { path, version: -1, data: cached },
+      path,
+      version,
+      keepPrevious
+    ),
     reload,
     update,
   }
@@ -167,6 +215,11 @@ export function useCommand() {
     []
   )
   return { pending, error, send, setError }
+}
+
+export function canRetry(error: unknown): boolean {
+  const key = errorKey(error)
+  return key !== "denied" && key !== "missing"
 }
 
 export function errorKey(error: unknown): EventMessageKey {
