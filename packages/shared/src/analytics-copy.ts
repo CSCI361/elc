@@ -6,9 +6,9 @@ const copy = {
     "Optional analytics",
   ],
   detail: [
-    "Рұқсат берсеңіз, GA4 ашық беттерге кірулер мен тапсырысты бастауды өлшейді. Бұл таңдау тек осы сайтқа қолданылады. Оны кез келген уақытта өшіре аласыз.",
-    "С вашего согласия GA4 измеряет посещения публичных страниц и начала оформления. Выбор действует только на этом сайте. Его можно изменить в любое время.",
-    "With your permission, GA4 measures public-page visits and checkout starts. This choice applies only to this site. You can turn it off at any time.",
+    "Сайтты жақсарту үшін кірулерді санауға рұқсат бересіз бе? Жарнама жоқ, кез келген уақытта өзгерте аласыз.",
+    "Разрешите считать посещения, чтобы мы улучшали сайт. Без рекламы, изменить можно в любой момент.",
+    "Can we count visits to improve the site? No ads, and you can change this anytime.",
   ],
   allow: ["Аналитикаға рұқсат беру", "Разрешить аналитику", "Allow analytics"],
   deny: ["Өшірулі қалдыру", "Оставить выключенной", "Keep analytics off"],
