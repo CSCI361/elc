@@ -5,20 +5,17 @@ import {
   ShieldCheckIcon,
   SignOutIcon,
   UserCircleIcon,
+  UserIcon,
 } from "@phosphor-icons/react"
-import { lazy, Suspense, useState } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Bar, SkeletonRegion } from "@/components/ui/skeleton"
+import { OrganizerProfilePanel } from "@/organizer-profile/panel"
 import { authClient } from "./client"
 import { useAccount } from "./context"
 import { authErrorMessage, type AuthErrorKey } from "./errors"
 import { LocaleSelect } from "./locale-select"
 import { AuthNotice } from "./notice"
-
-const OrganizerProfilePanel = lazy(() =>
-  import("@/organizer-profile").then((module) => ({
-    default: module.OrganizerProfilePanel,
-  }))
-)
 
 export function AccountPage() {
   const {
@@ -76,10 +73,19 @@ export function AccountPage() {
 
   if (status === "loading")
     return (
-      <section className="account-state" role="status">
-        <span className="loading-dot" />
-        {t.loadingAccount}
-      </section>
+      <SkeletonRegion label={t.loadingAccount} className="account-skeleton">
+        <div className="account-identity">
+          <Bar width={64} height={64} radius={32} />
+          <div className="account-identity-text">
+            <Bar width={240} height={28} />
+            <Bar width={300} height={16} style={{ marginTop: 10 }} />
+          </div>
+        </div>
+        <div className="settings-list">
+          <Bar height={72} radius={10} />
+          <Bar height={72} radius={10} />
+        </div>
+      </SkeletonRegion>
     )
   if (!account)
     return (
@@ -137,14 +143,32 @@ export function AccountPage() {
 
   return (
     <div className="account-page">
-      <div className="account-heading">
-        <span className="eyebrow">
-          <CheckCircleIcon size={17} weight="fill" aria-hidden />
-          {t.activeAccount}
+      <header className="account-identity">
+        <span className="account-avatar" aria-hidden>
+          <UserIcon size={28} />
         </span>
-        <h1>{t.accountTitle}</h1>
-        <p>{t.accountDescription}</p>
-      </div>
+        <div className="account-identity-text">
+          <h1>{account.user.name}</h1>
+          <p>
+            <span>{account.user.email}</span>
+            <span className="verified-label">
+              <CheckCircleIcon size={16} weight="fill" aria-hidden />
+              {t.emailVerified}
+            </span>
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          className="account-sign-out"
+          disabled={pending}
+          onClick={() => {
+            void securityAction("sign-out")
+          }}
+        >
+          <SignOutIcon size={18} aria-hidden />
+          {t.signOut}
+        </Button>
+      </header>
       {notice ? (
         <AuthNotice tone={notice.tone}>{t[notice.key]}</AuthNotice>
       ) : null}
@@ -154,78 +178,43 @@ export function AccountPage() {
           {t.pending}
         </p>
       ) : null}
-      <div className="account-grid">
-        <section className="account-section" aria-labelledby="account-details">
-          <span className="section-icon">
-            <UserCircleIcon size={28} aria-hidden />
-          </span>
-          <h2 id="account-details">{t.accountDetails}</h2>
-          <dl className="account-data">
-            <div>
-              <dt>{t.fullName}</dt>
-              <dd>{account.user.name}</dd>
-            </div>
-            <div>
-              <dt>{t.email}</dt>
-              <dd>{account.user.email}</dd>
-            </div>
-          </dl>
-          <span className="verified-label">
-            <CheckCircleIcon size={17} weight="fill" aria-hidden />
-            {t.emailVerified}
-          </span>
-          <div className="account-section-divider" />
-          <LocaleSelect accountPreference />
+      <div className="settings-list">
+        <section className="settings-row" aria-label={t.languagePreference}>
+          <LocaleSelect />
         </section>
-        <section className="account-section" aria-labelledby="account-security">
-          <span className="section-icon">
-            <ShieldCheckIcon size={28} aria-hidden />
-          </span>
-          <h2 id="account-security">{t.security}</h2>
-          <p>{t.securityDescription}</p>
+        <section className="settings-row" aria-labelledby="account-security">
+          <div className="settings-label">
+            <h2 id="account-security">{t.security}</h2>
+            <p>{t.securityDescription}</p>
+          </div>
           <div className="security-actions">
             <Button
               variant="outline"
-              className="auth-button"
               disabled={pending || !capabilities?.emailDelivery}
               onClick={() => {
                 void securityAction("reset")
               }}
             >
-              <EnvelopeSimpleIcon size={20} aria-hidden />
+              <EnvelopeSimpleIcon size={18} aria-hidden />
               {t.sendResetLink}
             </Button>
-            {!capabilities?.emailDelivery && capabilities ? (
-              <p className="field-hint">{t.emailUnavailable}</p>
-            ) : null}
             <Button
               variant="outline"
-              className="auth-button"
               disabled={pending}
               onClick={() => {
                 void securityAction("other-sessions")
               }}
             >
-              <ShieldCheckIcon size={20} aria-hidden />
+              <ShieldCheckIcon size={18} aria-hidden />
               {t.signOutAll}
             </Button>
-            <Button
-              variant="ghost"
-              className="auth-button sign-out-button"
-              disabled={pending}
-              onClick={() => {
-                void securityAction("sign-out")
-              }}
-            >
-              <SignOutIcon size={20} aria-hidden />
-              {t.signOut}
-            </Button>
+            {!capabilities?.emailDelivery && capabilities ? (
+              <p className="field-hint">{t.emailUnavailable}</p>
+            ) : null}
           </div>
         </section>
-      </div>
-      <Suspense fallback={<p role="status">{t.loadingAccount}</p>}>
         <OrganizerProfilePanel key={account.user.id} />
-      </Suspense>
+      </div>
     </div>
   )
 }

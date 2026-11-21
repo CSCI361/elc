@@ -11,6 +11,16 @@ export const emptyOrganizerProfile: OrganizerProfile = {
   contact: "",
   dummyPayoutReference: "",
 }
+// The API only accepts payout references in this prefixed form.
+const payoutPrefix = "DEMO-"
+export function payoutReferenceText(stored: string): string {
+  return stored.startsWith(payoutPrefix)
+    ? stored.slice(payoutPrefix.length)
+    : stored
+}
+export function payoutReferenceValue(typed: string): string {
+  return typed ? payoutPrefix + typed : ""
+}
 export type ProfileAttempt = {
   signature: string
   input: UpdateOrganizerProfile

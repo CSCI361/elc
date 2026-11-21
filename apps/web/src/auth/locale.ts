@@ -2,29 +2,16 @@ import { localeSchema, type Locale } from "@elc/shared"
 
 export const localeStorageKey = "elc.locale.v1"
 
-export function resolveLocale(
-  saved: string | null,
-  languages: readonly string[]
-): Locale {
+export function resolveLocale(saved: string | null): Locale {
   const preference = localeSchema.safeParse(saved)
-  if (preference.success) return preference.data
-  for (const language of languages) {
-    const candidate = localeSchema.safeParse(
-      language.toLowerCase().split(/[-_]/)[0]
-    )
-    if (candidate.success) return candidate.data
-  }
-  return "kk"
+  return preference.success ? preference.data : "en"
 }
 
 export function readBrowserLocale(): Locale {
   try {
-    return resolveLocale(
-      localStorage.getItem(localeStorageKey),
-      navigator.languages
-    )
+    return resolveLocale(localStorage.getItem(localeStorageKey))
   } catch {
-    return resolveLocale(null, navigator.languages)
+    return resolveLocale(null)
   }
 }
 

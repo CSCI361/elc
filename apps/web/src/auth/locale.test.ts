@@ -10,21 +10,20 @@ import {
 afterEach(() => vi.unstubAllGlobals())
 
 describe("account language", () => {
-  it("prioritizes a supported saved preference over browser language", () => {
-    expect(resolveLocale("kk", ["ru-RU", "en"])).toBe("kk")
-    expect(resolveLocale("ru", ["en-US"])).toBe("ru")
+  it("should use a supported saved preference", () => {
+    expect(resolveLocale("kk")).toBe("kk")
+    expect(resolveLocale("ru")).toBe("ru")
   })
 
-  it("falls back through browser languages and defaults to Kazakh", () => {
-    expect(resolveLocale("unsupported", ["fr-FR", "RU-ru"])).toBe("ru")
-    expect(resolveLocale(null, ["en_US"])).toBe("en")
-    expect(resolveLocale(null, ["kk-KZ"])).toBe("kk")
-    expect(resolveLocale(null, ["de-DE"])).toBe("kk")
-    expect(resolveLocale(null, [])).toBe("kk")
+  it("should open in English for first-time visitors whatever the browser language", () => {
+    vi.stubGlobal("navigator", { languages: ["kk-KZ", "ru-RU"] })
+    vi.stubGlobal("localStorage", { getItem: () => null, setItem() {} })
+    expect(resolveLocale(null)).toBe("en")
+    expect(resolveLocale("unsupported")).toBe("en")
+    expect(readBrowserLocale()).toBe("en")
   })
 
-  it("works when browser privacy settings block storage", () => {
-    vi.stubGlobal("navigator", { languages: ["ru-RU"] })
+  it("should work when browser privacy settings block storage", () => {
     vi.stubGlobal("localStorage", {
       getItem() {
         throw new Error("blocked")
@@ -33,7 +32,7 @@ describe("account language", () => {
         throw new Error("blocked")
       },
     })
-    expect(readBrowserLocale()).toBe("ru")
+    expect(readBrowserLocale()).toBe("en")
     expect(() => persistLocale("en")).not.toThrow()
   })
 

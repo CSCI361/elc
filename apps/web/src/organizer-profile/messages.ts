@@ -7,35 +7,26 @@ const messages = {
     "Этот профиль можно вручную подставить в форму активации события. Сохранение профиля не активирует события.",
     "You can choose to fill an event activation form from this profile. Saving the profile does not activate any event.",
   ],
-  demo: [
-    "Оқу жобасының имитациясы. Жалған заңды атау мен DEMO- төлем сілтемесін қолданыңыз. Нақты банк деректерін енгізбеңіз.",
-    "Учебная имитация. Используйте вымышленное юридическое имя и ссылку DEMO-. Не вводите настоящие банковские реквизиты.",
-    "Academic simulation. Use a fictional legal name and a DEMO- payout reference. Do not enter real bank credentials.",
-  ],
   displayName: [
     "Ұйымдастырушының көрсетілетін аты",
     "Отображаемое имя организатора",
     "Organizer display name",
   ],
-  legalName: [
-    "Жалған заңды атау",
-    "Вымышленное юридическое имя",
-    "Simulated legal name",
-  ],
+  legalName: ["Заңды атауы", "Юридическое название", "Legal name"],
   contact: [
     "Ұйымдастырушы байланысы",
     "Контакт организатора",
     "Organizer contact",
   ],
   dummyPayoutReference: [
-    "Жалған төлем сілтемесі",
-    "Учебная ссылка для выплат",
-    "Dummy payout reference",
+    "Төлем алу идентификаторы",
+    "Идентификатор для выплат",
+    "Payout reference",
   ],
   payoutHint: [
-    "DEMO- префиксінен кейін 3–60 латын әрпі, сан, астын сызу немесе дефис. Мысалы, DEMO-ORGANIZER.",
-    "После DEMO- укажите 3–60 латинских букв, цифр, подчёркиваний или дефисов. Например, DEMO-ORGANIZER.",
-    "After DEMO-, use 3–60 letters, digits, underscores or hyphens. For example, DEMO-ORGANIZER.",
+    "3–60 латын әрпі, сан, астын сызу немесе дефис. Мысалы, ORGANIZER.",
+    "3–60 латинских букв, цифр, подчёркиваний или дефисов. Например, ORGANIZER.",
+    "3–60 letters, digits, underscores or hyphens. For example, ORGANIZER.",
   ],
   missing: [
     "Сақталған ұйымдастырушы профилі жоқ.",
@@ -77,9 +68,9 @@ const messages = {
     "The saved profile changed. Reload it before editing further. An uncertain request can be retried unchanged.",
   ],
   invalid: [
-    "Барлық өрісті тексеріңіз. Байланыс кемінде 3 таңба, төлем сілтемесі DEMO- пішімінде болуы керек.",
-    "Проверьте все поля. Контакт должен содержать не менее 3 символов, ссылка для выплат должна иметь формат DEMO-.",
-    "Check every field. Contact needs at least 3 characters, and the payout reference must use the DEMO- format.",
+    "Барлық өрісті тексеріңіз. Байланыс кемінде 3 таңба, төлем алу идентификаторы 3–60 латын әрпі, сан, астын сызу немесе дефис болуы керек.",
+    "Проверьте все поля. Контакт должен содержать не менее 3 символов, идентификатор для выплат: 3–60 латинских букв, цифр, подчёркиваний или дефисов.",
+    "Check every field. Contact needs at least 3 characters, and the payout reference needs 3–60 letters, digits, underscores or hyphens.",
   ],
   uncertain: [
     "Сақтау нәтижесі расталмады. Сол сұрауды қайталаңыз немесе өзгертілген деректермен жаңа сұрау жіберіңіз.",

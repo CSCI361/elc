@@ -5,11 +5,14 @@ import {
 } from "@elc/shared"
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import { Button } from "@/components/ui/button"
+import { Bar, SkeletonRegion } from "@/components/ui/skeleton"
 import { api, EventApiError } from "@/events/api"
 import { EventError, Field } from "@/events/ui"
 import {
   emptyOrganizerProfile,
   observedProfile,
+  payoutReferenceText,
+  payoutReferenceValue,
   profileAttempt,
   type OrganizerProfile,
   type ProfileAttempt,
@@ -31,6 +34,12 @@ type View = {
   uncertain: boolean
   saved: boolean
 }
+const fields = [
+  "displayName",
+  "legalName",
+  "contact",
+  "dummyPayoutReference",
+] as const
 const initial = (): View => ({
   baseline: null,
   draft: { ...emptyOrganizerProfile },
@@ -184,20 +193,45 @@ export function OrganizerProfilePanel() {
     }
   }
   function reload(replace: boolean) {
-    setView((previous) => ({ ...previous, loading: true }))
+    setView((previous) => ({ ...previous, loading: true, readError: null }))
     void read(replace)
   }
   const stale =
     view.conflict ||
     (view.baseline !== null && view.observedRevision !== view.baseline.revision)
-  const hidden = view.loading || !!view.readError
+  if (view.loading && !view.baseline && !view.readError)
+    return (
+      <section className="organizer-profile-panel" aria-label={t("title")}>
+        <h2>{t("title")}</h2>
+        <p>{t("hint")}</p>
+        <SkeletonRegion
+          label={t("loading")}
+          className="organizer-profile-skeleton"
+        >
+          <div className="organizer-profile-fields">
+            {fields.map((key) => (
+              <div className="event-field" key={key}>
+                <span>{t(key)}</span>
+                <Bar height={40} radius={8} />
+                {key === "dummyPayoutReference" ? (
+                  <small>{t("payoutHint")}</small>
+                ) : null}
+              </div>
+            ))}
+          </div>
+          <Bar width={176} height={40} radius={8} />
+        </SkeletonRegion>
+      </section>
+    )
   return (
-    <section className="organizer-profile-panel" aria-label={t("title")}>
+    <section
+      className="organizer-profile-panel"
+      aria-label={t("title")}
+      aria-busy={view.loading || undefined}
+    >
       <h2>{t("title")}</h2>
       <p>{t("hint")}</p>
-      <p className="organizer-profile-demo">{t("demo")}</p>
       {view.saved ? <p role="status">{t("saved")}</p> : null}
-      {view.loading ? <p role="status">{t("loading")}</p> : null}
       {view.readError ? (
         <>
           {denied(view.readError) ? (
@@ -215,7 +249,7 @@ export function OrganizerProfilePanel() {
           </Button>
         </>
       ) : null}
-      {!hidden && view.baseline ? (
+      {!view.readError && view.baseline ? (
         <>
           {!view.baseline.profile ? (
             <p>{t("missing")}</p>
@@ -246,33 +280,30 @@ export function OrganizerProfilePanel() {
           <form onSubmit={(event) => void save(event)}>
             <fieldset
               className="organizer-profile-fields"
-              disabled={saving || stale}
+              disabled={saving || stale || view.loading}
             >
-              {(
-                [
-                  "displayName",
-                  "legalName",
-                  "contact",
-                  "dummyPayoutReference",
-                ] as const
-              ).map((key) => (
+              {fields.map((key) => (
                 <Field
                   key={key}
                   label={t(key)}
                   name={key}
-                  value={view.draft[key]}
+                  value={
+                    key === "dummyPayoutReference"
+                      ? payoutReferenceText(view.draft[key])
+                      : view.draft[key]
+                  }
                   required
                   maxLength={
                     key === "displayName"
                       ? 120
                       : key === "dummyPayoutReference"
-                        ? 65
+                        ? 60
                         : 200
                   }
                   minLength={key === "contact" ? 3 : undefined}
                   pattern={
                     key === "dummyPayoutReference"
-                      ? "DEMO-[A-Za-z0-9_-]{3,60}"
+                      ? "[A-Za-z0-9_-]{3,60}"
                       : undefined
                   }
                   hint={
@@ -280,7 +311,10 @@ export function OrganizerProfilePanel() {
                   }
                   autoComplete="off"
                   onChange={(event) => {
-                    const value = event.currentTarget.value
+                    const value =
+                      key === "dummyPayoutReference"
+                        ? payoutReferenceValue(event.currentTarget.value)
+                        : event.currentTarget.value
                     setView((previous) => ({
                       ...previous,
                       draft: { ...previous.draft, [key]: value },

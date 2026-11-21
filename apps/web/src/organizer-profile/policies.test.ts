@@ -1,7 +1,10 @@
+import { activationProfileSchema } from "@elc/shared"
 import { describe, expect, it, vi } from "vite-plus/test"
 import {
   emptyOrganizerProfile,
   observedProfile,
+  payoutReferenceText,
+  payoutReferenceValue,
   profileAttempt,
 } from "./policies"
 
@@ -146,5 +149,31 @@ describe("organizer profile read reconciliation", () => {
       draft: later.profile,
     })
     expect(current.baseline.revision).toBe(4)
+  })
+})
+
+describe("payout reference field", () => {
+  it("should show a saved reference without the stored prefix", () => {
+    expect(payoutReferenceText("DEMO-ORGANIZER")).toBe("ORGANIZER")
+  })
+
+  it("should store typed text in the format the API accepts", () => {
+    const value = payoutReferenceValue("ORGANIZER")
+    expect(value).toBe("DEMO-ORGANIZER")
+    expect(
+      activationProfileSchema.safeParse({
+        ...profile,
+        dummyPayoutReference: value,
+      }).success
+    ).toBe(true)
+  })
+
+  it("should give back exactly what was typed, even text that starts with the prefix", () => {
+    for (const typed of ["D", "DEMO", "DEMO-", "DEMO-2026", "ORGANIZER"])
+      expect(payoutReferenceText(payoutReferenceValue(typed))).toBe(typed)
+  })
+
+  it("should keep an empty field empty", () => {
+    expect(payoutReferenceValue("")).toBe("")
   })
 })
