@@ -1,53 +1,48 @@
-import { useEffect, useRef, useState } from "react"
-import { AppState, Linking, Text, View } from "react-native"
+import { useEffect, useRef, useState, type ReactNode } from "react"
+import { ActivityIndicator, AppState, Linking, Text, View } from "react-native"
+import {
+  ArrowCounterClockwise,
+  ArrowsClockwise,
+  Camera,
+  CheckCircle,
+  QrCode,
+  Warning,
+  XCircle,
+} from "./icons"
 import { CameraView, useCameraPermissions } from "expo-camera"
 import { useNetworkState } from "expo-network"
 import * as Crypto from "expo-crypto"
 import type { ScanResponse, ScannerEvent } from "@elc/shared"
-import type { Copy, Language } from "./copy"
+import type { Copy } from "./copy"
 import {
   confirmedScanResponse,
   eventCanScan,
+  eventPhase,
   prepareOnlineScan,
   type PendingScan,
 } from "./model"
+import { scanVerdict, type ScanMessage, type Verdict } from "./scan-verdict"
 import { service, ServiceError } from "./service"
 import { useClock } from "./use-clock"
 import { uncertainRequest } from "./transport"
-import { Action, Notice } from "./ui"
-import { styles } from "./theme"
+import { Button, Notice } from "./ui"
+import { colors, styles, toneColors } from "./theme"
 import { offlineController } from "./offline/runtime"
-import { offlineCopies, type OfflineCopy } from "./offline/copy"
 import type { LocalScanResult, OfflineStatus } from "./offline/model"
 
-const resultCopy: Record<ScanResponse["result"], keyof Copy> = {
-  checked_in: "success",
-  invalid: "invalid",
-  wrong_event: "wrongEvent",
-  cancelled: "cancelled",
-  refunded: "refunded",
-  already_used: "alreadyUsed",
-  admission_blocked: "blocked",
-  forbidden: "forbidden",
-  snapshot_expired: "snapshotExpired",
-  locally_reversed: "locallyReversed",
-}
 export function ScanScreen({
   event,
   accountId,
-  language,
   copy,
   onResult,
   offline,
 }: {
   event: ScannerEvent
   accountId: string
-  language: Language
   copy: Copy
   onResult: () => void
   offline?: {
     accountId: string
-    copy: OfflineCopy
     status: OfflineStatus | null
   }
 }) {
@@ -61,9 +56,7 @@ export function ScanScreen({
   )
   const [pending, setPending] = useState<PendingScan | null>(null)
   const [response, setResponse] = useState<ScanResponse | null>(null)
-  const [message, setMessage] = useState<
-    "invalidQr" | "notConfirmed" | "requestError" | "localPending" | null
-  >(null)
+  const [message, setMessage] = useState<ScanMessage | null>(null)
   const [localResult, setLocalResult] = useState<LocalScanResult | null>(null)
   const [undone, setUndone] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -207,136 +200,89 @@ export function ScanScreen({
   const eligible = online
     ? eventCanScan(event, offline?.status?.estimatedServerNow ?? clock)
     : offlineEligible
+  const verdict = scanVerdict({
+    response: response?.result,
+    local: localResult?.result,
+    undone,
+    message: message ?? undefined,
+  })
+  const blocked = !eligible
+    ? phaseNotice(event, clock)
+    : !online && !offlineEligible
+      ? "noConnection"
+      : null
+  const showCamera =
+    permission?.granted && !blocked && foreground && !pending && !verdict
   return (
-    <>
-      <Text accessibilityRole="header" style={styles.heading}>
-        {event.title}
-      </Text>
-      <Text style={styles.eyebrow}>
-        {offline
-          ? online
-            ? offline.copy.online
-            : offline.copy.offline
-          : copy.onlineOnly}
-      </Text>
-      {!eligible ? (
-        <Notice tone="error">
-          {event.cancelledAt
-            ? copy.eventCancelled
-            : event.suspendedAt
-              ? copy.eventSuspended
-              : copy.ended}
+    <View style={{ gap: 14 }}>
+      {blocked ? (
+        <Notice tone="danger" icon={Warning}>
+          {copy[blocked]}
         </Notice>
       ) : null}
-      {!online && !offlineEligible ? (
-        <Notice tone="error">
-          {offline ? offline.copy.unavailable : copy.connectionRequired}
-        </Notice>
-      ) : null}
-      {!permission?.granted ? (
-        <View style={styles.card}>
-          <Text style={styles.body}>
+      {!blocked && !permission?.granted ? (
+        <View
+          style={[styles.card, { alignItems: "center", paddingVertical: 28 }]}
+        >
+          <Camera size={40} color={colors.ink2} />
+          <Text style={[styles.heading, { textAlign: "center" }]}>
+            {copy.cameraTitle}
+          </Text>
+          <Text style={[styles.secondary, { textAlign: "center" }]}>
             {permission?.canAskAgain === false
               ? copy.cameraDenied
-              : copy.cameraPermission}
+              : copy.cameraBody}
           </Text>
-          <Action
-            label={
-              permission?.canAskAgain === false
-                ? copy.openSettings
-                : copy.allowCamera
-            }
-            onPress={() => {
-              if (permission?.canAskAgain === false)
-                void Linking.openSettings().catch(() =>
-                  setMessage("requestError")
-                )
-              else
-                void requestPermission().catch(() => setMessage("requestError"))
-            }}
-          />
+          <View style={{ alignSelf: "stretch" }}>
+            <Button
+              label={
+                permission?.canAskAgain === false
+                  ? copy.openSettings
+                  : copy.allowCamera
+              }
+              onPress={() => {
+                if (permission?.canAskAgain === false)
+                  void Linking.openSettings().catch(() =>
+                    setMessage("requestError")
+                  )
+                else
+                  void requestPermission().catch(() =>
+                    setMessage("requestError")
+                  )
+              }}
+            />
+          </View>
         </View>
       ) : null}
-      {permission?.granted &&
-      eligible &&
-      foreground &&
-      (online || offlineEligible) &&
-      !pending &&
-      !response &&
-      !localResult &&
-      !message ? (
-        <View style={styles.camera}>
+      {showCamera ? (
+        <Viewfinder hint={copy.scanHint} checking={busy ? copy.checking : null}>
           <CameraView
-            style={styles.cameraView}
+            style={{ flex: 1 }}
             facing="back"
             barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
             onBarcodeScanned={({ data }) => capture(data)}
           />
-        </View>
+        </Viewfinder>
       ) : null}
-      {!response && !localResult && !message ? (
-        <Text style={styles.body}>{busy ? copy.checking : copy.scanHint}</Text>
+      {pending && !verdict ? (
+        <Viewfinder hint={copy.scanHint} checking={copy.checking} />
       ) : null}
-      {response ? (
-        <View
-          accessibilityLiveRegion="polite"
-          style={[
-            styles.card,
-            response.result === "checked_in"
-              ? styles.successNotice
-              : styles.errorNotice,
-          ]}
-        >
-          <Text style={styles.resultTitle}>
-            {copy[resultCopy[response.result]]}
-          </Text>
-        </View>
-      ) : null}
-      {localResult && offline ? (
-        <Notice
-          tone={localResult.result === "provisional" ? undefined : "error"}
-        >
-          {undone
-            ? offline.copy.undoDone
-            : localResult.result === "provisional"
-              ? offline.copy.provisionalResult
-              : localResult.result === "unknown_ticket"
-                ? offline.copy.unknown
-                : localResult.result === "snapshot_unavailable"
-                  ? offline.copy.unavailable
-                  : localResult.result === "clock_unsafe"
-                    ? offline.copy.clockUnsafe
-                    : localResult.result === "invalid_qr"
-                      ? copy.invalidQr
-                      : localResult.result === "already_used"
-                        ? offline.copy.duplicate
-                        : localResult.result === "cancelled"
-                          ? copy.cancelled
-                          : localResult.result === "refunded"
-                            ? copy.refunded
-                            : copy.blocked}
-        </Notice>
-      ) : null}
+      {verdict ? <VerdictPanel verdict={verdict} copy={copy} /> : null}
       {localResult?.undoAvailable && offline ? (
-        <Action
-          label={offline.copy.undo}
-          secondary
+        <Button
+          label={copy.undo}
+          variant="secondary"
+          icon={ArrowCounterClockwise}
           busy={busy}
           onPress={() => {
             void undoLocal()
           }}
         />
       ) : null}
-      {message ? (
-        <Notice tone="error">
-          {message === "localPending"
-            ? offlineCopies[language].pendingLocal
-            : copy[message]}
-        </Notice>
-      ) : null}
       {pending ? (
-        <Action
+        <Button
           label={copy.retry}
+          icon={ArrowsClockwise}
           busy={busy}
           disabled={!online || !eligible}
           onPress={() => {
@@ -344,9 +290,10 @@ export function ScanScreen({
           }}
         />
       ) : null}
-      {(response || localResult || message) && !pending ? (
-        <Action
+      {verdict && !pending ? (
+        <Button
           label={copy.next}
+          icon={QrCode}
           disabled={(!online && !offlineEligible) || !eligible}
           onPress={() => {
             setLocalResult(null)
@@ -356,7 +303,172 @@ export function ScanScreen({
           }}
         />
       ) : null}
-      <Text style={styles.muted}>{copy.qrPrivacy}</Text>
-    </>
+    </View>
+  )
+}
+
+function phaseNotice(event: ScannerEvent, now: number): keyof Copy {
+  if (!event.permissions.includes("ticket:scan")) return "noPermission"
+  const phase = eventPhase(event, now)
+  return phase === "cancelled"
+    ? "cancelledNotice"
+    : phase === "suspended"
+      ? "suspendedNotice"
+      : "endedNotice"
+}
+
+function Viewfinder({
+  hint,
+  checking,
+  children,
+}: {
+  hint: string
+  checking: string | null
+  children?: ReactNode
+}) {
+  const corner = {
+    position: "absolute",
+    width: 36,
+    height: 36,
+    borderColor: "#fff",
+  } as const
+  return (
+    <View
+      style={{
+        aspectRatio: 1,
+        borderRadius: 20,
+        overflow: "hidden",
+        backgroundColor: colors.ink,
+      }}
+    >
+      {children}
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          top: 48,
+          left: 48,
+          right: 48,
+          bottom: 48,
+        }}
+      >
+        <View
+          style={[
+            corner,
+            {
+              top: 0,
+              left: 0,
+              borderTopWidth: 4,
+              borderLeftWidth: 4,
+              borderTopLeftRadius: 14,
+            },
+          ]}
+        />
+        <View
+          style={[
+            corner,
+            {
+              top: 0,
+              right: 0,
+              borderTopWidth: 4,
+              borderRightWidth: 4,
+              borderTopRightRadius: 14,
+            },
+          ]}
+        />
+        <View
+          style={[
+            corner,
+            {
+              bottom: 0,
+              left: 0,
+              borderBottomWidth: 4,
+              borderLeftWidth: 4,
+              borderBottomLeftRadius: 14,
+            },
+          ]}
+        />
+        <View
+          style={[
+            corner,
+            {
+              bottom: 0,
+              right: 0,
+              borderBottomWidth: 4,
+              borderRightWidth: 4,
+              borderBottomRightRadius: 14,
+            },
+          ]}
+        />
+      </View>
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          bottom: 14,
+          alignSelf: "center",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 8,
+          backgroundColor: "rgba(0,0,0,0.6)",
+          borderRadius: 999,
+          paddingHorizontal: 14,
+          paddingVertical: 8,
+        }}
+      >
+        {checking ? <ActivityIndicator color="#fff" size="small" /> : null}
+        <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600" }}>
+          {checking ?? hint}
+        </Text>
+      </View>
+    </View>
+  )
+}
+
+const verdictIcons = {
+  success: CheckCircle,
+  danger: XCircle,
+  warning: Warning,
+  neutral: ArrowCounterClockwise,
+} as const
+
+function VerdictPanel({ verdict, copy }: { verdict: Verdict; copy: Copy }) {
+  const palette = toneColors[verdict.tone]
+  const VerdictIcon = verdictIcons[verdict.tone]
+  return (
+    <View
+      accessibilityLiveRegion="assertive"
+      style={{
+        minHeight: 240,
+        borderRadius: 20,
+        backgroundColor: palette.soft,
+        borderWidth: 1,
+        borderColor: palette.ink,
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 24,
+        gap: 10,
+      }}
+    >
+      <VerdictIcon size={64} color={palette.ink} weight="fill" />
+      <Text
+        style={{
+          fontSize: 26,
+          lineHeight: 32,
+          fontWeight: "700",
+          color: palette.ink,
+          textAlign: "center",
+        }}
+      >
+        {copy[verdict.title]}
+      </Text>
+      {verdict.body ? (
+        <Text
+          style={[styles.body, { textAlign: "center", color: colors.ink2 }]}
+        >
+          {copy[verdict.body]}
+        </Text>
+      ) : null}
+    </View>
   )
 }

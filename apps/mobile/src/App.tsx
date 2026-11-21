@@ -1,108 +1,152 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import {
-  ActivityIndicator,
-  AppState,
-  KeyboardAvoidingView,
-  Linking,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native"
+import { AppState, BackHandler, View } from "react-native"
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context"
-import { getLocales } from "expo-localization"
-import { selectDeviceLocale } from "./model"
 import { StatusBar } from "expo-status-bar"
+import { getLocales } from "expo-localization"
+import { useNetworkState } from "expo-network"
+import { UserCircle } from "./icons"
 import {
   accountResponseSchema,
-  scannerEventSchema,
   scannerEventsResponseSchema,
   type ScannerEvent,
 } from "@elc/shared"
-import { Attendees } from "./attendees"
 import { copies, type Language } from "./copy"
-import { ScanScreen } from "./scan-screen"
-import { service, authClient, configuration } from "./service"
-import { SignIn } from "./sign-in"
+import { selectDeviceLocale, sortForStaff } from "./model"
+import { service, authClient } from "./service"
 import { useClock } from "./use-clock"
-import { Action, Notice } from "./ui"
-import { colors, styles } from "./theme"
-import { OfflineWorkspace } from "./offline/workspace"
-import { offlineCopies } from "./offline/copy"
-import { offlineVault } from "./offline/runtime"
+import { SignIn, VerifyEmail } from "./sign-in"
+import { EventsScreen } from "./events-screen"
+import { EventScreen } from "./event-screen"
+import { AccountScreen } from "./account-screen"
+import { ConnectionPill } from "./connection-pill"
+import { Logo } from "./logo"
+import { IconButton } from "./ui"
+import { styles } from "./theme"
+import { offlineController, offlineVault } from "./offline/runtime"
 import { useOfflineLifecycle } from "./offline/lifecycle"
+import { useOfflineAccount } from "./offline/use-offline-account"
 
-type Tab = "events" | "scan" | "attendees" | "settings" | "offline"
+type Screen =
+  | { name: "events" }
+  | { name: "event"; event: ScannerEvent }
+  | { name: "account" }
+
+function useLanguage(accountId: string | null) {
+  const [language, setLanguage] = useState<Language>(() =>
+    selectDeviceLocale(getLocales().map((locale) => locale.languageTag))
+  )
+  const explicit = useRef(false)
+  useEffect(() => {
+    if (!accountId) return
+    const controller = new AbortController()
+    service
+      .account(controller.signal)
+      .then((raw) => {
+        const account = accountResponseSchema.parse(raw)
+        if (
+          !controller.signal.aborted &&
+          !explicit.current &&
+          account.profile.hasSavedLocale
+        )
+          setLanguage(account.profile.locale)
+      })
+      .catch(() => undefined)
+    return () => controller.abort()
+  }, [accountId])
+  const choose = (next: Language) => {
+    explicit.current = true
+    setLanguage(next)
+    if (accountId) void service.saveLanguage(next).catch(() => undefined)
+  }
+  return [language, choose] as const
+}
+
 function EventAdmin({
   sessionState,
 }: {
   sessionState: ReturnType<typeof authClient.useSession>
 }) {
   const { data: session, isPending, refetch } = sessionState
-  const [language, setLanguage] = useState<Language>(() =>
-    selectDeviceLocale(getLocales().map((locale) => locale.languageTag))
-  )
-  const explicitLanguage = useRef(false)
-  const copy = copies[language]
-  const clock = useClock()
-  const [tab, setTab] = useState<Tab>("events")
-  const [events, setEvents] = useState<ScannerEvent[]>([])
-  const [cursor, setCursor] = useState<string | null>(null)
-  const [selected, setSelected] = useState<ScannerEvent | null>(null)
-  const [busy, setBusy] = useState(false)
-  const [message, setMessage] = useState<
-    "refreshError" | "requestError" | "signOutFailed" | null
-  >(null)
-  const accountId = session?.user.id
+  const accountId = session?.user.id ?? null
   const verified = session?.user.emailVerified === true
-  const loadEvents = useCallback(async (after?: string) => {
-    setBusy(true)
-    setMessage(null)
+  const [language, setLanguage] = useLanguage(verified ? accountId : null)
+  const copy = copies[language]
+  const now = useClock()
+  const network = useNetworkState()
+  const online =
+    network.isConnected !== false && network.isInternetReachable !== false
+  const offlineAccount = useOfflineAccount(verified ? accountId : null, online)
+  const offlineMode = !online && offlineAccount.accountId !== null
+  const [screen, setScreen] = useState<Screen>({ name: "events" })
+  const [events, setEvents] = useState<ScannerEvent[] | null>(null)
+  const [cursor, setCursor] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [savedIds, setSavedIds] = useState<ReadonlySet<string>>(new Set())
+  const [cookie, setCookie] = useState<string | null>(null)
+  const [signingOut, setSigningOut] = useState(false)
+  const [signOutFailed, setSignOutFailed] = useState(false)
+
+  const fetchEvents = useCallback(async (after?: string) => {
     try {
       const result = scannerEventsResponseSchema.parse(
         await service.events(after)
       )
       setEvents((current) =>
-        after ? [...current, ...result.items] : result.items
+        after && current ? [...current, ...result.items] : result.items
       )
       setCursor(result.nextCursor)
+      setLoadError(false)
     } catch {
-      setEvents([])
-      setCursor(null)
-      setMessage("refreshError")
-    } finally {
-      setBusy(false)
+      setLoadError(true)
+      setEvents((current) => current ?? [])
     }
   }, [])
   useEffect(() => {
-    if (!accountId || !verified) return
+    if (!online || !accountId || !verified) return
     const controller = new AbortController()
-    void service
+    service
       .events(undefined, controller.signal)
       .then((raw) => {
         const result = scannerEventsResponseSchema.parse(raw)
         if (controller.signal.aborted) return
         setEvents(result.items)
         setCursor(result.nextCursor)
+        setLoadError(false)
       })
       .catch(() => {
-        if (!controller.signal.aborted) setMessage("refreshError")
+        if (controller.signal.aborted) return
+        setLoadError(true)
+        setEvents((current) => current ?? [])
       })
-    void service
-      .account(controller.signal)
-      .then((raw) => {
-        const account = accountResponseSchema.parse(raw)
-        if (
-          !controller.signal.aborted &&
-          !explicitLanguage.current &&
-          account.profile.hasSavedLocale
-        )
-          setLanguage(account.profile.locale)
-      })
-      .catch(() => {})
     return () => controller.abort()
-  }, [accountId, verified])
+  }, [online, accountId, verified])
+  useEffect(() => {
+    const id = offlineAccount.accountId
+    if (!id || screen.name !== "events") return
+    let active = true
+    offlineController
+      .events(id)
+      .then((saved) => {
+        if (!active) return
+        setSavedIds(new Set(saved.map((event) => event.id)))
+        if (!online) {
+          setEvents(saved)
+          setCursor(null)
+        }
+      })
+      .catch(() => {
+        if (active && !online) setEvents([])
+      })
+    return () => {
+      active = false
+    }
+  }, [offlineAccount.accountId, online, screen.name])
+  useEffect(() => {
+    if (!accountId) return
+    void authClient.getCookie().then(setCookie)
+  }, [accountId])
   useEffect(() => {
     const listener = AppState.addEventListener("change", (state) => {
       if (state === "active")
@@ -110,341 +154,143 @@ function EventAdmin({
     })
     return () => listener.remove()
   }, [])
-  const refreshEvent = async () => {
-    if (!selected) return
-    const eventId = selected.id
-    try {
-      const event = scannerEventSchema.parse(await service.event(eventId))
-      if (event.id !== eventId) throw new Error("Event response does not match")
-      setSelected((current) => (current?.id === eventId ? event : current))
-      setEvents((current) =>
-        current.map((item) => (item.id === eventId ? event : item))
-      )
-      setMessage(null)
-    } catch {
-      setMessage("refreshError")
-      setSelected(null)
-      setTab("events")
-    }
-  }
-  const chooseLanguage = (next: Language) => {
-    explicitLanguage.current = true
-    setLanguage(next)
-    if (accountId && verified)
-      void service.saveLanguage(next).catch(() => setMessage("requestError"))
-  }
+  useEffect(() => {
+    const listener = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (screen.name === "events") return false
+      setScreen({ name: "events" })
+      return true
+    })
+    return () => listener.remove()
+  }, [screen.name])
+
+  const updateEvent = useCallback((next: ScannerEvent) => {
+    setEvents(
+      (current) =>
+        current?.map((event) => (event.id === next.id ? next : event)) ??
+        current
+    )
+    setScreen((current) =>
+      current.name === "event" && current.event.id === next.id
+        ? { name: "event", event: next }
+        : current
+    )
+  }, [])
+  const showEvents = useCallback(() => setScreen({ name: "events" }), [])
   const signOut = async () => {
-    setBusy(true)
-    setSelected(null)
-    setTab("settings")
+    setSigningOut(true)
+    setSignOutFailed(false)
     try {
       await offlineVault.signOut()
       const result = await authClient.signOut()
       if (result.error) throw new Error("Sign out failed")
-      setEvents([])
-      setMessage(null)
     } catch {
-      setMessage("signOutFailed")
+      setSignOutFailed(true)
     } finally {
-      setBusy(false)
+      setSigningOut(false)
     }
   }
-  const locale =
-    language === "kk" ? "kk-KZ" : language === "ru" ? "ru-RU" : "en-GB"
+  const selected = screen.name === "event" ? screen.event : null
+  const listedEvents =
+    !online && offlineAccount.ready && !offlineAccount.accountId
+      ? (events ?? [])
+      : events
+  const header = (
+    <View style={[styles.spread, { paddingTop: 8 }]}>
+      <Logo />
+      <View style={styles.row}>
+        <ConnectionPill online={online} copy={copy} />
+        {session ? (
+          <IconButton
+            testID="account-button"
+            icon={UserCircle}
+            label={copy.account}
+            onPress={() => setScreen({ name: "account" })}
+          />
+        ) : null}
+      </View>
+    </View>
+  )
+
+  const content = (() => {
+    if (!offlineMode && !isPending && !session)
+      return <SignIn copy={copy} language={language} onLanguage={setLanguage} />
+    if (session && !verified)
+      return (
+        <VerifyEmail
+          copy={copy}
+          email={session.user.email}
+          signingOut={signingOut}
+          onDone={() => void refetch()}
+          onSignOut={() => void signOut()}
+        />
+      )
+    if (screen.name === "account" && session)
+      return (
+        <AccountScreen
+          user={session.user}
+          copy={copy}
+          language={language}
+          signingOut={signingOut}
+          signOutFailed={signOutFailed}
+          onLanguage={setLanguage}
+          onSignOut={() => void signOut()}
+          onBack={showEvents}
+        />
+      )
+    const scannerId = accountId ?? offlineAccount.accountId
+    if (selected && scannerId)
+      return (
+        <EventScreen
+          event={selected}
+          accountId={scannerId}
+          offlineAccount={offlineAccount}
+          online={online}
+          now={now}
+          cookie={cookie}
+          copy={copy}
+          language={language}
+          onBack={showEvents}
+          onEvent={updateEvent}
+        />
+      )
+    return (
+      <EventsScreen
+        header={header}
+        events={
+          isPending || !listedEvents ? null : sortForStaff(listedEvents, now)
+        }
+        error={loadError}
+        cursor={cursor}
+        loadingMore={loadingMore}
+        refreshing={refreshing}
+        offlineMode={!online}
+        savedIds={savedIds}
+        now={now}
+        cookie={cookie}
+        copy={copy}
+        language={language}
+        onRefresh={() => {
+          setRefreshing(true)
+          void fetchEvents().finally(() => setRefreshing(false))
+        }}
+        onMore={() => {
+          if (!cursor) return
+          setLoadingMore(true)
+          void fetchEvents(cursor).finally(() => setLoadingMore(false))
+        }}
+        onOpen={(event) => setScreen({ name: "event", event })}
+      />
+    )
+  })()
+
   return (
     <SafeAreaView style={styles.page} edges={["top", "bottom"]}>
       <StatusBar style="dark" />
-      <View style={styles.header}>
-        <Text style={styles.brand}>elc</Text>
-        <View style={styles.row}>
-          {(["kk", "ru", "en"] as const).map((value) => (
-            <Pressable
-              key={value}
-              accessibilityRole="button"
-              accessibilityLabel={`${copy.language}: ${value.toUpperCase()}`}
-              accessibilityState={{ selected: language === value }}
-              onPress={() => chooseLanguage(value)}
-              style={[
-                styles.language,
-                language === value && styles.activeLanguage,
-              ]}
-            >
-              <Text
-                style={[styles.tabText, language === value && styles.activeTab]}
-              >
-                {value.toUpperCase()}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.content}
-        >
-          <Action
-            label={
-              tab === "offline"
-                ? offlineCopies[language].close
-                : offlineCopies[language].workspace
-            }
-            secondary
-            onPress={() => setTab(tab === "offline" ? "events" : "offline")}
-          />
-          {tab === "offline" ? (
-            <OfflineWorkspace
-              onlineAccountId={verified ? (accountId ?? null) : null}
-              language={language}
-              copy={copy}
-            />
-          ) : isPending ? (
-            <>
-              <ActivityIndicator color={colors.green} />
-              <Text style={styles.body}>{copy.sessionLoading}</Text>
-            </>
-          ) : !session ? (
-            <SignIn copy={copy} />
-          ) : !verified ? (
-            <>
-              <Notice>{copy.verifyEmail}</Notice>
-              <Action
-                label={copy.webAccount}
-                onPress={() => {
-                  void Linking.openURL(`${configuration.apiOrigin}/account`)
-                }}
-              />
-              <Action
-                label={copy.refresh}
-                secondary
-                onPress={() => {
-                  void refetch()
-                }}
-              />
-              <Action
-                label={copy.signOut}
-                secondary
-                busy={busy}
-                onPress={() => {
-                  void signOut()
-                }}
-              />
-            </>
-          ) : (
-            <>
-              {message ? <Notice tone="error">{copy[message]}</Notice> : null}
-              {tab === "events" ? (
-                <>
-                  <View style={styles.spread}>
-                    <Text accessibilityRole="header" style={styles.title}>
-                      {copy.chooseEvent}
-                    </Text>
-                  </View>
-                  <Action
-                    label={copy.refresh}
-                    secondary
-                    busy={busy}
-                    onPress={() => {
-                      void loadEvents()
-                    }}
-                  />
-                  {!busy && !events.length ? (
-                    <Notice>{copy.noEvents}</Notice>
-                  ) : null}
-                  {events.map((event) => (
-                    <Pressable
-                      key={event.id}
-                      accessibilityRole="button"
-                      accessibilityLabel={event.title}
-                      onPress={() => {
-                        setSelected(event)
-                        setTab("scan")
-                        setMessage(null)
-                      }}
-                      style={({ pressed }) => [
-                        styles.card,
-                        pressed && styles.pressed,
-                      ]}
-                    >
-                      <Text style={styles.heading}>{event.title}</Text>
-                      <Text style={styles.muted}>
-                        {new Intl.DateTimeFormat(locale, {
-                          dateStyle: "medium",
-                          timeStyle: "short",
-                          timeZone: event.timeZone,
-                        }).format(new Date(event.startsAt))}
-                      </Text>
-                      <Text style={styles.body}>{event.venueName}</Text>
-                      <View style={styles.row}>
-                        <View style={styles.counter}>
-                          <Text style={styles.number}>
-                            {event.counts.checkedIn}
-                          </Text>
-                          <Text style={styles.muted}>{copy.checkedIn}</Text>
-                        </View>
-                        <View style={styles.counter}>
-                          <Text style={styles.number}>
-                            {event.counts.registered}
-                          </Text>
-                          <Text style={styles.muted}>{copy.registered}</Text>
-                        </View>
-                      </View>
-                      {event.cancelledAt ? (
-                        <Text style={styles.muted}>{copy.eventCancelled}</Text>
-                      ) : event.suspendedAt ? (
-                        <Text style={styles.muted}>{copy.eventSuspended}</Text>
-                      ) : Date.parse(event.endsAt) <= clock ? (
-                        <Text style={styles.muted}>{copy.ended}</Text>
-                      ) : null}
-                    </Pressable>
-                  ))}
-                  {cursor ? (
-                    <Action
-                      label={copy.more}
-                      secondary
-                      busy={busy}
-                      onPress={() => {
-                        void loadEvents(cursor)
-                      }}
-                    />
-                  ) : null}
-                </>
-              ) : null}
-              {selected && (tab === "scan" || tab === "attendees") ? (
-                <>
-                  <Action
-                    label={copy.back}
-                    secondary
-                    onPress={() => {
-                      setTab("events")
-                      setSelected(null)
-                    }}
-                  />
-                  <View style={[styles.card, styles.row]}>
-                    <View style={styles.counter}>
-                      <Text style={styles.number}>
-                        {selected.counts.checkedIn}
-                      </Text>
-                      <Text style={styles.muted}>{copy.checkedIn}</Text>
-                    </View>
-                    <View style={styles.counter}>
-                      <Text style={styles.number}>
-                        {selected.counts.registered}
-                      </Text>
-                      <Text style={styles.muted}>{copy.registered}</Text>
-                    </View>
-                    {selected.counts.unresolvedOffline > 0 ? (
-                      <Text style={styles.muted}>
-                        {copy.reported}: {selected.counts.unresolvedOffline}
-                      </Text>
-                    ) : null}
-                  </View>
-                  {tab === "scan" ? (
-                    <ScanScreen
-                      key={selected.id}
-                      event={selected}
-                      accountId={accountId!}
-                      language={language}
-                      copy={copy}
-                      onResult={() => {
-                        void refreshEvent()
-                      }}
-                    />
-                  ) : (
-                    <Attendees
-                      key={selected.id}
-                      event={selected}
-                      copy={copy}
-                      onChange={() => {
-                        void refreshEvent()
-                      }}
-                    />
-                  )}
-                  <Action
-                    label={copy.refresh}
-                    secondary
-                    onPress={() => {
-                      void refreshEvent()
-                    }}
-                  />
-                </>
-              ) : null}
-              {tab === "settings" ? (
-                <>
-                  <Text accessibilityRole="header" style={styles.title}>
-                    {copy.settings}
-                  </Text>
-                  <View style={styles.card}>
-                    <Text style={styles.eyebrow}>{copy.currentAccount}</Text>
-                    <Text style={styles.heading}>{session.user.name}</Text>
-                    <Text style={styles.body}>{session.user.email}</Text>
-                    <Action
-                      label={copy.signOut}
-                      secondary
-                      busy={busy}
-                      onPress={() => {
-                        void signOut()
-                      }}
-                    />
-                  </View>
-                  <View style={styles.card}>
-                    <Text style={styles.eyebrow}>{copy.server}</Text>
-                    <Text style={styles.body}>
-                      {configuration.environment === "local"
-                        ? copy.local
-                        : configuration.environment === "preview"
-                          ? copy.preview
-                          : copy.demo}
-                    </Text>
-                    <Text style={styles.muted}>{configuration.apiOrigin}</Text>
-                  </View>
-                  <Notice>{offlineCopies[language].retention}</Notice>
-                </>
-              ) : null}
-            </>
-          )}
-        </ScrollView>
-      </KeyboardAvoidingView>
-      {session && verified ? (
-        <View style={styles.tabs}>
-          {(["events", "scan", "attendees", "settings"] as const).map(
-            (item) => (
-              <Pressable
-                key={item}
-                accessibilityRole="tab"
-                accessibilityLabel={copy[item]}
-                accessibilityState={{
-                  selected: tab === item,
-                  disabled:
-                    !selected && (item === "scan" || item === "attendees"),
-                }}
-                disabled={
-                  !selected && (item === "scan" || item === "attendees")
-                }
-                onPress={() => setTab(item)}
-                style={[
-                  styles.tab,
-                  !selected &&
-                    (item === "scan" || item === "attendees") &&
-                    styles.disabled,
-                ]}
-              >
-                <Text
-                  style={[styles.tabText, tab === item && styles.activeTab]}
-                >
-                  {copy[item]}
-                </Text>
-              </Pressable>
-            )
-          )}
-        </View>
-      ) : null}
+      {content}
     </SafeAreaView>
   )
 }
+
 export default function App() {
   const sessionState = authClient.useSession()
   useOfflineLifecycle()

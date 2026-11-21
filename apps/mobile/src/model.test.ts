@@ -2,8 +2,12 @@ import { describe, expect, it } from "vite-plus/test"
 import type { ScannerEvent } from "@elc/shared"
 import {
   canReverse,
+  checkInShare,
   confirmedScanResponse,
   eventCanScan,
+  eventPhase,
+  guestStatus,
+  sortForStaff,
   parseAdmissionQr,
   prepareOnlineScan,
   selectDeviceLocale,
@@ -187,5 +191,104 @@ describe("native online admission boundaries", () => {
       async () => new Response("not-json")
     ).catch((error) => error)
     expect(uncertainRequest(error)).toBe(true)
+  })
+})
+
+describe("event screen summaries", () => {
+  const at = (iso: string) => Date.parse(iso)
+  it.each([
+    ["2026-09-12T10:00:00.000Z", "upcoming"],
+    ["2026-09-13T02:00:00.000Z", "today"],
+    ["2026-09-13T10:30:00.000Z", "live"],
+    ["2026-09-13T12:00:00.000Z", "ended"],
+  ] as const)("should describe the event at %s as %s", (now, phase) => {
+    expect(eventPhase(event, at(now))).toBe(phase)
+  })
+
+  it("should treat today in the event time zone, not the phone's", () => {
+    const lateEvening = {
+      ...event,
+      startsAt: "2026-09-13T17:30:00.000Z",
+      endsAt: "2026-09-13T19:00:00.000Z",
+    }
+    expect(eventPhase(lateEvening, at("2026-09-12T19:30:00.000Z"))).toBe(
+      "today"
+    )
+    expect(eventPhase(lateEvening, at("2026-09-12T18:30:00.000Z"))).toBe(
+      "upcoming"
+    )
+  })
+
+  it("should put cancellation and suspension before timing", () => {
+    const now = at("2026-09-13T10:30:00.000Z")
+    expect(
+      eventPhase({ ...event, cancelledAt: "2026-09-01T00:00:00.000Z" }, now)
+    ).toBe("cancelled")
+    expect(
+      eventPhase({ ...event, suspendedAt: "2026-09-01T00:00:00.000Z" }, now)
+    ).toBe("suspended")
+  })
+
+  it.each([
+    [{ registered: 0, checkedIn: 0 }, 0],
+    [{ registered: 40, checkedIn: 10 }, 0.25],
+    [{ registered: 2, checkedIn: 3 }, 1],
+  ])("should report check-in share %j as %d", (counts, share) => {
+    expect(checkInShare({ ...counts, unresolvedOffline: 0 })).toBe(share)
+  })
+
+  it.each([
+    [{ state: "valid" }, "notIn"],
+    [{ state: "checked_in" }, "checkedIn"],
+    [{ state: "valid", activeCheckInId: "checkin" }, "checkedIn"],
+    [{ state: "refunded", activeCheckInId: "old" }, "refunded"],
+    [{ state: "cancelled", activeCheckInId: "old" }, "cancelled"],
+    [{ state: "valid", admissionBlocked: true }, "blocked"],
+  ] as const)("should show guest %j as %s", (changes, status) => {
+    expect(
+      guestStatus({
+        admissionBlocked: false,
+        activeCheckInId: null,
+        ...changes,
+      })
+    ).toBe(status)
+  })
+})
+
+describe("staff event order", () => {
+  it("should list current and upcoming events first, soonest on top, then past ones newest first", () => {
+    const now = Date.parse("2026-09-13T11:00:00.000Z")
+    const at = (
+      id: string,
+      startsAt: string,
+      endsAt: string,
+      cancelledAt: string | null = null
+    ) => ({
+      ...event,
+      id,
+      startsAt,
+      endsAt,
+      cancelledAt,
+    })
+    const events = [
+      at("old", "2026-09-01T10:00:00.000Z", "2026-09-01T12:00:00.000Z"),
+      at("later", "2026-09-20T10:00:00.000Z", "2026-09-20T12:00:00.000Z"),
+      at(
+        "cancelled",
+        "2026-09-14T10:00:00.000Z",
+        "2026-09-14T12:00:00.000Z",
+        "2026-09-02T00:00:00.000Z"
+      ),
+      at("live", "2026-09-13T10:00:00.000Z", "2026-09-13T12:00:00.000Z"),
+      at("recent", "2026-09-10T10:00:00.000Z", "2026-09-10T12:00:00.000Z"),
+    ]
+    expect(sortForStaff(events, now).map((item) => item.id)).toEqual([
+      "live",
+      "later",
+      "cancelled",
+      "recent",
+      "old",
+    ])
+    expect(events[0]?.id).toBe("old")
   })
 })

@@ -3,7 +3,6 @@ import {
   cachedAttendeeDisplay,
   currentCachedAttendees,
 } from "./attendee-display"
-import { offlineCopies } from "./copy"
 import type { SnapshotTicket } from "./model"
 
 const ticket: SnapshotTicket = {
@@ -17,16 +16,18 @@ const ticket: SnapshotTicket = {
 }
 describe("cached attendee presentation", () => {
   it.each([
-    [{ state: "valid" }, "valid"],
-    [{ state: "checked_in" }, "alreadyUsed"],
-    [{ state: "valid", activeCheckInId: "checkin" }, "alreadyUsed"],
-    [{ state: "refunded", activeCheckInId: "historic" }, "refundedState"],
-    [{ state: "cancelled", activeCheckInId: "historic" }, "cancelledState"],
+    [{ state: "valid" }, "notIn"],
+    [{ state: "checked_in" }, "checkedIn"],
+    [{ state: "valid", activeCheckInId: "checkin" }, "checkedIn"],
+    [{ state: "refunded", activeCheckInId: "historic" }, "refunded"],
+    [{ state: "cancelled", activeCheckInId: "historic" }, "cancelled"],
     [{ state: "refunded", admissionBlocked: true }, "blocked"],
   ] as const)(
-    "labels snapshot state without overriding invalidation %j",
-    (changes, state) => {
-      expect(cachedAttendeeDisplay({ ...ticket, ...changes }).state).toBe(state)
+    "should label snapshot state without overriding invalidation %j",
+    (changes, status) => {
+      expect(cachedAttendeeDisplay({ ...ticket, ...changes }).status).toBe(
+        status
+      )
     }
   )
   it("keeps complete accessible seat snapshots and rejects incomplete cached seats", () => {
@@ -57,20 +58,6 @@ describe("cached attendee presentation", () => {
         currentCachedAttendees(page, { ...scope, [key]: "changed" })
       ).toEqual([])
       expect(currentCachedAttendees(null, scope)).toEqual([])
-    }
-  )
-  it.each(["kk", "ru", "en"] as const)(
-    "labels snapshot time and seat details in %s",
-    (locale) => {
-      const text = offlineCopies[locale]
-      for (const key of [
-        "snapshotState",
-        "seat",
-        "accessibleSeat",
-        "generalAdmission",
-        "offlineAttendees",
-      ] as const)
-        expect(text[key].trim()).not.toBe("")
     }
   )
 })

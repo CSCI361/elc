@@ -1,19 +1,13 @@
 import { seatSnapshotSchema } from "@elc/shared"
 import type { SnapshotTicket } from "./model"
+import { guestStatus } from "../model"
 
-/** These labels describe the signed snapshot, never a new admission decision. */
 export function cachedAttendeeDisplay(ticket: SnapshotTicket) {
   const seat = seatSnapshotSchema.safeParse(ticket.seat)
-  const state = ticket.admissionBlocked
-    ? "blocked"
-    : ticket.state === "refunded"
-      ? "refundedState"
-      : ticket.state === "cancelled"
-        ? "cancelledState"
-        : ticket.state === "checked_in" || ticket.activeCheckInId
-          ? "alreadyUsed"
-          : "valid"
-  return { state, seat: seat.success ? seat.data : null } as const
+  return {
+    status: guestStatus(ticket),
+    seat: seat.success ? seat.data : null,
+  }
 }
 
 export type CachedAttendeePage = {

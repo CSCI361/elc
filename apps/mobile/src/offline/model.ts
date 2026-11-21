@@ -138,6 +138,12 @@ export type OfflineStatus = {
   recentResults: OfflineOperationResult[]
 }
 
+export const visibleStatus = (
+  stored: OfflineStatus | null,
+  accountId: string | null,
+  eventId: string
+) => (accountId && stored?.eventId === eventId ? stored : null)
+
 /** Estimate elapsed time from a signed server anchor; retain raw wall time separately. */
 export function anchoredTime(vault: VaultRow, wall: number): number {
   if (

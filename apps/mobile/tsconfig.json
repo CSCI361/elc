@@ -3,7 +3,12 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "types": ["react", "node", "@cloudflare/workers-types"],
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "phosphor-react-native/src/icons/*": [
+        "./node_modules/phosphor-react-native/lib/typescript/icons/*.d.ts"
+      ]
+    }
   },
   "include": [
     "index.ts",
