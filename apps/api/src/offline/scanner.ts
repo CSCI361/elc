@@ -28,12 +28,14 @@ type ScannerEventRow = {
   registered: number
   checked_in: number
   unresolved_offline: number
+  cover_image_url: string | null
 }
 const eventSelection = `SELECT e.id, e.title, e.venue_name, e.time_zone, e.starts_at, e.ends_at, e.cancelled_at, e.suspended_at,
   (SELECT json_group_array(permission) FROM event_permissions WHERE event_id = e.id AND user_id = ? AND revoked_at IS NULL) AS permissions,
   (SELECT count(*) FROM tickets t JOIN orders o ON o.id = t.order_id WHERE t.event_id = e.id AND t.state IN ('valid', 'checked_in') AND o.state = 'completed' AND o.admission_blocked_at IS NULL AND e.cancelled_at IS NULL AND e.suspended_at IS NULL) AS registered,
   (SELECT count(*) FROM tickets t JOIN orders o ON o.id = t.order_id JOIN checkins ci ON ci.ticket_id = t.id AND ci.reversed_at IS NULL WHERE t.event_id = e.id AND t.state = 'checked_in' AND o.state = 'completed' AND o.admission_blocked_at IS NULL AND e.cancelled_at IS NULL AND e.suspended_at IS NULL) AS checked_in,
-  (SELECT count(*) FROM offline_admission_reports r JOIN offline_operations op ON op.operation_id = r.operation_id WHERE op.event_id = e.id AND r.review_state = 'unresolved') AS unresolved_offline
+  (SELECT count(*) FROM offline_admission_reports r JOIN offline_operations op ON op.operation_id = r.operation_id WHERE op.event_id = e.id AND r.review_state = 'unresolved') AS unresolved_offline,
+  (SELECT '/api/events/' || l.event_id || '/images/' || l.id FROM event_images l JOIN event_image_assets a ON a.id = l.asset_id WHERE l.event_id = e.id AND a.state = 'ready' ORDER BY l.position, l.id LIMIT 1) AS cover_image_url
   FROM events e`
 function eventDto(row: ScannerEventRow) {
   return scannerEventSchema.parse({
@@ -51,6 +53,7 @@ function eventDto(row: ScannerEventRow) {
       checkedIn: row.checked_in,
       unresolvedOffline: row.unresolved_offline,
     },
+    coverImageUrl: row.cover_image_url,
   })
 }
 export async function listScannerEvents(

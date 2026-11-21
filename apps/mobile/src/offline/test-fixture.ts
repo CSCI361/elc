@@ -115,6 +115,7 @@ export async function snapshotFixture(
     suspendedAt: null,
     permissions: ["ticket:scan"],
     counts: { registered: count, checkedIn: 0, unresolvedOffline: 0 },
+    coverImageUrl: null,
   }
   return { manifest, pages, event, tickets, tokens }
 }

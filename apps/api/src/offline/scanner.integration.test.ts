@@ -127,6 +127,44 @@ describe("assigned native scanner queries on D1", () => {
     await expect(getScannerEvent(db, "scanner", "event-a")).rejects.toThrow()
   })
 
+  it("should return the first gallery image as the cover", async () => {
+    expect(
+      (await getScannerEvent(db, "scanner", "event-a")).coverImageUrl
+    ).toBeNull()
+    for (const position of [1, 0]) {
+      const asset = `cover-asset-${position}`
+      await db.batch([
+        db
+          .prepare(`INSERT INTO event_image_assets(id,event_id,uploader_id,request_id,input_hash,expected_revision,alt_text,object_key,content_type,original_size,content_size,content_sha256,created_at,expires_at)
+          VALUES (?,'event-a','owner',?,?,0,'Hall',?,'image/png',100,100,?,?,?)`)
+          .bind(
+            asset,
+            `cover-upload-${position}`,
+            "a".repeat(64),
+            `private/event-images/${asset}`,
+            "b".repeat(64),
+            now,
+            now + 3600000
+          ),
+        db
+          .prepare("UPDATE event_image_assets SET state='ready' WHERE id=?")
+          .bind(asset),
+        db
+          .prepare(
+            "INSERT INTO event_images(id,event_id,asset_id,position,alt_text,created_at) VALUES (?,'event-a',?,?,'Hall',?)"
+          )
+          .bind(`cover-${position}`, asset, position, now),
+      ])
+    }
+    const expected = "/api/events/event-a/images/cover-0"
+    expect(
+      (await getScannerEvent(db, "scanner", "event-a")).coverImageUrl
+    ).toBe(expected)
+    expect(
+      (await listScannerEvents(db, "scanner")).items[0]?.coverImageUrl
+    ).toBe(expected)
+  })
+
   it("bounds event pages and scopes cursors to the authenticated scanner", async () => {
     await db
       .prepare(

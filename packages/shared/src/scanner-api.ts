@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { eventImageSchema } from "./event-images-api"
 import {
   entityIdSchema,
   paginationQuerySchema,
@@ -23,6 +24,7 @@ export const scannerEventSchema = z.strictObject({
   suspendedAt: utcTimestampSchema.nullable(),
   permissions: z.array(permissionSchema),
   counts: scannerCountsSchema,
+  coverImageUrl: eventImageSchema.shape.url.nullable().default(null),
 })
 export const scannerEventsResponseSchema = z.strictObject({
   items: z.array(scannerEventSchema).max(100),

@@ -23,6 +23,7 @@ const event: ScannerEvent = {
   suspendedAt: null,
   permissions: ["ticket:scan"],
   counts: { registered: 1, checkedIn: 0, unresolvedOffline: 0 },
+  coverImageUrl: null,
 }
 
 describe("native online admission boundaries", () => {
