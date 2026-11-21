@@ -8,6 +8,7 @@ export default defineConfig({
     hookTimeout: 30000,
     // Each integration file starts workerd; bound host processes and loopback sockets.
     maxWorkers: 2,
+    server: { deps: { inline: ["@better-auth/expo"] } },
   },
   staged: {
     "*": "vp check --fix",

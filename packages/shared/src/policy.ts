@@ -1,5 +1,6 @@
 /** Academic-release defaults recorded in docs/architecture-decisions.md. */
 export const policy = Object.freeze({
+  authCookiePrefix: "elc",
   currency: "KZT" as const,
   currencyMinorUnitScale: 2,
   defaultLocale: "kk" as const,

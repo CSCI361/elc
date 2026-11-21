@@ -3,6 +3,7 @@ import { betterAuth } from "better-auth"
 import { expo } from "@better-auth/expo"
 import { APIError, createAuthMiddleware } from "better-auth/api"
 import { drizzle } from "drizzle-orm/d1"
+import { policy } from "@elc/shared"
 import * as schema from "../db/auth-schema"
 import type { Bindings } from "../env"
 import {
@@ -145,7 +146,7 @@ export function createAuth(
     advanced: {
       disableOriginCheck: false,
       disableCSRFCheck: false,
-      cookiePrefix: "elc",
+      cookiePrefix: policy.authCookiePrefix,
       useSecureCookies: secure,
       ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] },
       defaultCookieAttributes: { httpOnly: true, sameSite: "lax", secure },
