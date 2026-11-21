@@ -451,7 +451,7 @@ export function createGa4Provider(
           try {
             response = await fetcher(url, {
               ...init,
-              redirect: "error",
+              redirect: "manual",
               credentials: "omit",
               cache: "no-store",
               signal: controller.signal,

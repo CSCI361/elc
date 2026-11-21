@@ -340,7 +340,7 @@ export function createResendEmailAdapter(
             ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
           },
           ...(body === undefined ? {} : { body }),
-          redirect: "error",
+          redirect: "manual",
           signal: controller.signal,
         })
       } catch {

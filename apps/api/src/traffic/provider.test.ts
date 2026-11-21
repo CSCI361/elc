@@ -151,7 +151,7 @@ describe("GA4 property-scoped protocol and OAuth", () => {
     expect(url).toBe(oauthUrl)
     expect(init).toMatchObject({
       method: "POST",
-      redirect: "error",
+      redirect: "manual",
       credentials: "omit",
       cache: "no-store",
     })
@@ -249,7 +249,7 @@ describe("GA4 property-scoped protocol and OAuth", () => {
     expect(campaigns.limit).toBe("8")
     for (const [url, init] of fetcher.mock.calls.slice(1)) {
       expect(url).toBe(reportUrl)
-      expect(init!.redirect).toBe("error")
+      expect(init!.redirect).toBe("manual")
       expect(new Headers(init!.headers).get("Authorization")).toBe(
         "Bearer synthetic_access_token"
       )
@@ -872,7 +872,7 @@ describe("GA4 bounded transport failures", () => {
         fetcher.mock.calls.every(
           ([url, init]) =>
             [oauthUrl, reportUrl].includes(stringValue(url)) &&
-            init!.redirect === "error"
+            init!.redirect === "manual"
         )
       ).toBe(true)
     }

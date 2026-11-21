@@ -227,7 +227,7 @@ describe("Resend send transport", () => {
     expect(url).toBe("https://api.resend.com/emails")
     expect(options).toMatchObject({
       method: "POST",
-      redirect: "error",
+      redirect: "manual",
       headers: {
         Authorization: "Bearer re_test_secret_never_log",
         "Content-Type": "application/json",
@@ -356,6 +356,7 @@ describe("Resend send transport", () => {
   it.each([
     [500, { message: "SECRET" }, "PROVIDER_UNCERTAIN", "uncertain"],
     [503, { message: "SECRET" }, "PROVIDER_UNCERTAIN", "uncertain"],
+    [302, {}, "PROVIDER_UNCERTAIN", "uncertain"],
     [408, {}, "PROVIDER_UNCERTAIN", "uncertain"],
     [
       429,
@@ -527,7 +528,7 @@ describe("Resend lookup binding and delivery status", () => {
       })
       expect(fetcher.mock.calls[0]).toMatchObject([
         `https://api.resend.com/emails/${providerId}`,
-        { method: "GET", redirect: "error" },
+        { method: "GET", redirect: "manual" },
       ])
       expect(fetcher.mock.calls[0]![1]).not.toHaveProperty("body")
       expect(
