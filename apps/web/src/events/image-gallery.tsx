@@ -49,21 +49,48 @@ export function EventImageCover({ event }: { event: EventApi }) {
   ) : null
 }
 
-export function EventImageGallery({ event }: { event: EventApi }) {
+export function EventHero({ event }: { event: EventApi }) {
+  const cover = event.images[0]
+  return (
+    <div className="event-hero">
+      {cover ? (
+        <EventImageView
+          key={cover.url}
+          eventId={event.id}
+          image={cover}
+          eager
+        />
+      ) : (
+        <div className="event-hero-placeholder" aria-hidden>
+          <TicketIcon size={56} weight="light" />
+        </div>
+      )}
+    </div>
+  )
+}
+
+export function EventImageGallery({
+  event,
+  skipCover = false,
+}: {
+  event: EventApi
+  skipCover?: boolean
+}) {
   const { t } = useImageText()
-  if (!event.images.length) return null
+  const images = skipCover ? event.images.slice(1) : event.images
+  if (!images.length) return null
   return (
     <section className="event-image-gallery" aria-label={t("gallery")}>
-      {event.images.map((image, index) => (
+      {images.map((image, index) => (
         <figure
           key={image.id}
-          className={index === 0 ? "event-image-main" : undefined}
+          className={index === 0 && !skipCover ? "event-image-main" : undefined}
         >
           <EventImageView
             key={image.url}
             eventId={event.id}
             image={image}
-            eager={index === 0}
+            eager={index === 0 && !skipCover}
           />
         </figure>
       ))}

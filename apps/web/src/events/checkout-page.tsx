@@ -1,3 +1,4 @@
+import { navigate } from "@/lib/navigation"
 import {
   checkoutResponseSchema,
   completedOrderResponseSchema,
@@ -16,7 +17,8 @@ import { Button } from "@/components/ui/button"
 import { segment, useCommand, useResource, useServerNow } from "./api"
 import { useEventText } from "./messages"
 import { clockText, money, remainingSeconds } from "./policies"
-import { EventError, Loading } from "./ui"
+import { priceText } from "./date-parts"
+import { EventError, Loading, SectionLoading } from "./ui"
 import { CalendarActions, TicketPdfDownload } from "./exports"
 import { RefundPanel } from "@/support/refund-panel"
 import { useSupportText } from "@/support/messages"
@@ -35,7 +37,7 @@ function OrderTickets({ orderId }: { orderId: string }) {
       {result.error ? (
         <EventError error={result.error} retry={result.reload} />
       ) : null}
-      {result.loading ? <Loading /> : null}
+      {result.loading ? <SectionLoading /> : null}
       <div className="order-ticket-list">
         {result.data?.items.map((ticket) => (
           <article className="order-ticket-item" key={ticket.id}>
@@ -151,9 +153,7 @@ function CheckoutActions({
                     )
                     .then((result) => {
                       if (result)
-                        window.location.assign(
-                          `/payments/${segment(result.payment.id)}`
-                        )
+                        navigate(`/payments/${segment(result.payment.id)}`)
                     })
                 }}
               >
@@ -223,9 +223,6 @@ export function CheckoutPage({ orderId }: { orderId: string }) {
       </a>
       <div className="event-page-heading">
         <div>
-          <span className="eyebrow">
-            {t("order")} · {t(order.state)}
-          </span>
           <h1>
             {t(
               order.state === "completed"
@@ -255,7 +252,7 @@ export function CheckoutPage({ orderId }: { orderId: string }) {
       <div className="event-detail-grid">
         <div>
           <section className="event-panel">
-            <h2>{t("tickets")}</h2>
+            <h2>{t("orderSummary")}</h2>
             {order.items.map((item) => (
               <article className="order-line" key={item.id}>
                 <div>
@@ -275,34 +272,37 @@ export function CheckoutPage({ orderId }: { orderId: string }) {
                       ?.names.join(", ")}
                   </p>
                 </div>
-                <strong>{money(item.totalMinor, locale)}</strong>
+                <strong>{priceText(item.totalMinor, locale)}</strong>
               </article>
             ))}
             <dl className="order-totals">
               <div>
                 <dt>{t("subtotal")}</dt>
-                <dd>{money(order.subtotalMinor, locale)}</dd>
+                <dd>{priceText(order.subtotalMinor, locale)}</dd>
               </div>
-              <div>
-                <dt>{t("discount")}</dt>
-                <dd>−{money(order.discountMinor, locale)}</dd>
-              </div>
+              {order.discountMinor > 0 ? (
+                <div>
+                  <dt>{t("discount")}</dt>
+                  <dd>−{money(order.discountMinor, locale)}</dd>
+                </div>
+              ) : null}
               <div className="order-total">
                 <dt>{t("total")}</dt>
-                <dd>{money(order.totalMinor, locale)}</dd>
+                <dd>{priceText(order.totalMinor, locale)}</dd>
               </div>
             </dl>
           </section>
-          <section className="event-panel">
-            <h2>{t("refundPolicy")}</h2>
-            <p>{t("refundHint")}</p>
-            <p className="preserve-lines">
-              {resource.data.refundPolicy.instructions}
-            </p>
-          </section>
           {order.completedAt && !resource.error ? (
             <RefundPanel orderId={order.id} onChanged={resource.reload} />
-          ) : null}
+          ) : (
+            <section className="event-panel">
+              <h2>{t("refundPolicy")}</h2>
+              <p>{t("refundHint")}</p>
+              <p className="preserve-lines">
+                {resource.data.refundPolicy.instructions}
+              </p>
+            </section>
+          )}
         </div>
         <div>
           {order.completedAt !== null ? (

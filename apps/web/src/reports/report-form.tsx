@@ -49,7 +49,7 @@ export function EventReportForm({ eventId }: EventReportFormProps) {
           label={t("category")}
           value={category}
           disabled={command.pending}
-          onChange={(event) => setCategory(event.target.value)}
+          onValueChange={(value) => setCategory(value)}
         >
           {eventReportCategorySchema.options.map((option) => (
             <option key={option} value={option}>

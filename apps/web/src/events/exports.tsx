@@ -12,7 +12,7 @@ import {
   type DownloadFormat,
 } from "./downloads"
 import { useEventText } from "./messages"
-import { EventError, Loading } from "./ui"
+import { EventError, SectionLoading } from "./ui"
 
 function DownloadButton({
   path,
@@ -112,7 +112,7 @@ function CurrentCalendar({ eventId }: { eventId: string }) {
   )
   if (resource.error)
     return <EventError error={resource.error} retry={resource.reload} />
-  if (!resource.data) return <Loading />
+  if (!resource.data) return <SectionLoading rows={1} />
   const { data } = resource
   const path = calendarDownloadPath(
     data.downloadUrl,
@@ -169,7 +169,7 @@ export function CalendarActions({ eventId }: { eventId: string }) {
   const { account, status } = useAccount()
   const { locale, t } = useEventText()
   return (
-    <section className="event-panel calendar-panel">
+    <section className="event-section calendar-panel">
       <h2>{t("addCalendar")}</h2>
       <CurrentCalendar
         key={`${eventId}:${locale}:${account?.user.id ?? status}`}

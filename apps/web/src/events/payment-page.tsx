@@ -51,7 +51,6 @@ export function PaymentPage({ attemptId }: { attemptId: string }) {
   return (
     <div className="events-page payment-page">
       <section className="event-panel">
-        <span className="eyebrow">elc / {t("paymentTitle")}</span>
         <h1>{t(payment.state)}</h1>
         <strong className="payment-amount">
           {money(payment.amountMinor, locale)}

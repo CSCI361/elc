@@ -94,8 +94,10 @@ export function TicketPage({ ticketId }: { ticketId: string }) {
         {t("order")}
       </a>
       <section className="event-panel ticket-document">
-        <span className="eyebrow">
-          <ShieldCheckIcon size={20} aria-hidden />
+        <span
+          className={`badge ${ticket.state === "valid" && !ticket.admissionBlocked ? "badge-success" : ""}`}
+        >
+          <ShieldCheckIcon size={14} weight="bold" aria-hidden />
           {t(ticket.state)}
         </span>
         <h1>{ticket.attendeeName}</h1>

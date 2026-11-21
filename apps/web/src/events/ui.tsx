@@ -1,10 +1,18 @@
 import { Input } from "@base-ui/react/input"
-import { useId, type ComponentProps, type ReactNode } from "react"
+import {
+  Children,
+  isValidElement,
+  useId,
+  type ComponentProps,
+  type ReactNode,
+} from "react"
+import { Select } from "@/components/ui/select"
+import { Bar, SkeletonRegion } from "@/components/ui/skeleton"
 import { AuthNotice } from "@/auth/notice"
 import { AccountPage } from "@/auth/account-page"
 import { useAccount } from "@/auth/context"
 import { authHref } from "@/auth/navigation"
-import { EventApiError, errorKey } from "./api"
+import { canRetry, EventApiError, errorKey } from "./api"
 import { useEventText } from "./messages"
 
 export function EventError({
@@ -23,7 +31,7 @@ export function EventError({
           {t("reference")}: {error.reference}
         </small>
       ) : null}
-      {retry ? (
+      {retry && canRetry(error) ? (
         <button type="button" className="text-action" onClick={retry}>
           {t("reload")}
         </button>
@@ -34,9 +42,25 @@ export function EventError({
 export function Loading() {
   const { t } = useEventText()
   return (
-    <p className="event-loading" role="status">
-      {t("loading")}
-    </p>
+    <SkeletonRegion label={t("loading")} className="page-skeleton">
+      <Bar width="40%" height={32} />
+      <Bar width="60%" height={16} style={{ marginTop: 12 }} />
+      <div className="page-skeleton-rows">
+        {[0, 1, 2, 3].map((row) => (
+          <Bar key={row} height={56} radius={10} />
+        ))}
+      </div>
+    </SkeletonRegion>
+  )
+}
+export function SectionLoading({ rows = 4 }: { rows?: number }) {
+  const { t } = useEventText()
+  return (
+    <SkeletonRegion label={t("loading")} className="section-skeleton">
+      {Array.from({ length: rows }, (_, row) => (
+        <Bar key={row} height={56} radius={10} />
+      ))}
+    </SkeletonRegion>
   )
 }
 export function Protected({ children }: { children: ReactNode }) {
@@ -94,14 +118,37 @@ export function SelectField({
   label,
   children,
   ...props
-}: ComponentProps<"select"> & { label: string }) {
+}: {
+  label: string
+  children: ReactNode
+  value?: string
+  defaultValue?: string
+  onValueChange?: (value: string) => void
+  name?: string
+  id?: string
+  disabled?: boolean
+  required?: boolean
+  placeholder?: string
+}) {
+  const labelId = useId()
+  const options = Children.toArray(children).flatMap((child) =>
+    isValidElement<ComponentProps<"option">>(child) && child.type === "option"
+      ? [
+          {
+            value: String(child.props.value ?? ""),
+            label: child.props.children,
+            disabled: child.props.disabled,
+          },
+        ]
+      : []
+  )
   return (
-    <label className="event-field">
-      <span>{label}</span>
-      <select {...props} className="auth-input">
-        {children}
-      </select>
-    </label>
+    <div className="event-field">
+      <span id={labelId} className="field-label">
+        {label}
+      </span>
+      <Select {...props} options={options} labelledBy={labelId} />
+    </div>
   )
 }
 export function TextArea({

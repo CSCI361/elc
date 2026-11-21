@@ -1,3 +1,4 @@
+import { navigate } from "@/lib/navigation"
 import {
   checkoutResponseSchema,
   eventDetailResponseSchema,
@@ -9,10 +10,11 @@ import {
   ArrowLeftIcon,
   CalendarBlankIcon,
   MapPinIcon,
+  TagIcon,
   MinusIcon,
 } from "@phosphor-icons/react"
 import { useState, type FormEvent } from "react"
-import { useAccount } from "@/auth/context"
+import { useAccount, useSignedIn } from "@/auth/context"
 import { authHref } from "@/auth/navigation"
 import { Button } from "@/components/ui/button"
 import {
@@ -25,7 +27,6 @@ import {
 import { useEventText } from "./messages"
 import {
   dateText,
-  money,
   purchasableSeats,
   selectedBasket,
   ticketSalesOpen,
@@ -35,7 +36,11 @@ import {
 import { SeatMap } from "./seat-map"
 import { EventError, Field, Loading } from "./ui"
 import { CalendarActions } from "./exports"
-import { EventImageGallery } from "./image-gallery"
+import { EventHero, EventImageGallery } from "./image-gallery"
+import { DateStub } from "./date-stub"
+import { categoryLabel, priceText } from "./date-parts"
+import { QuantityStepper } from "@/components/ui/stepper"
+import { Bar, SkeletonRegion } from "@/components/ui/skeleton"
 import { useImageText } from "./image-messages"
 import { supportHref } from "@/support/policies"
 import { useSupportText } from "@/support/messages"
@@ -59,7 +64,8 @@ function ReservationForm({
     campaignCode: string
   ) => void
 }) {
-  const { status, messages } = useAccount()
+  const { messages } = useAccount()
+  const signedIn = useSignedIn()
   const { locale, t } = useEventText()
   const { t: campaignText } = useCampaignNoticeText()
   const [selected, setSelected] = useState<string[]>([])
@@ -125,7 +131,7 @@ function ReservationForm({
       })
       if (result) {
         trackCheckout(result.order.totalMinor, count, campaign)
-        window.location.assign(`/orders/${segment(result.order.id)}`)
+        navigate(`/orders/${segment(result.order.id)}`)
       }
     } catch (error) {
       command.setError(
@@ -155,171 +161,172 @@ function ReservationForm({
   return (
     <section className="event-panel booking-panel">
       <h2>{t("selectTickets")}</h2>
-      <p>{t("basketHint")}</p>
-      <p className="field-hint">
-        {t("orderLimit")}: {event.maxTicketsPerOrder}
-      </p>
-      {command.error ? (
-        <EventError error={command.error} retry={refresh} />
-      ) : null}
       <form onSubmit={submit}>
         <fieldset disabled={command.pending}>
-          {assigned ? (
-            <>
-              {inventory.ticketTypes.some((type) => type.kind === "paid") &&
-              event.paidSalesState !== "active" ? (
-                <p className="field-hint">{t("paymentInactive")}</p>
-              ) : null}
-              <SeatMap
-                seats={seats}
-                selected={selected}
-                onSelect={select}
-                disabled={command.pending}
-              />
-            </>
-          ) : (
-            <div className="ticket-type-options">
-              {inventory.ticketTypes.map((type) => (
-                <div className="ticket-type-option" key={type.id}>
-                  <div>
-                    <h3>{type.name}</h3>
-                    <p>{type.description}</p>
-                    <strong>{money(type.priceMinor, locale)}</strong>
-                    <small>
-                      {t("available")}: {type.available}
-                    </small>
-                    {type.kind === "paid" &&
-                    event.paidSalesState !== "active" ? (
-                      <small>{t("paymentInactive")}</small>
-                    ) : null}
-                  </div>
-                  <Field
-                    label={`${t("quantity")} · ${type.name}`}
-                    name={`quantity-${type.id}`}
-                    type="number"
-                    min={0}
-                    max={Math.min(type.available, event.maxTicketsPerOrder)}
-                    value={quantities[type.id] ?? 0}
-                    disabled={
-                      type.available === 0 ||
-                      !ticketSalesOpen(
-                        type,
-                        event.paidSalesState === "active",
-                        date
-                      )
-                    }
-                    onChange={(change) => {
-                      const next = Number(change.target.value)
-                      if (
-                        Number.isInteger(next) &&
-                        next >= 0 &&
-                        next <=
-                          Math.min(type.available, event.maxTicketsPerOrder)
-                      )
+          <div className="booking-body">
+            <p>{t("basketHint")}</p>
+            <p className="field-hint">
+              {t("orderLimit")}: {event.maxTicketsPerOrder}
+            </p>
+            {assigned ? (
+              <>
+                {inventory.ticketTypes.some((type) => type.kind === "paid") &&
+                event.paidSalesState !== "active" ? (
+                  <p className="field-hint">{t("paymentInactive")}</p>
+                ) : null}
+                <SeatMap
+                  seats={seats}
+                  selected={selected}
+                  onSelect={select}
+                  disabled={command.pending}
+                />
+              </>
+            ) : (
+              <div className="ticket-type-options">
+                {inventory.ticketTypes.map((type) => (
+                  <div className="ticket-type-option" key={type.id}>
+                    <div>
+                      <h3>{type.name}</h3>
+                      <p>{type.description}</p>
+                      <strong>{priceText(type.priceMinor, locale)}</strong>
+                      <small>
+                        {t("available")}: {type.available}
+                      </small>
+                      {type.kind === "paid" &&
+                      event.paidSalesState !== "active" ? (
+                        <small>{t("paymentInactive")}</small>
+                      ) : null}
+                    </div>
+                    <QuantityStepper
+                      label={`${t("quantity")}, ${type.name}`}
+                      value={quantities[type.id] ?? 0}
+                      max={Math.min(type.available, event.maxTicketsPerOrder)}
+                      decreaseLabel={t("decrease")}
+                      increaseLabel={t("increase")}
+                      disabled={
+                        type.available === 0 ||
+                        !ticketSalesOpen(
+                          type,
+                          event.paidSalesState === "active",
+                          date
+                        )
+                      }
+                      onChange={(next) =>
                         setQuantities((previous) => ({
                           ...previous,
                           [type.id]: next,
                         }))
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-          {assigned
-            ? selectedSeats.map((seat) => (
-                <div className="attendee-row" key={seat.id}>
-                  <Field
-                    label={`${t("attendee")} · ${seat.section} ${seat.row}${seat.number}`}
-                    required
-                    maxLength={200}
-                    value={names[seat.id] ?? ""}
-                    onChange={(change) =>
-                      setNames((previous) => ({
-                        ...previous,
-                        [seat.id]: change.target.value,
-                      }))
-                    }
-                  />
-                  <button
-                    type="button"
-                    className="seat-remove"
-                    aria-label={`${t("removeSeat")} ${seat.section} ${seat.row}${seat.number}`}
-                    onClick={() =>
-                      setSelected((value) =>
-                        value.filter((id) => id !== seat.id)
-                      )
-                    }
-                  >
-                    <MinusIcon size={20} aria-hidden />
-                  </button>
-                </div>
-              ))
-            : inventory.ticketTypes.flatMap((type) =>
-                Array.from({ length: quantities[type.id] ?? 0 }, (_, index) => (
-                  <Field
-                    key={`${type.id}:${index}`}
-                    label={`${t("attendee")} · ${type.name} ${index + 1}`}
-                    required
-                    maxLength={200}
-                    value={names[`${type.id}:${index}`] ?? ""}
-                    onChange={(change) =>
-                      setNames((previous) => ({
-                        ...previous,
-                        [`${type.id}:${index}`]: change.target.value,
-                      }))
-                    }
-                  />
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+            {assigned
+              ? selectedSeats.map((seat) => (
+                  <div className="attendee-row" key={seat.id}>
+                    <Field
+                      label={`${t("attendee")} · ${seat.section} ${seat.row}${seat.number}`}
+                      required
+                      maxLength={200}
+                      value={names[seat.id] ?? ""}
+                      onChange={(change) =>
+                        setNames((previous) => ({
+                          ...previous,
+                          [seat.id]: change.target.value,
+                        }))
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="seat-remove"
+                      aria-label={`${t("removeSeat")} ${seat.section} ${seat.row}${seat.number}`}
+                      onClick={() =>
+                        setSelected((value) =>
+                          value.filter((id) => id !== seat.id)
+                        )
+                      }
+                    >
+                      <MinusIcon size={20} aria-hidden />
+                    </button>
+                  </div>
                 ))
-              )}
-          <Field
-            label={t("campaign")}
-            hint={t("campaignHint")}
-            maxLength={64}
-            autoComplete="off"
-            value={campaign}
-            onChange={(change) => setCampaign(change.target.value)}
-          />
-          <div className="basket-total">
-            <span>
-              {campaign.trim() ? campaignText("subtotal") : t("estimate")}
-            </span>
-            <strong>{money(estimated, locale)}</strong>
+              : inventory.ticketTypes.flatMap((type) =>
+                  Array.from(
+                    { length: quantities[type.id] ?? 0 },
+                    (_, index) => (
+                      <Field
+                        key={`${type.id}:${index}`}
+                        label={`${t("attendee")} · ${type.name} ${index + 1}`}
+                        required
+                        maxLength={200}
+                        value={names[`${type.id}:${index}`] ?? ""}
+                        onChange={(change) =>
+                          setNames((previous) => ({
+                            ...previous,
+                            [`${type.id}:${index}`]: change.target.value,
+                          }))
+                        }
+                      />
+                    )
+                  )
+                )}
+            <Field
+              label={t("campaign")}
+              hint={t("campaignHint")}
+              maxLength={64}
+              autoComplete="off"
+              value={campaign}
+              onChange={(change) => setCampaign(change.target.value)}
+            />
           </div>
-          <CampaignNotice
-            eventId={event.id}
-            code={campaign}
-            timeZone={event.timeZone}
-            ticketTypes={inventory.ticketTypes}
-            onClear={() => setCampaign("")}
-          />
-          {status === "active" ? (
-            <Button
-              className="auth-button"
-              type="submit"
-              disabled={
-                command.pending ||
-                count === 0 ||
-                count > event.maxTicketsPerOrder
-              }
-            >
-              {command.pending ? t("loading") : t("reserve")}
-            </Button>
-          ) : (
-            <a
-              className="primary-link"
-              href={authHref(
-                "sign-in",
-                `${window.location.pathname}${window.location.search}`
-              )}
-            >
-              {messages.signIn}
-            </a>
-          )}
-          {count === 0 ? <p className="field-hint">{t("selectHint")}</p> : null}
-          {count > event.maxTicketsPerOrder ? (
-            <p role="alert">{t("limit")}</p>
-          ) : null}
+          <div className="booking-footer">
+            {command.error ? (
+              <EventError error={command.error} retry={refresh} />
+            ) : null}
+            <div className="basket-total">
+              <span>
+                {campaign.trim() ? campaignText("subtotal") : t("estimate")}
+              </span>
+              <strong>{priceText(estimated, locale)}</strong>
+            </div>
+            <CampaignNotice
+              eventId={event.id}
+              code={campaign}
+              timeZone={event.timeZone}
+              ticketTypes={inventory.ticketTypes}
+              onClear={() => setCampaign("")}
+            />
+            {signedIn ? (
+              <Button
+                className="auth-button"
+                type="submit"
+                disabled={
+                  command.pending ||
+                  count === 0 ||
+                  count > event.maxTicketsPerOrder
+                }
+              >
+                {command.pending ? t("loading") : t("reserve")}
+              </Button>
+            ) : (
+              <a
+                className="primary-link"
+                href={authHref(
+                  "sign-in",
+                  `${window.location.pathname}${window.location.search}`
+                )}
+              >
+                {messages.signIn}
+              </a>
+            )}
+            {count === 0 ? (
+              <p className="field-hint">{t("selectHint")}</p>
+            ) : null}
+            {count > event.maxTicketsPerOrder ? (
+              <p role="alert">{t("limit")}</p>
+            ) : null}
+          </div>
         </fieldset>
       </form>
     </section>
@@ -371,28 +378,41 @@ export function EventDetailPage({ eventId }: { eventId: string }) {
           </a>
         </div>
       ) : null}
-      <div className="event-detail-heading">
-        <div className="event-badges">
-          <span>{event.category}</span>
-          <span>{t(event.phase)}</span>
-        </div>
-        <h1>{event.title}</h1>
-        <div className="event-meta">
-          <span>
-            <CalendarBlankIcon size={22} aria-hidden />
-            {dateText(event.startsAt, event.timeZone, locale)}
-          </span>
-          <span>
-            <MapPinIcon size={22} aria-hidden />
-            {event.venueName}
-          </span>
-        </div>
-      </div>
-      <EventImageGallery event={event} />
+      <EventHero event={event} />
       <div className="event-detail-grid">
-        <div>
-          <section className="event-panel event-description">
-            <h2>{t("details")}</h2>
+        <div className="event-detail-main">
+          <div className="event-detail-heading">
+            <DateStub
+              iso={event.startsAt}
+              timeZone={event.timeZone}
+              locale={locale}
+              size="lg"
+            />
+            <div>
+              {event.phase !== "upcoming" ? (
+                <div className="event-badges">
+                  <span>{t(event.phase)}</span>
+                </div>
+              ) : null}
+              <h1>{event.title}</h1>
+              <div className="event-meta">
+                <span>
+                  <CalendarBlankIcon size={18} aria-hidden />
+                  {dateText(event.startsAt, event.timeZone, locale)}
+                </span>
+                <span>
+                  <MapPinIcon size={18} aria-hidden />
+                  {event.venueName}
+                </span>
+                <span>
+                  <TagIcon size={18} aria-hidden />
+                  {categoryLabel(event.category, locale)}
+                </span>
+              </div>
+            </div>
+          </div>
+          <section className="event-section event-description">
+            <h2>{t("aboutEvent")}</h2>
             <p className="preserve-lines">{event.description}</p>
             <dl className="account-data">
               <div>
@@ -409,27 +429,33 @@ export function EventDetailPage({ eventId }: { eventId: string }) {
               </div>
             </dl>
           </section>
-          <section className="event-panel">
+          <EventImageGallery event={event} skipCover />
+          <section className="event-section">
             <h2>{t("refundPolicy")}</h2>
             <p>{t("refundHint")}</p>
             <p className="preserve-lines">{event.refundInstructions}</p>
           </section>
           <CalendarActions eventId={event.id} />
-          <a
-            className="secondary-link"
-            href={supportHref({
-              eventId: event.id,
-              audience: "attendee",
-              category: "event_information",
-            })}
-          >
-            {supportText("help")}
-          </a>
-          {account && !preview && account.user.id !== event.organizerId ? (
-            <EventReportForm eventId={event.id} />
-          ) : null}
+          <section className="event-section event-help">
+            <h2>{t("needHelp")}</h2>
+            <div>
+              <a
+                className="secondary-link"
+                href={supportHref({
+                  eventId: event.id,
+                  audience: "attendee",
+                  category: "event_information",
+                })}
+              >
+                {supportText("help")}
+              </a>
+            </div>
+            {account && !preview && account.user.id !== event.organizerId ? (
+              <EventReportForm eventId={event.id} />
+            ) : null}
+          </section>
         </div>
-        <div>
+        <aside className="event-detail-aside sticky-fit">
           {inventory.error ? (
             <EventError error={inventory.error} retry={inventory.reload} />
           ) : null}
@@ -442,7 +468,7 @@ export function EventDetailPage({ eventId }: { eventId: string }) {
                     <div>
                       <h3>{type.name}</h3>
                       <p>{type.description}</p>
-                      <strong>{money(type.priceMinor, locale)}</strong>
+                      <strong>{priceText(type.priceMinor, locale)}</strong>
                       <small>
                         {t("available")}: {type.available}
                       </small>
@@ -471,9 +497,14 @@ export function EventDetailPage({ eventId }: { eventId: string }) {
               trackCheckout={trackCheckout}
             />
           ) : inventory.loading ? (
-            <Loading />
+            <SkeletonRegion label={t("loading")} className="event-panel">
+              <Bar width="50%" height={20} />
+              <Bar height={64} radius={10} />
+              <Bar height={64} radius={10} />
+              <Bar height={44} radius={8} />
+            </SkeletonRegion>
           ) : null}
-        </div>
+        </aside>
       </div>
     </div>
   )

@@ -1,39 +1,37 @@
-import { lazy, Suspense } from "react"
+import { Suspense } from "react"
+import { preloadedPage } from "@/lib/preloaded-page"
 import { EventListPage } from "./list-page"
 import { EventDetailPage } from "./detail-page"
 import { Protected, EventError, Loading } from "./ui"
 import { EventApiError } from "./api"
+import { OrganizerEventLayout } from "./organizer-workspace"
 import "./events.css"
 
-const EventEditorPage = lazy(() =>
-  import("./editor").then((module) => ({ default: module.EventEditorPage }))
+const EventEditorPage = preloadedPage(() =>
+  import("./editor").then((module) => module.EventEditorPage)
 )
-const CheckoutPage = lazy(() =>
-  import("./checkout-page").then((module) => ({ default: module.CheckoutPage }))
+const CheckoutPage = preloadedPage(() =>
+  import("./checkout-page").then((module) => module.CheckoutPage)
 )
-const TicketPage = lazy(() =>
-  import("./ticket-page").then((module) => ({ default: module.TicketPage }))
+const TicketPage = preloadedPage(() =>
+  import("./ticket-page").then((module) => module.TicketPage)
 )
-const PaymentPage = lazy(() =>
-  import("./payment-page").then((module) => ({ default: module.PaymentPage }))
+const PaymentPage = preloadedPage(() =>
+  import("./payment-page").then((module) => module.PaymentPage)
 )
-const OrdersPage = lazy(() =>
-  import("./orders-page").then((module) => ({ default: module.OrdersPage }))
+const OrdersPage = preloadedPage(() =>
+  import("./orders-page").then((module) => module.OrdersPage)
 )
-const EventAccessPage = lazy(() =>
-  import("@/access/owner-page").then((module) => ({
-    default: module.EventAccessPage,
-  }))
+const EventAccessPage = preloadedPage(() =>
+  import("@/access/owner-page").then((module) => module.EventAccessPage)
 )
-const CampaignPage = lazy(() =>
-  import("@/campaigns/page").then((module) => ({
-    default: module.CampaignPage,
-  }))
+const CampaignPage = preloadedPage(() =>
+  import("@/campaigns/page").then((module) => module.CampaignPage)
 )
-const OrganizerRecordsPage = lazy(() =>
-  import("@/organizer-records/page").then((module) => ({
-    default: module.OrganizerRecordsPage,
-  }))
+const OrganizerRecordsPage = preloadedPage(() =>
+  import("@/organizer-records/page").then(
+    (module) => module.OrganizerRecordsPage
+  )
 )
 
 export function EventsRoute({ path }: { path: string }) {
@@ -102,19 +100,25 @@ function MatchedEventRoute({ path }: { path: string }) {
   if (accessPath)
     return (
       <Protected>
-        <EventAccessPage eventId={id} />
+        <OrganizerEventLayout eventId={id}>
+          <EventAccessPage eventId={id} />
+        </OrganizerEventLayout>
       </Protected>
     )
   if (campaignPath)
     return (
       <Protected>
-        <CampaignPage eventId={id} />
+        <OrganizerEventLayout eventId={id}>
+          <CampaignPage eventId={id} />
+        </OrganizerEventLayout>
       </Protected>
     )
   if (recordsPath)
     return (
       <Protected>
-        <OrganizerRecordsPage eventId={id} />
+        <OrganizerEventLayout eventId={id}>
+          <OrganizerRecordsPage eventId={id} />
+        </OrganizerEventLayout>
       </Protected>
     )
   if (parts.length === 2 && parts[0] === "events")
@@ -122,7 +126,9 @@ function MatchedEventRoute({ path }: { path: string }) {
   if (parts.length === 3 && parts[0] === "organizer" && parts[1] === "events")
     return (
       <Protected>
-        <EventEditorPage eventId={id} />
+        <OrganizerEventLayout eventId={id}>
+          <EventEditorPage eventId={id} />
+        </OrganizerEventLayout>
       </Protected>
     )
   if (parts.length === 2 && parts[0] === "orders")
