@@ -1,4 +1,3 @@
-import { OfflineOperationsLink } from "@/offline-operations/navigation"
 import {
   createEventInvitationSchema,
   eventDetailResponseSchema,
@@ -13,7 +12,6 @@ import {
   type EventStaff,
   type Permission,
 } from "@elc/shared"
-import { ArrowLeftIcon } from "@phosphor-icons/react"
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import { useAccount } from "@/auth/context"
 import { AuthNotice } from "@/auth/notice"
@@ -26,7 +24,7 @@ import {
   useServerNow,
 } from "@/events/api"
 import { useEventText } from "@/events/messages"
-import { EventError, Field, Loading } from "@/events/ui"
+import { EventError, Field, SectionLoading } from "@/events/ui"
 import { useAccessText, type AccessMessageKey } from "./messages"
 import "./access.css"
 
@@ -187,7 +185,7 @@ function StaffPanel({
   }
   if (resource.error)
     return <EventError error={resource.error} retry={reload} />
-  if (!resource.data) return <Loading />
+  if (!resource.data) return <SectionLoading />
   const { data } = resource
   return (
     <section className="event-panel">
@@ -352,7 +350,7 @@ function InvitationsPanel({
   }
   if (resource.error)
     return <EventError error={resource.error} retry={reload} />
-  if (!resource.data) return <Loading />
+  if (!resource.data) return <SectionLoading />
   return (
     <section className="event-panel">
       <h2>{t("invitations")}</h2>
@@ -425,18 +423,19 @@ export function EventAccessPage({ eventId }: { eventId: string }) {
   }
   if (detail.error)
     return <EventError error={detail.error} retry={detail.reload} />
-  if (!detail.data) return <Loading />
+  if (!detail.data)
+    return (
+      <div className="events-page access-page">
+        <h1>{t("title")}</h1>
+        <SectionLoading rows={3} />
+      </div>
+    )
   if (detail.data.event.organizerId !== account?.user.id)
     return <AuthNotice>{t("ownerOnly")}</AuthNotice>
   return (
     <div className="events-page access-page">
-      <a className="back-link" href={`/organizer/events/${segment(eventId)}`}>
-        <ArrowLeftIcon size={18} aria-hidden />
-        {eventText("editEvent")}
-      </a>
       <div className="event-page-heading">
         <div>
-          <span className="eyebrow">{detail.data.event.title}</span>
           <h1>{t("title")}</h1>
         </div>
         <button
@@ -461,7 +460,6 @@ export function EventAccessPage({ eventId }: { eventId: string }) {
           {t(notice)}
         </p>
       ) : null}
-      <OfflineOperationsLink eventId={eventId} />
       <div className="access-grid">
         <StaffPanel
           key={`staff:${version}`}

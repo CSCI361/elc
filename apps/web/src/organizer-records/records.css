@@ -29,46 +29,35 @@
 }
 .records-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-  align-items: start;
+  gap: 12px;
+  min-width: 0;
 }
 .records-card {
-  min-width: 0;
+  flex-flow: row wrap;
+  align-items: center;
+  gap: 12px 8px;
   overflow-wrap: anywhere;
+}
+.records-card > :not(h2, .records-state, .records-notice) {
+  flex-basis: 100%;
 }
 .records-card h2 {
-  font-size: 1.2rem;
-  margin-block: 0 0.6rem;
-}
-.records-card h3 {
-  font-size: 1rem;
-  margin-block: 1.1rem 0.5rem;
-}
-.records-state {
+  margin-right: 4px;
+  font-size: 16px;
   font-weight: 600;
 }
-.records-facts {
-  display: grid;
-  gap: 0.6rem;
-  margin-block: 1rem;
+.records-card h3 {
+  font-size: 14px;
+  margin-top: 6px;
 }
-.records-facts > div {
-  display: grid;
-  grid-template-columns: minmax(7rem, 1fr) minmax(0, 1.6fr);
-  gap: 0.3rem 0.8rem;
+.records-card .fact-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
 }
-.records-facts dt {
-  color: var(--muted-foreground);
-}
-.records-facts dd {
-  margin: 0;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-.records-facts a {
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
+.records-card .fact-grid a {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .records-filters {
   display: grid;
@@ -84,10 +73,6 @@
 .records-summary .history-retention p {
   margin-block: 0.55rem;
 }
-.records-notice {
-  border-inline-start: 3px solid var(--primary);
-  padding-inline-start: 0.7rem;
-}
 .registrations-page .text-action {
   display: inline-flex;
   align-items: center;
@@ -101,19 +86,43 @@
   height: auto;
 }
 @media (max-width: 760px) {
-  .records-list {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .records-facts > div {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .records-facts dd {
-    margin-bottom: 0.3rem;
-  }
   .records-tabs {
     gap: 0.3rem;
   }
   .records-tabs a {
     padding-inline: 0.5rem;
   }
+}
+.records-summary {
+  gap: 4px;
+}
+.records-summary p,
+.records-summary .history-retention p {
+  margin: 0;
+  font-size: 14px;
+}
+.records-summary .field-hint {
+  margin-bottom: 8px;
+}
+.records-summary > button {
+  align-self: flex-start;
+}
+.records-tabs {
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+}
+.records-tabs a {
+  min-height: 40px;
+  padding: 0 12px;
+  border-bottom: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-2);
+  text-decoration: none;
+  box-shadow: inset 0 -2px 0 transparent;
+}
+.records-tabs a[aria-current="page"] {
+  color: var(--brand-ink);
+  font-weight: 500;
+  box-shadow: inset 0 -2px 0 var(--brand);
 }

@@ -7,6 +7,7 @@ import {
   type EventApi,
   type EventImage,
 } from "@elc/shared"
+import { UploadSimpleIcon } from "@phosphor-icons/react"
 import { useEffect, useId, useRef, useState, type FormEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { api, EventApiError, segment } from "./api"
@@ -443,11 +444,12 @@ export function EventImagePanel({
             baseline.images.length >= eventImageLimits.count
           }
         >
-          <label className="event-field" htmlFor={`${id}-file`}>
+          <label className="event-field file-picker" htmlFor={`${id}-file`}>
             <span>{t("choose")}</span>
             <input
               id={`${id}-file`}
               ref={fileInput}
+              className="file-picker-input"
               type="file"
               accept="image/jpeg,image/png"
               aria-describedby={`${id}-limits`}
@@ -475,6 +477,10 @@ export function EventImagePanel({
                 })
               }}
             />
+            <span className="file-picker-box">
+              <UploadSimpleIcon size={20} aria-hidden />
+              <span>{selected ? selected.file.name : t("pickFile")}</span>
+            </span>
           </label>
           {selected ? (
             <SelectedImage key={selected.token} url={selected.url} />

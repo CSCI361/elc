@@ -6,14 +6,13 @@ import { useAccount } from "@/auth/context"
 import { AuthNotice } from "@/auth/notice"
 import { Button } from "@/components/ui/button"
 import { EventApiError, segment, useResource } from "@/events/api"
-import { EventError, Field, Loading, Protected } from "@/events/ui"
+import { EventError, Field, Protected, SectionLoading } from "@/events/ui"
 import { HistoryHeading, Retention } from "@/history/ui"
 import { CheckinRecord, OrderRecord, RecordTime, TicketRecord } from "./cards"
 import { useRecordsText } from "./messages"
 import {
   recordsBase,
   recordsHref,
-  recordsLinks,
   recordsPage,
   recordsQuery,
   recordsReset,
@@ -44,7 +43,7 @@ function RecordFilters({
         ))}
       </nav>
       <form
-        className="event-panel records-filters"
+        className="records-filters"
         method="get"
         action={recordsBase(eventId)}
       >
@@ -141,7 +140,13 @@ function CurrentRecords({
         )}
       </>
     )
-  if (!resource.data) return <Loading />
+  if (!resource.data)
+    return (
+      <>
+        <HistoryHeading>{t("title")}</HistoryHeading>
+        <SectionLoading rows={5} />
+      </>
+    )
   const data = resource.data
   if (data.event.id !== eventId || data.kind !== query.kind)
     return (
@@ -153,15 +158,7 @@ function CurrentRecords({
   const props = { eventId, query, timeZone: data.event.timeZone }
   return (
     <>
-      <HistoryHeading>{data.event.title}</HistoryHeading>
-      <h2 className="records-title">{t("title")}</h2>
-      <div className="records-links">
-        {recordsLinks(eventId, data.capabilities).map((link) => (
-          <a className="text-action" key={link.label} href={link.href}>
-            {t(link.label)}
-          </a>
-        ))}
-      </div>
+      <HistoryHeading>{t("title")}</HistoryHeading>
       <section className="event-panel records-summary">
         <Retention value={data.retention} timeZone={data.event.timeZone} />
         <p className="field-hint">{t("retentionHint")}</p>

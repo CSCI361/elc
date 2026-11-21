@@ -1,4 +1,4 @@
-import { OfflineOperationsLink } from "@/offline-operations/navigation"
+import { navigate } from "@/lib/navigation"
 import {
   createEventRequestSchema,
   createTicketTypeRequestSchema,
@@ -10,37 +10,28 @@ import {
   type EventApi,
   type CreateEvent,
 } from "@elc/shared"
-import {
-  ArrowLeftIcon,
-  ArrowUpRightIcon,
-  PlusIcon,
-} from "@phosphor-icons/react"
+import { PlusIcon } from "@phosphor-icons/react"
 import { useState, type FormEvent } from "react"
 import { useAccount } from "@/auth/context"
-import { useAccessText } from "@/access/messages"
-import { useSupportText } from "@/support/messages"
-import { usePayoutText } from "@/payouts/messages"
-import { useHistoryText } from "@/history/messages"
-import { useAnalyticsText } from "@/analytics/messages"
-import { duplicateHref, eventHistoryHref } from "@/history/policies"
-import { supportHref } from "@/support/policies"
 import { CancellationPanel } from "@/support/cancellation-panel"
 import { CalendarActions } from "./exports"
 import { EventImagePanel, ImageDraftHint } from "./image-panel"
-import { useImageText } from "./image-messages"
 import { Button } from "@/components/ui/button"
 import { EventApiError, segment, useCommand, useResource } from "./api"
 import { useEventText } from "./messages"
 import {
   dateFromInput,
   dateInput,
-  money,
   parsePrice,
   type Inventory,
 } from "./policies"
 import { SeatMap } from "./seat-map"
 import { ActivationPanel } from "./activation-panel"
-import { EventError, Field, Loading, SelectField, TextArea } from "./ui"
+import { categoryLabel, EVENT_CATEGORIES, priceText } from "./date-parts"
+import { EventError, Field, SectionLoading, SelectField, TextArea } from "./ui"
+import { OrganizerBackLink } from "./organizer-workspace"
+import { trackStickyHeight } from "@/lib/sticky-height"
+import { useWorkspace } from "./workspace-context"
 
 type EventDetail = ReturnType<typeof eventDetailResponseSchema.parse>
 type TicketType = EventDetail["ticketTypes"][number]
@@ -65,6 +56,12 @@ function initialEvent(): CreateEvent {
   }
 }
 
+function categoryOptions(current: string): readonly string[] {
+  return current && !(EVENT_CATEGORIES as readonly string[]).includes(current)
+    ? [current, ...EVENT_CATEGORIES]
+    : EVENT_CATEGORIES
+}
+
 function EventForm({
   detail,
   onSaved,
@@ -72,7 +69,7 @@ function EventForm({
   detail?: EventDetail
   onSaved?: () => void
 }) {
-  const { t } = useEventText()
+  const { t, locale } = useEventText()
   const [initial] = useState(() => detail?.event ?? initialEvent())
   const [seating, setSeating] = useState(initial.seatingMode)
   const command = useCommand()
@@ -128,8 +125,7 @@ function EventForm({
     )
     if (result) {
       if (onSaved) onSaved()
-      else
-        window.location.assign(`/organizer/events/${segment(result.eventId)}`)
+      else navigate(`/organizer/events/${segment(result.eventId)}`)
     }
   }
   return (
@@ -140,6 +136,7 @@ function EventForm({
       ) : null}
       <form onSubmit={submit}>
         <fieldset disabled={command.pending}>
+          <h3 className="form-section-title">{t("formBasics")}</h3>
           <Field
             label={t("title")}
             name="title"
@@ -156,13 +153,19 @@ function EventForm({
             defaultValue={initial.description}
           />
           <div className="event-form-grid">
-            <Field
+            <SelectField
               label={t("category")}
               name="category"
               required
-              maxLength={80}
+              placeholder={t("category")}
               defaultValue={initial.category}
-            />
+            >
+              {categoryOptions(initial.category).map((category) => (
+                <option key={category} value={category}>
+                  {categoryLabel(category, locale)}
+                </option>
+              ))}
+            </SelectField>
             <Field
               label={t("venue")}
               name="venueName"
@@ -178,6 +181,7 @@ function EventForm({
             maxLength={500}
             defaultValue={initial.venueAddress}
           />
+          <h3 className="form-section-title">{t("formWhen")}</h3>
           <p className="event-zone">
             {t("timeZone")}: <strong>{initial.timeZone}</strong>
           </p>
@@ -209,16 +213,15 @@ function EventForm({
               />
             ))}
           </div>
+          <h3 className="form-section-title">{t("formSeats")}</h3>
           <div className="event-form-grid">
             <SelectField
               label={t("seating")}
               value={seating}
               disabled={Boolean(detail?.ticketTypes.length)}
-              onChange={(event) =>
+              onValueChange={(value) =>
                 setSeating(
-                  event.target.value === "assigned"
-                    ? "assigned"
-                    : "general_admission"
+                  value === "assigned" ? "assigned" : "general_admission"
                 )
               }
             >
@@ -260,6 +263,7 @@ function EventForm({
             </SelectField>
           </div>
           <p className="field-hint">{t("privateHint")}</p>
+          <h3 className="form-section-title">{t("formRefunds")}</h3>
           <TextArea
             label={t("refundInstructions")}
             name="refundInstructions"
@@ -267,9 +271,11 @@ function EventForm({
             maxLength={4000}
             defaultValue={detail?.event.refundInstructions ?? ""}
           />
-          <Button type="submit" className="auth-button">
-            {command.pending ? t("loading") : t(detail ? "save" : "newEvent")}
-          </Button>
+          <div className="form-save-bar">
+            <Button type="submit" className="auth-button">
+              {command.pending ? t("loading") : t(detail ? "save" : "newEvent")}
+            </Button>
+          </div>
         </fieldset>
       </form>
     </section>
@@ -352,8 +358,8 @@ function TicketTypeForm({
           <SelectField
             label={t("kind")}
             value={kind}
-            onChange={(event) =>
-              setKind(event.target.value === "paid" ? "paid" : "free")
+            onValueChange={(value) =>
+              setKind(value === "paid" ? "paid" : "free")
             }
           >
             <option value="free">{t("free")}</option>
@@ -457,10 +463,7 @@ export function EventEditorPage({ eventId }: { eventId?: string }) {
   if (!eventId)
     return (
       <div className="events-page editor-page">
-        <a className="back-link" href="/organizer/events">
-          <ArrowLeftIcon size={18} aria-hidden />
-          {t("organize")}
-        </a>
+        <OrganizerBackLink />
         <h1>{t("newEvent")}</h1>
         <ImageDraftHint />
         <EventForm />
@@ -469,207 +472,47 @@ export function EventEditorPage({ eventId }: { eventId?: string }) {
   return <ExistingEventEditor eventId={eventId} />
 }
 
-function RetainedEventActions({ event }: { event: EventApi }) {
-  const { t } = useEventText()
-  const { account } = useAccount()
-  const { t: historyText } = useHistoryText()
-  const { t: analyticsText } = useAnalyticsText()
-  return (
-    <>
-      <a
-        className="secondary-link"
-        href={`/organizer/events/${segment(event.id)}/registrations`}
-      >
-        {t("registrations")}
-      </a>
-      <a
-        className="secondary-link"
-        href={`/organizer/events/${segment(event.id)}/campaigns`}
-      >
-        {t("campaigns")}
-      </a>
-      {account?.user.id === event.organizerId ? (
-        <>
-          <a
-            className="secondary-link"
-            href={`/events/${segment(event.id)}/analytics`}
-          >
-            {analyticsText("title")}
-          </a>
-          <a className="secondary-link" href={eventHistoryHref(event.id)}>
-            {historyText("timeline")}
-          </a>
-        </>
-      ) : null}
-      {event.suspendedAt === null &&
-      (event.cancelledAt !== null || event.phase === "completed") ? (
-        <a className="secondary-link" href={duplicateHref(event.id)}>
-          {historyText("duplicate")}
-        </a>
-      ) : null}
-    </>
-  )
-}
-
 function ExistingEventEditor({ eventId }: { eventId: string }) {
-  const { t: imageText } = useImageText()
-  const { t: payoutText } = usePayoutText()
-  const { t: supportText } = useSupportText()
   const { account } = useAccount()
-  const { t: accessText } = useAccessText()
   const { locale, t } = useEventText()
-  const detail = useResource(
-    `/events/${segment(eventId)}/preview`,
-    eventDetailResponseSchema,
-    15000
-  )
+  const workspace = useWorkspace()
   const inventory = useResource(
     `/events/${segment(eventId)}/inventory?preview=true`,
     inventoryResponseSchema
   )
-  const command = useCommand()
   const reload = () => {
-    detail.reload()
+    workspace.reload()
     inventory.reload()
   }
-  if (detail.error || !detail.data)
-    return detail.error ? (
-      <EventError error={detail.error} retry={reload} />
+  if (!workspace.detail)
+    return workspace.error ? (
+      <EventError error={workspace.error} retry={reload} />
     ) : (
-      <Loading />
+      <SectionLoading />
     )
-  const { event, ticketTypes } = detail.data
-  const published = event.publicationState === "published"
+  const detail = workspace.detail
+  const { event, ticketTypes } = detail
   if (event.cancelledAt)
     return (
-      <div className="events-page">
-        <a className="back-link" href="/organizer/events">
-          {t("organize")}
-        </a>
-        <h1>{event.title}</h1>
-        <RetainedEventActions event={event} />
-        {account?.user.id === event.organizerId ? (
-          <OfflineOperationsLink eventId={event.id} />
-        ) : null}
+      <>
+        <h1 className="sr-only">{t("editEvent")}</h1>
         <CancellationPanel event={event} onChanged={reload} />
-        <a
-          className="secondary-link"
-          href={`/support?view=staff&eventId=${segment(event.id)}`}
-        >
-          {supportText("title")}
-        </a>
         <CalendarActions eventId={event.id} />
-        <a
-          className="secondary-link"
-          href={`/organizer/events/${segment(event.id)}/payouts`}
-        >
-          {payoutText("title")}
-        </a>
-      </div>
+      </>
     )
   return (
-    <div className="events-page editor-page">
-      <a className="back-link" href="/organizer/events">
-        <ArrowLeftIcon size={18} aria-hidden />
-        {t("organize")}
-      </a>
-      <div className="event-page-heading">
-        <div>
-          <span className="eyebrow">
-            {t(event.publicationState)} · {t(event.phase)}
-          </span>
-          <h1>{event.title}</h1>
-        </div>
-        <div className="event-actions">
-          <RetainedEventActions event={event} />
-          {account?.user.id === event.organizerId ? (
-            <OfflineOperationsLink eventId={event.id} />
-          ) : null}
-          <a
-            className="secondary-link"
-            href={`/organizer/events/${segment(event.id)}/payouts`}
-          >
-            {payoutText("title")}
-          </a>
-          <a
-            className="secondary-link"
-            href={`/support?view=staff&eventId=${segment(event.id)}`}
-          >
-            {supportText("title")}
-          </a>
-          {account?.user.id === event.organizerId ? (
-            <a
-              className="secondary-link"
-              href={supportHref({
-                eventId: event.id,
-                audience: "organizer_platform",
-                category: "activation",
-              })}
-            >
-              {supportText("organizer_platform")}
-            </a>
-          ) : null}
-          {account?.user.id === event.organizerId ? (
-            <a
-              className="secondary-link"
-              href={`/organizer/events/${segment(event.id)}/access`}
-            >
-              {accessText("title")}
-            </a>
-          ) : null}
-          <a
-            className="secondary-link"
-            href={`/events/${segment(event.id)}?preview=true`}
-          >
-            {imageText("previewEvent")}
-            <ArrowUpRightIcon size={18} aria-hidden />
-          </a>
-          {published ? (
-            <a className="secondary-link" href={`/events/${segment(event.id)}`}>
-              {t("details")}
-              <ArrowUpRightIcon size={18} aria-hidden />
-            </a>
-          ) : null}
-          <Button
-            disabled={
-              command.pending || (!published && ticketTypes.length === 0)
-            }
-            onClick={() => {
-              void command
-                .send(
-                  `/events/${segment(event.id)}/${published ? "unpublish" : "publish"}`,
-                  eventMutationResponseSchema,
-                  { expectedRevision: event.revision }
-                )
-                .then((result) => {
-                  if (result) reload()
-                })
-            }}
-          >
-            {t(published ? "unpublish" : "publish")}
-          </Button>
-        </div>
-      </div>
-      {command.error ? (
-        <EventError error={command.error} retry={reload} />
-      ) : null}
-      <CancellationPanel event={event} onChanged={reload} />
-      <EventImagePanel
-        key={`${account?.user.id}:${event.id}`}
-        event={event}
-        onChanged={(fresh) => {
-          detail.update(fresh)
-          inventory.reload()
-        }}
-        onDenied={reload}
-      />
+    <>
+      <h1 className="sr-only">{t("editEvent")}</h1>
       <div className="editor-grid">
         <EventForm
           key={`event:${event.revision}`}
-          detail={detail.data}
+          detail={detail}
           onSaved={reload}
         />
-        <section className="event-panel">
+        <section
+          ref={trackStickyHeight}
+          className="event-panel editor-aside sticky-fit"
+        >
           <h2>{t("ticketTypes")}</h2>
           {ticketTypes.some((type) => type.kind === "paid") &&
           event.paidSalesState !== "active" ? (
@@ -684,11 +527,10 @@ function ExistingEventEditor({ eventId }: { eventId: string }) {
                 <span>
                   <strong>{type.name}</strong>
                   <small>
-                    {money(type.priceMinor, locale)} · {t("available")}:{" "}
+                    {priceText(type.priceMinor, locale)} · {t("available")}:{" "}
                     {type.available} · {t("sold")}: {type.sold}
                   </small>
                 </span>
-                <span>{t("save")}</span>
               </summary>
               <TicketTypeForm event={event} type={type} onSaved={reload} />
             </details>
@@ -700,8 +542,10 @@ function ExistingEventEditor({ eventId }: { eventId: string }) {
               open={ticketTypes.length === 0}
             >
               <summary>
-                <PlusIcon size={20} aria-hidden />
-                {t("addType")}
+                <span className="ticket-type-add">
+                  <PlusIcon size={16} weight="bold" aria-hidden />
+                  {t("addType")}
+                </span>
               </summary>
               <TicketTypeForm event={event} onSaved={reload} />
             </details>
@@ -718,11 +562,21 @@ function ExistingEventEditor({ eventId }: { eventId: string }) {
           onSaved={reload}
         />
       ) : null}
+      <EventImagePanel
+        key={`${account?.user.id}:${event.id}`}
+        event={event}
+        onChanged={(fresh) => {
+          workspace.update(fresh)
+          inventory.reload()
+        }}
+        onDenied={reload}
+      />
       <ActivationPanel
         eventId={event.id}
         hasPaidTickets={ticketTypes.some((type) => type.kind === "paid")}
         onChanged={reload}
       />
-    </div>
+      <CancellationPanel event={event} onChanged={reload} />
+    </>
   )
 }

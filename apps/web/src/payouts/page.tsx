@@ -8,7 +8,7 @@ import { useAccount } from "@/auth/context"
 import { EventApiError, useResource } from "@/events/api"
 import { useEventText } from "@/events/messages"
 import { money } from "@/events/policies"
-import { EventError, Protected } from "@/events/ui"
+import { EventError, Protected, SectionLoading } from "@/events/ui"
 import { usePayoutText } from "./messages"
 import { payoutCursor, payoutPath, summaryMeasures } from "./policies"
 import "./payouts.css"
@@ -147,9 +147,14 @@ function CurrentPayoutPage({ eventId }: { eventId: string }) {
     )
   if (!resource.data)
     return (
-      <p className="event-loading" role="status">
-        {t("loading")}
-      </p>
+      <div className="events-page payout-page">
+        <div className="event-page-heading">
+          <div>
+            <h1>{t("title")}</h1>
+          </div>
+        </div>
+        <SectionLoading rows={3} />
+      </div>
     )
   const data = resource.data
   const date = new Intl.DateTimeFormat(locale, {
@@ -159,20 +164,14 @@ function CurrentPayoutPage({ eventId }: { eventId: string }) {
   })
   return (
     <div className="events-page payout-page">
-      <a className="back-link" href="/organizer/events">
-        {eventText("organize")}
-      </a>
       <div className="event-page-heading">
         <div>
-          <p className="eyebrow">{t("simulation")}</p>
-          <h1>{data.eventTitle}</h1>
-          <h2>{t("title")}</h2>
+          <h1>{t("title")}</h1>
         </div>
         <button type="button" className="text-action" onClick={resource.reload}>
           {eventText("reload")}
         </button>
       </div>
-      <p className="event-inline-note">{t("simulationHint")}</p>
       <div className="payout-layout">
         <section className="event-panel">
           <div
@@ -212,7 +211,7 @@ function CurrentPayoutPage({ eventId }: { eventId: string }) {
           <p>{t("holdsHint")}</p>
         </aside>
       </div>
-      <section>
+      <section className="payout-history">
         <h2 ref={historyHeading} tabIndex={-1}>
           {t("records")}
         </h2>

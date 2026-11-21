@@ -7,7 +7,7 @@ import {
 } from "@elc/shared"
 import { useAccount } from "@/auth/context"
 import { useResource } from "@/events/api"
-import { EventError, Loading, Protected } from "@/events/ui"
+import { EventError, SectionLoading, Protected } from "@/events/ui"
 import { supportHref } from "@/support/policies"
 import { createOfflineCommands, type OfflineCommands } from "./commands"
 import { DeviceCard, AdmissionCard } from "./cards"
@@ -25,6 +25,7 @@ function Pagination({
   change: (cursor: string) => void
 }) {
   const { t } = useOfflineText()
+  if (!cursor && !next) return null
   return (
     <nav className="offline-actions" aria-label={t("pagination")}>
       <button
@@ -59,19 +60,28 @@ function AvailableEvents() {
   )
   return (
     <div className="events-page offline-page">
-      <h1 ref={heading} tabIndex={-1}>
-        {t("title")}
-      </h1>
-      <p>{t("intro")}</p>
-      <button type="button" className="text-action" onClick={resource.reload}>
-        {t("reload")}
-      </button>
+      <div className="event-page-heading">
+        <div>
+          <h1 ref={heading} tabIndex={-1}>
+            {t("title")}
+          </h1>
+          <p>{t("intro")}</p>
+        </div>
+        <button type="button" className="text-action" onClick={resource.reload}>
+          {t("reload")}
+        </button>
+      </div>
       {resource.error ? (
         <EventError error={resource.error} retry={resource.reload} />
       ) : !resource.data ? (
-        <Loading />
+        <SectionLoading />
       ) : (
         <>
+          {resource.data.items.some(
+            (item) => !item.capabilities.manageDevices
+          ) ? (
+            <p className="field-hint">{t("ownDevices")}</p>
+          ) : null}
           {!resource.data.items.length ? (
             <p>{t("emptyEvents")}</p>
           ) : (
@@ -84,7 +94,7 @@ function AvailableEvents() {
                   <p>
                     {item.capabilities.manageDevices
                       ? t("devices")
-                      : t("ownDevices")}
+                      : t("yourDevices")}
                     {item.capabilities.reviewAdmissions
                       ? ` · ${t("admissions")}`
                       : ""}
@@ -147,7 +157,7 @@ function Devices({
           <EventError error={resource.error} retry={reload} />
         </>
       ) : !resource.data ? (
-        <Loading />
+        <SectionLoading />
       ) : (
         <>
           {!resource.data.items.length ? (
@@ -215,7 +225,7 @@ function Admissions({
           <EventError error={resource.error} retry={reload} />
         </>
       ) : !resource.data ? (
-        <Loading />
+        <SectionLoading />
       ) : (
         <>
           {!resource.data.items.length ? (
@@ -253,9 +263,6 @@ function Workspace({ eventId }: { eventId: string }) {
   )
   return (
     <div className="events-page offline-page">
-      <a className="back-link" href="/offline">
-        {t("events")}
-      </a>
       {access.error ? (
         <>
           <h1>{t("title")}</h1>
@@ -263,12 +270,11 @@ function Workspace({ eventId }: { eventId: string }) {
           <EventError error={access.error} retry={access.reload} />
         </>
       ) : !access.data ? (
-        <Loading />
+        <SectionLoading />
       ) : (
         <>
           <header className="event-page-heading">
             <div>
-              <span className="eyebrow">{access.data.event.title}</span>
               <h1>{t("title")}</h1>
             </div>
             <button

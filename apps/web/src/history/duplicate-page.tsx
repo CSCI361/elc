@@ -1,3 +1,4 @@
+import { navigate } from "@/lib/navigation"
 import {
   duplicatePastEventResponseSchema,
   eventDetailResponseSchema,
@@ -15,7 +16,7 @@ import {
   useResource,
 } from "@/events/api"
 import { useEventText } from "@/events/messages"
-import { Field, Loading } from "@/events/ui"
+import { Field, SectionLoading } from "@/events/ui"
 import {
   canResetRejectedRequest,
   duplicateEligible,
@@ -117,7 +118,7 @@ function DuplicateForm({
         } catch {
           /* A retained receipt only replays the same confirmed draft. */
         }
-        window.location.assign(`/organizer/events/${segment(response.eventId)}`)
+        navigate(`/organizer/events/${segment(response.eventId)}`)
       }
     } catch (failure) {
       if (!mounted.current) return
@@ -249,7 +250,13 @@ function CurrentDuplicate({
         />
       </>
     )
-  if (!resource.data) return <Loading />
+  if (!resource.data)
+    return (
+      <>
+        <HistoryHeading>{t("duplicate")}</HistoryHeading>
+        <SectionLoading rows={5} />
+      </>
+    )
   const { event, ticketTypes } = resource.data
   return (
     <>

@@ -44,21 +44,7 @@
 .offline-state {
   font-weight: 600;
 }
-.offline-facts {
-  display: grid;
-  gap: 0.6rem;
-  margin-block: 1rem;
-}
-.offline-facts > div {
-  display: grid;
-  grid-template-columns: minmax(100px, 0.75fr) minmax(0, 1.25fr);
-  gap: 0.75rem;
-}
-.offline-facts dt {
-  opacity: 0.75;
-}
 .offline-facts dd {
-  margin: 0;
   white-space: pre-wrap;
 }
 .offline-record summary {
@@ -104,8 +90,33 @@
   line-height: 1.6;
 }
 @media (max-width: 480px) {
-  .offline-facts > div {
-    grid-template-columns: 1fr;
-    gap: 0.2rem;
-  }
+}
+.offline-event-list li {
+  position: relative;
+  gap: 4px;
+  padding: 20px 24px;
+  transition: border-color 160ms var(--ease-out);
+}
+.offline-event-list li:hover {
+  border-color: var(--line-strong);
+}
+.offline-event-list h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.offline-event-list h2 a {
+  color: var(--ink);
+  text-decoration: none;
+}
+.offline-event-list h2 a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.offline-event-list p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 14px;
 }

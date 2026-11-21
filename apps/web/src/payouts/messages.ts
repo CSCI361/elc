@@ -6,21 +6,15 @@ const copy = {
     "Выплаты организатору",
     "Organizer payouts",
   ],
-  simulation: ["Төлем симуляциясы", "Симуляция выплат", "Payout simulation"],
-  simulationHint: [
-    "Бұл оқу жобасының есептері. Банкке аударым жасалмайды.",
-    "Это записи учебного проекта. Банковский перевод не выполняется.",
-    "These are demonstration ledger records. No bank transfer is made.",
-  ],
   eligibility: [
     "Есептеу басталатын уақыт",
     "Дата начала расчета",
     "Payout eligibility begins",
   ],
   eligibilityHint: [
-    "Төлем іс-шара аяқталғаннан кейін жеті күн өткенде есептелуі мүмкін. Бұл күн нақты аударымды білдірмейді.",
-    "Выплата может быть рассчитана через семь дней после окончания события. Эта дата не означает фактический перевод.",
-    "A payout can be recorded seven days after the event ends. This date does not represent an actual transfer.",
+    "Төлем іс-шара аяқталғаннан кейін жеті күн өткенде есептелуі мүмкін.",
+    "Выплата может быть рассчитана через семь дней после окончания события.",
+    "A payout can be recorded seven days after the event ends.",
   ],
   holdsHint: [
     "Шешілмеген қайтару, дау немесе өтемақы өтініші бар тапсырыстың толық үлесі ұсталады. Күтілген немесе сәтсіз қайтару да ұсталымды сақтайды.",
@@ -51,9 +45,9 @@ const copy = {
     "Estimated organizer contribution",
   ],
   simulatedPaidMinor: [
-    "Бастапқы симуляция төлемдерінің жиыны",
-    "Итог исходных симулированных выплат",
-    "Original simulated payouts total",
+    "Бастапқы төлемдер жиыны",
+    "Итог исходных выплат",
+    "Original payouts total",
   ],
   adjustmentMinor: [
     "Кейінгі қайтару түзетулері",
@@ -67,19 +61,15 @@ const copy = {
   ],
   heldMinor: ["Ұсталған үлес", "Удерживаемый вклад", "Held contribution"],
   availableMinor: [
-    "Келесі симуляцияға қолжетімді",
-    "Доступно для следующей симуляции",
-    "Available for the next simulation",
+    "Келесі төлемге қолжетімді",
+    "Доступно для следующей выплаты",
+    "Available for the next payout",
   ],
-  records: [
-    "Тіркелген симуляциялар",
-    "Записи симуляций",
-    "Recorded simulations",
-  ],
+  records: ["Тіркелген төлемдер", "Записанные выплаты", "Recorded payouts"],
   empty: [
-    "Симуляция төлемдері әлі тіркелмеген.",
-    "Симулированные выплаты еще не записаны.",
-    "No simulated payouts have been recorded.",
+    "Төлемдер әлі тіркелмеген.",
+    "Выплаты еще не записаны.",
+    "No payouts have been recorded.",
   ],
   recordsHint: [
     "Бастапқы төлем жазбалары өзгермейді. Кейін расталған қайтару бөлек теріс түзету ретінде көрсетіледі.",
@@ -104,7 +94,7 @@ const copy = {
   ],
   adjustmentDate: ["Түзету уақыты", "Дата корректировки", "Adjustment date"],
   none: ["Жоқ", "Нет", "None"],
-  reference: ["Симуляция нөмірі", "Номер симуляции", "Simulation reference"],
+  reference: ["Төлем нөмірі", "Номер выплаты", "Payout reference"],
   loading: [
     "Төлем есебі жүктелуде…",
     "Загрузка отчета о выплатах…",

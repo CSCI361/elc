@@ -18,6 +18,7 @@ export const offlineMessages = {
     "No events are available. Event ownership or a staff assignment is required.",
   ],
   devices: ["Офлайн құрылғылар", "Офлайн-устройства", "Offline devices"],
+  yourDevices: ["Сіздің құрылғыларыңыз", "Ваши устройства", "Your devices"],
   admissions: [
     "Кіру туралы есептер",
     "Сообщения о проходах",

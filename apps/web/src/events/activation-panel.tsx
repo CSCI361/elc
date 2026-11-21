@@ -1,3 +1,4 @@
+import { navigate } from "@/lib/navigation"
 import {
   activationResponseSchema,
   paymentResponseSchema,
@@ -11,8 +12,12 @@ import { Button } from "@/components/ui/button"
 import { EventApiError, segment, useCommand, useResource } from "./api"
 import { useEventText } from "./messages"
 import { money } from "./policies"
-import { EventError, Field, Loading, SelectField } from "./ui"
+import { EventError, Field, SectionLoading, SelectField } from "./ui"
 import { SavedOrganizerProfileButton } from "@/organizer-profile/saved-profile-button"
+import {
+  payoutReferenceText,
+  payoutReferenceValue,
+} from "@/organizer-profile/policies"
 
 type Activation = ActivationResponse["activation"]
 
@@ -68,7 +73,7 @@ function ActivationForm({
         displayName: value("displayName"),
         legalName: value("legalName"),
         contact: value("contact"),
-        dummyPayoutReference: value("dummyPayoutReference"),
+        dummyPayoutReference: profile.dummyPayoutReference,
       },
       identityCheck: identity,
       payoutCheck: payout,
@@ -92,7 +97,6 @@ function ActivationForm({
 
   return (
     <div className="activation-content">
-      <p className="event-inline-note">{t("activationDemo")}</p>
       <div className="activation-status">
         <CheckCircleIcon size={22} aria-hidden />
         <strong>
@@ -137,7 +141,7 @@ function ActivationForm({
               }
             />
             <Field
-              label={t("demoLegalName")}
+              label={t("legalName")}
               name="legalName"
               required
               maxLength={200}
@@ -162,22 +166,23 @@ function ActivationForm({
               name="dummyPayoutReference"
               hint={t("dummyPayoutHint")}
               required
-              pattern="DEMO-[A-Za-z0-9_-]{3,60}"
-              maxLength={65}
-              value={profile.dummyPayoutReference}
+              pattern="[A-Za-z0-9_-]{3,60}"
+              maxLength={60}
+              value={payoutReferenceText(profile.dummyPayoutReference)}
               onChange={(event) =>
-                changeProfile("dummyPayoutReference", event.currentTarget.value)
+                changeProfile(
+                  "dummyPayoutReference",
+                  payoutReferenceValue(event.currentTarget.value)
+                )
               }
             />
           </div>
           <div className="event-form-grid">
             <SelectField
-              label={t("simulatedIdentity")}
+              label={t("identityCheck")}
               value={identity}
-              onChange={(event) =>
-                setIdentity(
-                  event.target.value === "passed" ? "passed" : "failed"
-                )
+              onValueChange={(value) =>
+                setIdentity(value === "passed" ? "passed" : "failed")
               }
             >
               <option value="pending" disabled>
@@ -187,10 +192,10 @@ function ActivationForm({
               <option value="failed">{t("checkFailed")}</option>
             </SelectField>
             <SelectField
-              label={t("simulatedPayout")}
+              label={t("payoutCheck")}
               value={payout}
-              onChange={(event) =>
-                setPayout(event.target.value === "passed" ? "passed" : "failed")
+              onValueChange={(value) =>
+                setPayout(value === "passed" ? "passed" : "failed")
               }
             >
               <option value="pending" disabled>
@@ -202,11 +207,6 @@ function ActivationForm({
           </div>
           <div className="activation-terms">
             <p>{t("activationTerms")}</p>
-            <details>
-              <summary>{t("termsOriginal")}</summary>
-              <p lang="en">{activation.terms.text}</p>
-              <small>{activation.terms.version}</small>
-            </details>
             <label className="event-checkbox">
               <input
                 type="checkbox"
@@ -267,10 +267,7 @@ function ActivationForm({
                 { expectedRevision: activation.revision }
               )
               .then((result) => {
-                if (result)
-                  window.location.assign(
-                    `/payments/${segment(result.payment.id)}`
-                  )
+                if (result) navigate(`/payments/${segment(result.payment.id)}`)
               })
           }}
         >
@@ -304,7 +301,7 @@ export function ActivationPanel({
       <summary>
         <h2>{t("enablePaidSales")}</h2>
       </summary>
-      {result.loading ? <Loading /> : null}
+      {result.loading ? <SectionLoading /> : null}
       {result.error ? <EventError error={result.error} retry={reload} /> : null}
       {result.data ? (
         <ActivationForm

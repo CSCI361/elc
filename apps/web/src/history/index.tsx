@@ -1,21 +1,19 @@
-import { lazy, Suspense } from "react"
+import { Suspense } from "react"
+import { preloadedPage } from "@/lib/preloaded-page"
 import { useAccount } from "@/auth/context"
 import { EventApiError } from "@/events/api"
 import { EventError, Loading, Protected } from "@/events/ui"
 import { historyRoute } from "./policies"
+import { OrganizerEventLayout } from "@/events/organizer-workspace"
 import "./history.css"
-const HistoryListPage = lazy(() =>
-  import("./list-page").then((module) => ({ default: module.HistoryListPage }))
+const HistoryListPage = preloadedPage(() =>
+  import("./list-page").then((module) => module.HistoryListPage)
 )
-const HistoryTimelinePage = lazy(() =>
-  import("./timeline-page").then((module) => ({
-    default: module.HistoryTimelinePage,
-  }))
+const HistoryTimelinePage = preloadedPage(() =>
+  import("./timeline-page").then((module) => module.HistoryTimelinePage)
 )
-const HistoryDuplicatePage = lazy(() =>
-  import("./duplicate-page").then((module) => ({
-    default: module.HistoryDuplicatePage,
-  }))
+const HistoryDuplicatePage = preloadedPage(() =>
+  import("./duplicate-page").then((module) => module.HistoryDuplicatePage)
 )
 export function HistoryRoute({ path }: { path: string }) {
   const { account } = useAccount(),
@@ -28,7 +26,9 @@ export function HistoryRoute({ path }: { path: string }) {
         ) : route.kind === "list" ? (
           <HistoryListPage />
         ) : route.kind === "timeline" ? (
-          <HistoryTimelinePage eventId={route.eventId} />
+          <OrganizerEventLayout eventId={route.eventId}>
+            <HistoryTimelinePage eventId={route.eventId} />
+          </OrganizerEventLayout>
         ) : (
           <HistoryDuplicatePage eventId={route.eventId} />
         )}

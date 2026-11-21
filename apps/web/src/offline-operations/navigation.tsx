@@ -2,7 +2,7 @@ import { useOfflineText } from "./messages"
 import { offlineHref } from "./policies"
 export function OfflineOperationsLink({
   eventId,
-  className = "text-action",
+  className = "secondary-link",
 }: {
   eventId?: string
   className?: string

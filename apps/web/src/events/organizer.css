@@ -1,0 +1,200 @@
+.organizer-workspace-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.organizer-workspace-title {
+  font-size: 28px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.organizer-workspace h1:not(.organizer-workspace-title) {
+  font-size: 20px;
+  letter-spacing: -0.01em;
+}
+.organizer-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px 24px;
+  flex-wrap: wrap;
+}
+.organizer-heading > div:first-child {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.organizer-heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tabs-row {
+  border-bottom: 1px solid var(--line);
+}
+.tabs-row .category-chips {
+  gap: 4px;
+}
+.tabs-row .category-chips a {
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--ink-2);
+  box-shadow: inset 0 -2px 0 transparent;
+}
+.tabs-row .category-chips a:hover {
+  color: var(--ink);
+  background: none;
+}
+.tabs-row .category-chips a[aria-current="page"] {
+  color: var(--brand-ink);
+  background: none;
+  box-shadow: inset 0 -2px 0 var(--brand);
+}
+.editor-page .event-page-heading .event-badges span {
+  text-transform: none;
+}
+.editor-grid {
+  align-items: start;
+}
+.editor-page .event-panel > h2 {
+  margin-bottom: 0;
+}
+.ticket-type-editor {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.ticket-type-editor:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.ticket-type-editor summary {
+  font-size: 14px;
+  min-height: 48px;
+}
+.ticket-type-editor summary > span:first-child {
+  display: grid;
+  gap: 2px;
+}
+.ticket-type-editor summary small {
+  color: var(--ink-2);
+  font-size: 13px;
+}
+.ticket-type-add {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+  color: var(--brand-ink);
+  font-weight: 500;
+}
+.dark .ticket-type-add {
+  color: var(--brand);
+}
+.ticket-type-form {
+  margin-top: 16px;
+}
+.activation-terms {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.activation-fee {
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+  margin-top: 20px;
+}
+.activation-fee strong {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.activation-status {
+  color: var(--ink);
+}
+.activation-status svg {
+  color: var(--brand);
+}
+.ticket-type-editor summary strong {
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+.organizer-heading-actions .btn {
+  height: 36px;
+  padding: 0 12px;
+  font-size: 14px;
+}
+@media (max-width: 640px) {
+  .organizer-heading-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+  .organizer-heading-actions .btn-ghost {
+    border-color: var(--line-strong);
+  }
+  .organizer-heading-actions > a,
+  .organizer-heading-actions > button {
+    height: 44px;
+  }
+  .organizer-heading-actions > .auth-notice,
+  .organizer-heading-actions > button,
+  .organizer-heading-actions > a:nth-last-child(1 of a):nth-child(odd of a) {
+    grid-column: 1 / -1;
+  }
+}
+.editor-page .editor-grid,
+.organizer-workspace .editor-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+  gap: 24px;
+}
+
+.form-section-title {
+  margin: 12px 0 -4px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.event-panel form fieldset > .form-section-title:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.form-save-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin: 8px -24px -24px;
+  padding: 16px 24px;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 12px 12px;
+}
+.form-save-bar .auth-button {
+  margin: 0;
+}
+.organizer-workspace .page-skeleton > .skeleton:first-child {
+  height: 24px !important;
+}
+@media (max-width: 860px) {
+  .editor-page .editor-grid,
+  .organizer-workspace .editor-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .editor-aside {
+    position: static;
+  }
+}
+@media (max-width: 860px) {
+  .form-save-bar {
+    margin: 8px -20px -20px;
+    padding: 12px 20px;
+  }
+}

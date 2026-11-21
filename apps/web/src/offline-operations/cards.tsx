@@ -46,7 +46,7 @@ export function DeviceCard({
         {t(device.revokedAt ? "revokedAt" : "active")}
         {device.lossReported ? ` · ${t("lost")}` : ""}
       </p>
-      <dl className="offline-facts">
+      <dl className="offline-facts fact-grid">
         <Fact label={t("deviceId")}>{device.id}</Fact>
         <Fact label={t("accountId")}>{device.accountId}</Fact>
         <Fact label={t("registered")}>
@@ -95,7 +95,7 @@ export function AdmissionCard({
       <h3>
         {t("reviewState")}: {t(report.reviewState)}
       </h3>
-      <dl className="offline-facts">
+      <dl className="offline-facts fact-grid">
         <Fact label={t("operationId")}>{report.operationId}</Fact>
         <Fact label={t("deviceId")}>{report.deviceId}</Fact>
         <Fact label={t("accountId")}>{report.accountId}</Fact>

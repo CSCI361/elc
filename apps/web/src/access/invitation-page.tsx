@@ -8,7 +8,7 @@ import { AuthNotice } from "@/auth/notice"
 import { Button } from "@/components/ui/button"
 import { api, EventApiError, segment } from "@/events/api"
 import { useEventText } from "@/events/messages"
-import { EventError, Loading } from "@/events/ui"
+import { EventError, SectionLoading } from "@/events/ui"
 import {
   readInvitationToken,
   withoutInvitationSecrets,
@@ -215,7 +215,6 @@ export function InvitationPage({ memory }: { memory: InvitationMemory }) {
   )
   return (
     <section className="auth-card invitation-page">
-      <span className="eyebrow">ELC</span>
       <h1>{t("invitationTitle")}</h1>
       <p>{t("invitationIntro")}</p>
       {acceptedEvent ? (
@@ -235,7 +234,7 @@ export function InvitationPage({ memory }: { memory: InvitationMemory }) {
       ) : (
         <>
           {status === "loading" ? (
-            <Loading />
+            <SectionLoading />
           ) : status === "active" && account ? (
             <div
               className="access-accept"

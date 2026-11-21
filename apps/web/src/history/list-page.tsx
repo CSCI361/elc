@@ -2,7 +2,7 @@ import { organizerHistoryResponseSchema } from "@elc/shared"
 import { Button } from "@/components/ui/button"
 import { segment, useResource } from "@/events/api"
 import { useEventText } from "@/events/messages"
-import { Field, Loading, SelectField } from "@/events/ui"
+import { Field, SectionLoading, SelectField } from "@/events/ui"
 import { useHistoryText } from "./messages"
 import {
   duplicateHref,
@@ -21,7 +21,7 @@ function CurrentList({ query }: { query: string }) {
   )
   if (resource.error)
     return <HistoryFailure error={resource.error} retry={resource.reload} />
-  if (!resource.data) return <Loading />
+  if (!resource.data) return <SectionLoading />
   const data = resource.data,
     params = new URLSearchParams(query)
   const date = new Intl.DateTimeFormat(locale, {
@@ -118,7 +118,7 @@ export function HistoryListPage() {
       <form
         method="get"
         action="/organizer/history"
-        className="event-panel history-filters"
+        className="history-filters"
       >
         <Field
           name="q"

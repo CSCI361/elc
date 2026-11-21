@@ -36,17 +36,17 @@
   cursor: pointer;
 }
 .permission-options input {
-  width: 1.15rem;
-  height: 1.15rem;
   flex: 0 0 auto;
-  accent-color: var(--primary);
 }
 .access-record,
 .access-new,
 .invitation-record {
-  margin-block: 1rem;
-  padding-block: 1rem;
-  border-top: 1px solid var(--border);
+  padding-block: 0.5rem;
+  border-top: 1px solid var(--line);
+}
+.access-record[open],
+.access-new[open] {
+  padding-bottom: 1rem;
 }
 .access-record summary,
 .access-new summary {
@@ -54,10 +54,27 @@
   min-height: 44px;
   padding-block: 0.5rem;
 }
+.events-page .access-record > summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2px 12px;
+}
+.events-page .access-record > summary > * {
+  grid-column: 1;
+}
+.events-page .access-record > summary::after {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+}
+.access-record summary > span {
+  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 400;
+}
 .access-record summary > span,
 .access-record summary > small {
-  display: block;
-  margin-top: 0.4rem;
+  overflow-wrap: anywhere;
 }
 .access-record summary > small,
 .invitation-record p {

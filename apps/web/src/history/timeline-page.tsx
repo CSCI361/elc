@@ -6,14 +6,9 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { segment, useResource } from "@/events/api"
 import { useEventText } from "@/events/messages"
-import { Field, Loading, SelectField } from "@/events/ui"
+import { Field, SectionLoading, SelectField } from "@/events/ui"
 import { useHistoryText } from "./messages"
-import {
-  duplicateHref,
-  eventHistoryHref,
-  historyFilters,
-  pageHref,
-} from "./policies"
+import { eventHistoryHref, historyFilters, pageHref } from "./policies"
 import { FiltersInvalid, HistoryFailure, HistoryHeading, Retention } from "./ui"
 function TimelineFilters({ eventId }: { eventId: string }) {
   const { t } = useHistoryText(),
@@ -21,7 +16,7 @@ function TimelineFilters({ eventId }: { eventId: string }) {
   const [range, setRange] = useState(params.get("range") ?? "30")
   return (
     <form
-      className="event-panel history-filters"
+      className="history-filters"
       action={eventHistoryHref(eventId)}
       method="get"
     >
@@ -30,7 +25,7 @@ function TimelineFilters({ eventId }: { eventId: string }) {
         aria-label={t("range")}
         label={t("range")}
         value={range}
-        onChange={(event) => setRange(event.target.value)}
+        onValueChange={(value) => setRange(value)}
       >
         <option value="30">{t("thirty")}</option>
         <option value="7">{t("seven")}</option>
@@ -97,7 +92,13 @@ function CurrentTimeline({
         <HistoryFailure error={resource.error} retry={resource.reload} />
       </>
     )
-  if (!resource.data) return <Loading />
+  if (!resource.data)
+    return (
+      <>
+        <HistoryHeading>{t("timeline")}</HistoryHeading>
+        <SectionLoading rows={5} />
+      </>
+    )
   const data = resource.data,
     date = new Intl.DateTimeFormat(locale, {
       timeZone: data.timeZone,
@@ -106,23 +107,7 @@ function CurrentTimeline({
     })
   return (
     <>
-      <div className="event-page-heading">
-        <div>
-          <HistoryHeading>{data.event.title}</HistoryHeading>
-          <h2>{t("timeline")}</h2>
-        </div>
-        {data.canDuplicate ? (
-          <a className="primary-link" href={duplicateHref(eventId)}>
-            {t("duplicate")}
-          </a>
-        ) : null}
-      </div>
-      <a
-        className="text-action"
-        href={`/organizer/events/${segment(eventId)}/registrations`}
-      >
-        {et("registrations")}
-      </a>
+      <HistoryHeading>{t("timeline")}</HistoryHeading>
       <p>{t("periodHint")}</p>
       <p className="history-period">
         {data.period.start} – {data.period.end} · {data.timeZone}
@@ -204,9 +189,6 @@ export function HistoryTimelinePage({ eventId }: { eventId: string }) {
     : ""
   return (
     <div className="events-page history-page">
-      <a className="back-link" href="/organizer/history">
-        {t("overview")}
-      </a>
       {parsed.success ? (
         <CurrentTimeline
           key={`${eventId}:${query}`}

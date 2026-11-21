@@ -17,8 +17,8 @@ import { dateInput, dateText, money } from "../events/policies"
 import {
   EventError,
   Field,
-  Loading,
   Protected,
+  SectionLoading,
   SelectField,
 } from "../events/ui"
 import { useCampaignText } from "./messages"
@@ -108,7 +108,7 @@ function CreateCampaign({
               <SelectField
                 label={t("kind")}
                 value={draft.kind}
-                onChange={(e) => field("kind", e.currentTarget.value)}
+                onValueChange={(value) => field("kind", value)}
               >
                 <option value="percentage">{t("percentage")}</option>
                 <option value="fixed">{t("fixed")}</option>
@@ -415,13 +415,7 @@ function CampaignWorkspace({ eventId }: { eventId: string }) {
   if (denied(failure)) return <EventError error={failure} retry={reload} />
   return (
     <div className="events-page campaigns-page">
-      <a className="back-link" href={`/organizer/events/${segment(eventId)}`}>
-        {t("back")}
-      </a>
-      <h1>
-        {t("title")}
-        {detail.data ? ` · ${detail.data.event.title}` : ""}
-      </h1>
+      <h1>{t("title")}</h1>
       {saved ? <p role="status">{t("saved")}</p> : null}
       {failure ? <EventError error={failure} retry={reload} /> : null}
       {detail.data ? (
@@ -437,7 +431,7 @@ function CampaignWorkspace({ eventId }: { eventId: string }) {
           />
         )
       ) : detail.loading ? (
-        <Loading />
+        <SectionLoading />
       ) : null}
       {detail.data && list.data ? (
         <>
@@ -456,33 +450,35 @@ function CampaignWorkspace({ eventId }: { eventId: string }) {
           ) : (
             <p>{t("empty")}</p>
           )}
-          <nav className="event-actions" aria-label={t("page")}>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={!!failure || cursors.length < 2}
-              onClick={() => setCursors((previous) => previous.slice(0, -1))}
-            >
-              {t("previous")}
-            </Button>
-            <span>
-              {t("page")} {cursors.length}
-            </span>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={!!failure || !list.data.nextCursor}
-              onClick={() => {
-                const next = list.data?.nextCursor
-                if (next) setCursors((previous) => [...previous, next])
-              }}
-            >
-              {t("next")}
-            </Button>
-          </nav>
+          {cursors.length > 1 || list.data.nextCursor ? (
+            <nav className="event-actions" aria-label={t("page")}>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={!!failure || cursors.length < 2}
+                onClick={() => setCursors((previous) => previous.slice(0, -1))}
+              >
+                {t("previous")}
+              </Button>
+              <span>
+                {t("page")} {cursors.length}
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={!!failure || !list.data.nextCursor}
+                onClick={() => {
+                  const next = list.data?.nextCursor
+                  if (next) setCursors((previous) => [...previous, next])
+                }}
+              >
+                {t("next")}
+              </Button>
+            </nav>
+          ) : null}
         </>
       ) : !failure && list.loading ? (
-        <Loading />
+        <SectionLoading />
       ) : null}
     </div>
   )

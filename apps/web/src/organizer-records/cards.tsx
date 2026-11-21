@@ -90,11 +90,11 @@ export function OrderRecord({
       <h2>
         {t("orderId")} <a href={href("orders")}>{item.id}</a>
       </h2>
-      <p className="records-state">{t(item.state)}</p>
+      <p className="records-state badge">{t(item.state)}</p>
       {item.admissionBlocked ? (
-        <p className="records-notice">{t("blocked")}</p>
+        <p className="records-notice badge badge-danger">{t("blocked")}</p>
       ) : null}
-      <dl className="records-facts">
+      <dl className="fact-grid">
         <RecordFact label={t("created")}>
           <RecordTime value={item.createdAt} timeZone={timeZone} />
         </RecordFact>
@@ -119,7 +119,7 @@ export function OrderRecord({
       </dl>
       <h3>{t("originalAmounts")}</h3>
       <p className="field-hint">{t("amountsHint")}</p>
-      <dl className="records-facts">
+      <dl className="fact-grid">
         <RecordFact label={t("subtotal")}>
           {money(item.subtotalMinor, locale)}
         </RecordFact>
@@ -167,14 +167,14 @@ export function TicketRecord({
   return (
     <article className="event-panel records-card">
       <h2>{item.attendeeName}</h2>
-      <p className="records-state">{t(item.state)}</p>
+      <p className="records-state badge">{t(item.state)}</p>
       {item.admissionBlocked ? (
-        <p className="records-notice">{t("blocked")}</p>
+        <p className="records-notice badge badge-danger">{t("blocked")}</p>
       ) : null}
       {item.unresolvedOfflineAdmission ? (
-        <p className="records-notice">{t("offline")}</p>
+        <p className="records-notice badge badge-danger">{t("offline")}</p>
       ) : null}
-      <dl className="records-facts">
+      <dl className="fact-grid">
         <RecordFact label={t("ticketId")}>
           <a href={href("tickets")}>{item.id}</a>
         </RecordFact>
@@ -199,11 +199,7 @@ export function TicketRecord({
           <RecordFact label={t("activeCheckin")}>
             <a href={href("checkins")}>{item.activeCheckinId}</a>
             {item.activeCheckinAt ? (
-              <>
-                {" "}
-                ·{" "}
-                <RecordTime value={item.activeCheckinAt} timeZone={timeZone} />
-              </>
+              <RecordTime value={item.activeCheckinAt} timeZone={timeZone} />
             ) : null}
           </RecordFact>
         ) : null}
@@ -239,10 +235,10 @@ export function CheckinRecord({
   return (
     <article className="event-panel records-card">
       <h2>{item.attendeeName}</h2>
-      <p className="records-state">
+      <p className="records-state badge">
         {t(item.reversedAt ? "reversed" : "activeCheckin")}
       </p>
-      <dl className="records-facts">
+      <dl className="fact-grid">
         <RecordFact label={t("checkinId")}>{item.id}</RecordFact>
         <RecordFact label={t("ticketId")}>
           <a

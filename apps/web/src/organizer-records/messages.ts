@@ -53,9 +53,9 @@ const messages = {
     "Rows on this page",
   ],
   retentionHint: [
-    "Оқу жобасының сақтау мерзімі. Шешілмеген жұмыс жазбалардың жойылуын кейінге қалдыруы мүмкін.",
-    "Срок хранения учебного проекта. Незавершённые процессы могут отложить удаление записей.",
-    "Academic retention date. Unresolved work may postpone record deletion.",
+    "Шешілмеген жұмыс жазбалардың жойылуын кейінге қалдыруы мүмкін.",
+    "Незавершённые процессы могут отложить удаление записей.",
+    "Unresolved work may postpone record deletion.",
   ],
   manage: ["Іс-шараны өңдеу", "Редактировать событие", "Edit event"],
   history: ["Әрекеттер тарихы", "Лента действий", "Activity timeline"],

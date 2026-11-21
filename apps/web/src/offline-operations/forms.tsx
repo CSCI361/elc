@@ -196,7 +196,7 @@ export function AdmissionForm({
           label={t("resolution")}
           name="resolution"
           value={resolution}
-          onChange={(event) => setResolution(event.target.value)}
+          onValueChange={(value) => setResolution(value)}
           required
         >
           <option value="">{t("choose")}</option>

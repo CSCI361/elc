@@ -39,6 +39,11 @@ const messages = {
     "Save the event draft first, then add images.",
   ],
   choose: ["Сурет файлы", "Файл изображения", "Image file"],
+  pickFile: [
+    "JPEG не PNG таңдаңыз",
+    "Выберите JPEG или PNG",
+    "Choose a JPEG or PNG",
+  ],
   alt: ["Сурет сипаттамасы", "Описание изображения", "Image description"],
   altHint: [
     "Экраннан оқу құралдары үшін суреттегі маңызды ақпаратты сипаттаңыз. 500 таңбаға дейін.",

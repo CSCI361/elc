@@ -119,3 +119,44 @@
     padding: 1rem;
   }
 }
+.payout-layout .payout-table-region {
+  border: 0;
+  border-radius: 0;
+}
+.payout-summary caption {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.payout-summary th,
+.payout-summary td {
+  border-bottom-color: var(--line);
+  font-size: 14px;
+  padding: 12px 0;
+}
+.payout-summary th {
+  color: var(--ink-2);
+}
+.payout-summary tr:last-child {
+  color: var(--ink);
+}
+.payout-summary tr:last-child th,
+.payout-summary tr:last-child td {
+  border-bottom: 0;
+  color: var(--ink);
+  font-weight: 650;
+}
+.payout-info p {
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.payout-history {
+  display: grid;
+  gap: 8px;
+}
+.payout-history > p:not(.event-panel) {
+  color: var(--ink-2);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
