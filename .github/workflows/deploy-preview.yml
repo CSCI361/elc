@@ -39,6 +39,8 @@ jobs:
       - run: vp -C apps/web build
         env:
           CLOUDFLARE_ENV: preview
+          # Public G-... stream ID; blank keeps analytics transport disabled.
+          VITE_GA4_MEASUREMENT_ID: ${{ vars.VITE_GA4_MEASUREMENT_ID }}
       - name: Refuse to deploy anything but the preview Worker
         run: node -e 'const c = require(process.argv[1]); if (c.name !== "elc-preview" || c.vars?.ENVIRONMENT !== "preview") throw new Error(`Unexpected Worker ${c.name}`)' "$PWD/apps/web/dist/elc_local/wrangler.json"
       - run: vp exec wrangler d1 migrations apply elc-preview --remote --env preview --config apps/api/wrangler.jsonc
