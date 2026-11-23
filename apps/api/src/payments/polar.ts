@@ -27,6 +27,22 @@ import type { Bindings } from "../env"
 export const POLAR_API_VERSION = "2026-04"
 export const POLAR_MINIMUM_KZT_MINOR = 30_000
 const MAX_RECOVERY_PAGES = 20
+// Polar rejects special-use domains (RFC 6761), such as the `.test` demo accounts.
+const SPECIAL_USE_EMAIL_TLDS = new Set([
+  "arpa",
+  "invalid",
+  "local",
+  "localhost",
+  "onion",
+  "test",
+])
+
+/** Prefill only addresses Polar accepts; otherwise the buyer types one at checkout. */
+export function checkoutEmailPrefill(email: string) {
+  const domain = email.slice(email.lastIndexOf("@") + 1).toLowerCase()
+  const tld = domain.replace(/\.$/, "").split(".").at(-1) ?? ""
+  return SPECIAL_USE_EMAIL_TLDS.has(tld) ? {} : { customer_email: email }
+}
 
 function sandboxTransport(accessToken: string): PolarTransport {
   const core = createPolarCore({
@@ -490,7 +506,7 @@ export function createPolarSandboxAdapter(
         allow_discount_codes: false,
         allow_trial: false,
         external_customer_id: request.accountId,
-        customer_email: request.customerEmail,
+        ...checkoutEmailPrefill(request.customerEmail),
         metadata: bindingMetadata(request),
         success_url: request.successUrl,
         return_url: request.returnUrl,
