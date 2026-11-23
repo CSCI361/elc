@@ -242,6 +242,7 @@ export function EventListPage({ organizer = false }: { organizer?: boolean }) {
           <EmptyState
             icon={TicketIcon}
             title={t("noOwnEvents")}
+            titleAs="h2"
             hint={t("noOwnEventsHint")}
             action={
               <a className="btn btn-primary" href="/organizer/events/new">
@@ -254,6 +255,7 @@ export function EventListPage({ organizer = false }: { organizer?: boolean }) {
           <EmptyState
             icon={MagnifyingGlassIcon}
             title={t("noEvents")}
+            titleAs="h2"
             hint={t("noEventsHint")}
             action={
               term || activeCategory ? (

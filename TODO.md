@@ -11,4 +11,4 @@ Ask Dauren for the demo logins. Anything that creates Cloudflare resources or se
 - [ ] **Marketing site.** Deploy `apps/marketing` with `pnpm --filter @elc/marketing deploy:preview`. Done when: it loads on its own URL and its links open the web app.
 - [ ] **Load test and demo recording.** Run a short load test on event list, checkout and scan, and note the results. Record the final demo video.
 - [ ] **Evidence docs.** Update `docs/implementation-plan.md` acceptance and `docs/evidence/` with what was verified above.
-- [ ] **Small accessibility fixes (web).** After "Clear search" on the organizer overview, move keyboard focus to the results. Give the full-page empty states (event list, My tickets, Support) a real heading tag.
+- [x] **Small accessibility fixes (web).** After "Clear search" on the organizer overview, move keyboard focus to the results. Give the full-page empty states (event list, My tickets, Support) a real heading tag.

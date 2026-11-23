@@ -90,6 +90,7 @@ export function OrdersPage() {
         <EmptyState
           icon={TicketIcon}
           title={t("emptyOrders")}
+          titleAs="h2"
           hint={t("emptyOrdersHint")}
           action={
             <a className="btn btn-primary" href="/events">

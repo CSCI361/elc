@@ -104,6 +104,7 @@ function AvailableReports() {
                   type="button"
                   variant="secondary"
                   onClick={() => {
+                    requestedFocus.current = true
                     setDraft("")
                     setQuery({ search: "", after: "" })
                   }}

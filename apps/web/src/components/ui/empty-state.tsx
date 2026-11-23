@@ -4,6 +4,7 @@ import type { ReactNode } from "react"
 interface EmptyStateProps {
   icon: Icon
   title: string
+  titleAs?: "p" | "h2" | "h3"
   hint?: string
   action?: ReactNode
   inline?: boolean
@@ -12,6 +13,7 @@ interface EmptyStateProps {
 export function EmptyState({
   icon: Glyph,
   title,
+  titleAs: Title = "p",
   hint,
   action,
   inline = false,
@@ -25,7 +27,7 @@ export function EmptyState({
       <span className="empty-state-icon">
         <Glyph size={inline ? 20 : 24} aria-hidden />
       </span>
-      <p className="empty-state-title">{title}</p>
+      <Title className="empty-state-title">{title}</Title>
       {hint ? <p className="empty-state-hint">{hint}</p> : null}
       {action ? <div className="empty-state-action">{action}</div> : null}
     </div>

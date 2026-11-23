@@ -127,6 +127,7 @@ export function SupportListPage() {
             <EmptyState
               icon={ChatsCircleIcon}
               title={t("empty")}
+              titleAs="h2"
               hint={filtered ? undefined : t("emptyHint")}
               action={
                 filtered ? (
