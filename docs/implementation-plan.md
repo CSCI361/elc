@@ -384,14 +384,19 @@ The remaining external acceptance is pending.
       expiry, limits and attributed reporting; scanners reject campaign QR codes.
 - [x] Calendar links and `.ics` on event/confirmation views; stable UID, sequence,
       time zones, cancellation metadata and fresh IDs when events are duplicated.
+- [x] Initial export from a live-preview ticket confirmation into Google Calendar
+      web and Apple Calendar macOS; title, location and Asia/Almaty start/end match.
+      See [calendar client acceptance](./evidence/calendar-clients.md).
 - [ ] Verify replacement procedures that leave one calendar entry in Google web,
       Outlook web and Apple Calendar iOS/macOS; no automatic-sync claims.
 
 Current evidence: [PDF/calendar verification](./evidence/ticket-exports.md) covers
 real Worker downloads, three languages, private R2 access, canonical QR recovery,
 grayscale raster decoding, calendar identifiers/time zones and cancellation
-metadata. Physical paper scanning, supported calendar clients, frontend export
-controls and external delivery remain pending. Background notification processing
+metadata. Initial Google web and Apple macOS imports and confirmation-page calendar
+controls now have [live-preview evidence](./evidence/calendar-clients.md).
+Physical paper scanning, remaining calendar clients, update/cancellation replacement
+and external delivery remain pending. Background notification processing
 and operator recovery now have [coordinator](./evidence/queued-email.md),
 [fanout](./evidence/notification-fanout.md), [source](./evidence/notification-sources.md)
 and [web recovery](./evidence/web-delivery.md) evidence. Account email localization

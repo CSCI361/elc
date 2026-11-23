@@ -1,5 +1,60 @@
 # Backup and recovery evidence
 
+## Provisioning and local rehearsal — 2026-11-23
+
+Remote acceptance remains incomplete. The following checks and provisioning were
+performed against the configured preview account; no application database was
+restored or switched.
+
+- Confirmed the remote source `elc-preview`, database ID
+  `850e6486-8bdb-4098-9369-441887943740`, in account
+  `796baa3cbaf26549c2ed5a17dccba8c4`. Unrelated database contents were not read.
+- Confirmed separate existing buckets `elc-preview-files` and
+  `elc-preview-backups`. The backup bucket's managed `r2.dev` URL is disabled
+  and it has no custom domains. Recovery-role IAM has not been verified.
+- Added and read back the enabled `elc-sql-30-days` lifecycle rule: expire
+  objects under `exports/` after 30 days. Preserved the existing seven-day
+  incomplete-multipart-upload abort rule. Actual object expiration timing has
+  not been observed.
+- GitHub inspection found only the `preview` environment, no repository
+  `ELC_BACKUPS_ENABLED` variable, and a skipped scheduled backup run:
+  [run 45010972948](https://github.com/ieraasyl/elc/actions/runs/45010972948).
+  The available GitHub credential has write access but no administrator access.
+  Follow-up verification after the user reported completing setup still listed
+  only `preview`; neither the backup environment nor its environment secrets
+  and variables were accessible. Repository secret names were limited to
+  `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`; repository variables still
+  contained only `ELC_PREVIEW_DEPLOY_ENABLED`.
+  Scheduling has not been enabled by this verification.
+- Installed the locked workspace dependencies with Vite+ 0.3.1 / pnpm 12.4.1.
+  `node --test scripts/backup-core.test.mjs scripts/backup-sql.test.mjs` passed
+  all 34 safety tests.
+- `vp test --config scripts/backup-vitest.config.mjs` passed both full-schema
+  local restore tests in 34.14 seconds. They restore into disposable Miniflare
+  D1, round-trip exports through emulated R2, exercise production retention and
+  reconciliation helpers, and keep recovery paused for unresolved admissions.
+  Provider outcomes remain synthetic. The first attempt was blocked by the
+  sandbox's localhost-listening restriction; the same command passed with the
+  required local runtime access.
+
+The user confirmed Workers Free, so the private local target records a seven-day
+Time Travel window. The supplied dedicated token is active and can read metadata
+for the selected D1 database. However, the backup preflight cannot read the
+backup bucket's managed-domain settings: Cloudflare returns HTTP 403, error 10000. No SQL was exported, no completion manifest was published, and no remote
+scratch database was created. Token values remain outside tracked source and
+evidence.
+
+Still required: correct the dedicated credential's R2 policy access, verify the
+protected GitHub environment, enable the
+repository variable, observe a successful scheduled export and its completion
+manifest, and restore that export into a disposable remote database. The account
+subscription metadata request returned HTTP 403; the Free-plan selection above
+was supplied by the user. The
+local rehearsal above does not satisfy remote restore or scheduled-export
+acceptance. No credential or SQL export is included in this evidence.
+
+## Previous local rehearsal — 2026-09-13
+
 On 2026-09-13, the local backup/recovery checks passed against disposable Miniflare D1 and R2 resources. Each rehearsal applied all 32 migrations through `0031_reservation_expiry_indexes.sql`, exported the populated source database, and restored it into a second empty database. No remote resource, credential, billing setting or live `.wrangler/state` was read or modified.
 
 | Check                                    | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                       |

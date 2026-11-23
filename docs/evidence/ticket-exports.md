@@ -32,4 +32,11 @@ The local macOS verifier in `apps/api/src/exports/verify-pdf-qr.swift` used Visi
 
 ## Remaining acceptance
 
-Physical grayscale A4 scanning on supported iOS/Android devices remains pending. Google Calendar web, Outlook web and Apple Calendar iOS/macOS import, time-zone display, update replacement and cancellation procedures still need checks that leave one entry per event. No automatic calendar synchronization is implemented or claimed. Frontend buttons, external ticket email, background PDF delivery jobs and remote R2/Worker deployment are separate integration work; these tests do not establish their completion.
+Initial Google Calendar web and Apple Calendar macOS imports from a live-preview
+ticket confirmation passed on 2026-11-23, including title, full location and
+Asia/Almaty start/end times; see [calendar client acceptance](./calendar-clients.md).
+Physical grayscale A4 scanning on supported iOS/Android devices remains pending.
+Outlook web, Apple Calendar iOS, update replacement and cancellation procedures
+still need checks that leave one entry per event. No automatic calendar
+synchronization is implemented or claimed. External ticket email, background PDF
+delivery jobs and broader remote R2/Worker acceptance remain separate work.
