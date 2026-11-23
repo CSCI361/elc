@@ -10,7 +10,11 @@ import {
   type PaymentCheckoutRequest,
   type ProviderRefundRequest,
 } from "@elc/shared"
-import { createPolarSandboxAdapter, type PolarTransport } from "./polar"
+import {
+  checkoutEmailPrefill,
+  createPolarSandboxAdapter,
+  type PolarTransport,
+} from "./polar"
 
 const checkoutId = "00000000-0000-4000-8000-000000000001"
 const orderId = "00000000-0000-4000-8000-000000000002"
@@ -220,12 +224,47 @@ describe("Polar sandbox checkout adapter", () => {
       allow_discount_codes: false,
       allow_trial: false,
       external_customer_id: binding.accountId,
-      customer_email: request.customerEmail,
       metadata,
       success_url: request.successUrl,
       return_url: request.returnUrl,
     })
-    expect(calls.createCheckout.mock.calls[0]?.[0]).not.toHaveProperty("amount")
+    const body = calls.createCheckout.mock.calls[0]?.[0]
+    expect(body).not.toHaveProperty("amount")
+    // Polar rejects the reserved `.test` domain, so the buyer enters an email at checkout.
+    expect(body).not.toHaveProperty("customer_email")
+  })
+
+  it("prefills a deliverable buyer email at checkout", async () => {
+    const { adapter, calls } = harness()
+    await adapter.createCheckout({
+      ...request,
+      customerEmail: "buyer@nu.edu.kz",
+    })
+    expect(calls.createCheckout.mock.calls[0]?.[0]).toMatchObject({
+      customer_email: "buyer@nu.edu.kz",
+    })
+  })
+
+  it.each([
+    "buyer@example.test",
+    "buyer@EXAMPLE.TEST",
+    "buyer@example.test.",
+    "buyer@host.invalid",
+    "buyer@localhost",
+    "buyer@printer.local",
+    "buyer@site.onion",
+    "buyer@in-addr.arpa",
+  ])("omits the special-use address %s from the checkout", (email) => {
+    expect(checkoutEmailPrefill(email)).toEqual({})
+  })
+
+  it("keeps ordinary domains that only contain a reserved word", () => {
+    expect(checkoutEmailPrefill("qa@test.kz")).toEqual({
+      customer_email: "qa@test.kz",
+    })
+    expect(checkoutEmailPrefill("dev@localhost.example.com")).toEqual({
+      customer_email: "dev@localhost.example.com",
+    })
   })
 
   it("uses the actual versioned SDK against the sandbox origin without POST retries", async () => {
