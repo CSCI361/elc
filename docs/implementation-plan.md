@@ -136,8 +136,10 @@ now pass through the local Worker. Five genuine events, exact replay, tampered
 body rejection and provider redelivery preserve one event/outbox row per event.
 The KZT 9,000 refund invalidated all three tickets; their credentials reject
 admission. The earlier compensated order remains intact. The temporary endpoint
-is disabled and the tunnel stopped. Paid event-cancellation refund and deployed
-runtime acceptance remain pending.
+is disabled and the tunnel stopped. A [paid event-cancellation refund on the
+preview Worker](./evidence/polar-event-cancellation-preview.md) now passes with
+signed webhooks on the deployed endpoint. Wider deployed runtime acceptance
+remains pending.
 
 ## Scope and evidence rules
 
@@ -512,8 +514,7 @@ disabled and its HTTP/2 tunnel stopped. Preserve the private sandbox transaction
 state; both paid ticket orders have now been refunded through their respective
 compensation and voluntary flows.
 
-Remaining external checks include the paid event-cancellation refund, Cloudflare
-preview provisioning and deployed workload, R2 enrollment and backup lifecycle,
+Remaining external checks include the Cloudflare deployed workload, R2 enrollment and backup lifecycle,
 actual Time Travel recovery, Google OAuth, Resend receipt, GA4 collection/reports,
 supported calendar clients and physical iOS/Android devices. No unrelated remote
 database was changed. Missing credentials do not establish provider

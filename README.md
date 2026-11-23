@@ -116,8 +116,6 @@ remain open:
 - Cloudflare preview deployment, deployed queues and Durable Objects, and the
   50-event/10,000-ticket mixed workload.
 - Google OAuth, Resend delivery and GA4 collection with live credentials.
-- A paid event-cancellation refund through Polar and signed webhooks on a
-  deployed endpoint.
 - D1 Time Travel recovery and scheduled backup exports.
 - Physical iOS/Android scanning, grayscale printed tickets and two-device offline
   conflicts.

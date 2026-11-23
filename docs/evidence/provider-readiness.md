@@ -284,6 +284,8 @@ Actual sandbox activation and mixed-ticket transactions now pass as recorded
 above. A full late-payment refund also passes as recorded in
 [compensation evidence](./polar-compensation.md). A fulfilled-order voluntary
 refund and genuine signed delivery also pass, as recorded in
-[signed delivery and refund evidence](./polar-webhooks-refund.md). Paid event
-cancellation, operator recovery variants and deployed runtime acceptance remain
-pending. Node-only mocks cannot establish those results.
+[signed delivery and refund evidence](./polar-webhooks-refund.md). A paid
+event-cancellation refund passes on the deployed preview Worker; see
+[preview cancellation evidence](./polar-event-cancellation-preview.md). Operator
+recovery variants and wider deployed runtime acceptance remain pending.
+Node-only mocks cannot establish those results.

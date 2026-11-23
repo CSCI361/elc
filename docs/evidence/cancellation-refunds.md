@@ -1,12 +1,13 @@
 # Cancellation and refund evidence
 
-Updated: 2026-09-13
+Updated: 2026-11-23
 
 These results cover application transitions in isolated, real D1 databases with
 a recorded payment adapter. Actual Polar compensation and a fulfilled-order
 voluntary refund now pass. See [provider readiness](./provider-readiness.md) and
 [signed delivery and refund evidence](./polar-webhooks-refund.md). A paid
-event-cancellation refund still needs provider acceptance.
+event-cancellation refund also passes on the deployed preview Worker; see
+[preview cancellation evidence](./polar-event-cancellation-preview.md).
 
 ## Event cancellation
 
@@ -79,7 +80,6 @@ passes without payment-provider credentials.
 
 ## Remaining acceptance
 
-- Complete the actual Polar paid event-cancellation refund check.
 - Verify actual provider recovery using the [authorized recovery workflow](./refund-recovery.md).
 - Verify deployed scheduling. The [payout browser view](./web-payouts.md) passes
   local acceptance.
