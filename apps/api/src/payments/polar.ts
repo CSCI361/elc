@@ -369,13 +369,15 @@ export function createPolarSandboxAdapter(
     const order = parse(orderSchema, value)
     checkMetadata(order.metadata, expected)
     const refunded = order.refunded_amount + order.refunded_tax_amount
+    // Ownership comes from the checkout and the metadata binding (which carries
+    // the account). Polar reuses a customer per email, so `customer.external_id`
+    // may belong to whoever first paid with that email; it is not compared.
     if (
       (orderId && order.id !== orderId) ||
       order.checkout_id !== checkoutId ||
       order.product_id !== productId ||
       order.product?.id !== productId ||
       order.product.organization_id !== organizationId ||
-      order.customer.external_id !== expected.accountId ||
       order.currency !== "kzt" ||
       order.total_amount !== expected.amountMinor ||
       order.net_amount + order.tax_amount !== order.total_amount ||
