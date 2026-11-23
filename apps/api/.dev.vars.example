@@ -11,6 +11,7 @@ RESEND_API_KEY=
 GA4_PROPERTY_ID=
 # JSON service-account credentials remain server-side.
 GA4_SERVICE_ACCOUNT_JSON=
+# Polar sandbox; docs/polar-preview-setup.md also copies these to the preview Worker.
 POLAR_ACCESS_TOKEN=
 POLAR_WEBHOOK_SECRET=
 # Sandbox-only identifiers; the adapter never calls the production API.
