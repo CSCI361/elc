@@ -51,3 +51,15 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Sync GA4 reporting secrets to the preview Worker
+        if: env.GA4_PROPERTY_ID != '' && env.GA4_SERVICE_ACCOUNT_JSON != ''
+        run: |
+          file="$RUNNER_TEMP/ga4-secrets.json"
+          trap 'rm -f "$file"' EXIT
+          node -e 'require("fs").writeFileSync(process.argv[1], JSON.stringify({ GA4_PROPERTY_ID: process.env.GA4_PROPERTY_ID, GA4_SERVICE_ACCOUNT_JSON: process.env.GA4_SERVICE_ACCOUNT_JSON }), { mode: 0o600 })' "$file"
+          vp exec wrangler secret bulk "$file" --name elc-preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GA4_PROPERTY_ID: ${{ secrets.GA4_PROPERTY_ID }}
+          GA4_SERVICE_ACCOUNT_JSON: ${{ secrets.GA4_SERVICE_ACCOUNT_JSON }}
