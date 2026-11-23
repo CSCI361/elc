@@ -413,7 +413,6 @@ describe("Polar sandbox checkout adapter", () => {
     { total_amount: 900_001 },
     { net_amount: 749_999 },
     { applied_balance_amount: -100, due_amount: 899_900 },
-    { customer: { external_id: null } },
     { metadata: { ...metadata, elc_account_id: "other-account" } },
     { paid: false },
     { refunded_amount: 900_001 },
@@ -428,6 +427,25 @@ describe("Polar sandbox checkout adapter", () => {
           expected: binding,
         })
       ).rejects.toMatchObject({ code: "PAYMENT_MISMATCH" })
+    }
+  )
+
+  it.each([
+    { customer: { external_id: "organizer-account" } },
+    { customer: { external_id: null } },
+  ])(
+    "accepts an order Polar attached to an existing customer record: %j",
+    async (changes) => {
+      // Polar keys customers by email, so a buyer reusing an email gets that
+      // customer's external ID. Checkout and metadata still bind the account.
+      const { adapter, calls } = harness()
+      calls.listOrders.mockResolvedValue(page([{ ...order, ...changes }]))
+      expect(
+        await adapter.lookupPayment({
+          providerPaymentId: checkoutId,
+          expected: binding,
+        })
+      ).toMatchObject({ state: "succeeded", providerOrderId: orderId })
     }
   )
 
